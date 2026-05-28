@@ -8,8 +8,8 @@ Pendekatan implementasi: setup project structure → backend plugins (Tripay, Di
 
 ## Tasks
 
-- [ ] 1. Set up project structure and core configuration
-  - [-] 1.1 Initialize Vendure project with TypeScript configuration
+- [x] 1. Set up project structure and core configuration
+  - [x] 1.1 Initialize Vendure project with TypeScript configuration
     - Create Vendure project with `@vendure/create`
     - Configure TypeScript strict mode, path aliases
     - Set up PostgreSQL connection with pool size limited to 10 connections
@@ -17,26 +17,26 @@ Pendekatan implementasi: setup project structure → backend plugins (Tripay, Di
     - Set memory limits (900MB normal, 1GB rejection threshold)
     - _Requirements: 12.1, 12.2, 12.4, 12.5_
 
-  - [-] 1.2 Set up MinIO client configuration and connection
+  - [x] 1.2 Set up MinIO client configuration and connection
     - Install and configure `minio` npm package
     - Create MinIO client singleton with private bucket configuration
     - Set up bucket initialization (create `products` bucket if not exists)
     - _Requirements: 3.1, 13.1_
 
-  - [-] 1.3 Create shared TypeScript interfaces and types
+  - [x] 1.3 Create shared TypeScript interfaces and types
     - Define `TripayPluginOptions`, `TripayChannel`, `TripayCreateTransactionInput`, `TripayCreateTransactionResponse`, `TripayWebhookPayload` interfaces
     - Define `DigitalProductInput`, `DigitalDownloadRecord`, `DownloadLinkResponse` interfaces
     - Define `EmailPluginOptions`, `OrderConfirmationEmailData` interfaces
     - _Requirements: 1.1, 3.1, 6.2_
 
 - [ ] 2. Implement Tripay Payment Plugin
-  - [~] 2.1 Create TripayTransaction entity and database migration
+  - [x] 2.1 Create TripayTransaction entity and database migration
     - Implement `TripayTransaction` entity with TypeORM decorators
     - Add indexes on `orderId`, `merchantRef` (unique), `tripayReference`
     - Create database migration for the entity
     - _Requirements: 1.2_
 
-  - [~] 2.2 Implement Tripay API service for transaction creation
+  - [x] 2.2 Implement Tripay API service for transaction creation
     - Create `TripayService` with `createTransaction()` method
     - Implement 30-second timeout for Tripay API calls
     - Validate payment channel code against allowed channels list
@@ -44,19 +44,19 @@ Pendekatan implementasi: setup project structure → backend plugins (Tripay, Di
     - Handle error responses from Tripay (timeout, API errors)
     - _Requirements: 1.1, 1.4, 1.5, 1.6, 1.7_
 
-  - [~] 2.3 Implement Tripay payment handler integration with Vendure
+  - [-] 2.3 Implement Tripay payment handler integration with Vendure
     - Create custom `PaymentMethodHandler` for Vendure
     - Implement `createPayment()` that validates order state (ArrangingPayment with items)
     - Store TripayTransaction record on successful response
     - Return payment redirect URL to frontend
     - _Requirements: 1.1, 1.2, 1.3_
 
-  - [~] 2.4 Write property test for Tripay transaction payload completeness
+  - [-] 2.4 Write property test for Tripay transaction payload completeness
     - **Property 10: Tripay Transaction Payload Completeness**
     - Generate random orders with varying line items, verify payload always contains correct total, customer details, channel, and all items with name/price/quantity
     - **Validates: Requirements 1.1, 1.5**
 
-  - [~] 2.5 Implement webhook signature verification
+  - [x] 2.5 Implement webhook signature verification
     - Implement `verifyTripaySignature()` using HMAC SHA256
     - Use constant-time comparison (`crypto.timingSafeEqual`)
     - Reject requests without signature header (HTTP 400)
@@ -91,21 +91,21 @@ Pendekatan implementasi: setup project structure → backend plugins (Tripay, Di
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 4. Implement Digital Fulfillment Plugin
-  - [~] 4.1 Create DigitalProduct entity and database migration
+  - [x] 4.1 Create DigitalProduct entity and database migration
     - Implement `DigitalProduct` entity with TypeORM decorators
     - Add relation to `ProductVariant`
     - Add validation constraints (maxDownloadsPerOrder: 1-10, downloadExpiryHours: 1-168)
     - Create database migration
     - _Requirements: 3.2_
 
-  - [~] 4.2 Create DigitalDownload entity and database migration
+  - [x] 4.2 Create DigitalDownload entity and database migration
     - Implement `DigitalDownload` entity with TypeORM decorators
     - Add indexes on `orderId`, `downloadToken` (unique)
     - Add validation constraints (currentDownloads <= maxDownloads)
     - Create database migration
     - _Requirements: 4.2, 4.3, 4.4_
 
-  - [~] 4.3 Implement file upload service with streaming and validation
+  - [x] 4.3 Implement file upload service with streaming and validation
     - Create `DigitalFulfillmentService.uploadProductFile()` method
     - Implement streaming upload to MinIO (max 8MB in-memory buffer)
     - Validate MIME type (allow only: application/zip, application/pdf, application/epub+zip)
@@ -115,12 +115,12 @@ Pendekatan implementasi: setup project structure → backend plugins (Tripay, Di
     - Handle MinIO unreachable errors
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 12.3_
 
-  - [~] 4.4 Write property test for MIME type validation
+  - [-] 4.4 Write property test for MIME type validation
     - **Property 11: MIME Type Validation**
     - For any MIME type string, verify acceptance if and only if it's in the allowed list
     - **Validates: Requirements 3.3**
 
-  - [~] 4.5 Implement download record creation on order fulfillment
+  - [-] 4.5 Implement download record creation on order fulfillment
     - Listen to Vendure order state transition event (→ Fulfilled)
     - Create DigitalDownload records for each line item with associated DigitalProduct
     - Skip line items without DigitalProduct association
@@ -170,18 +170,18 @@ Pendekatan implementasi: setup project structure → backend plugins (Tripay, Di
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 6. Implement Order State Machine and Payment Integrity
-  - [~] 6.1 Configure Vendure order state machine with custom transitions
+  - [x] 6.1 Configure Vendure order state machine with custom transitions
     - Define custom order process with forward-only transitions: AddingItems → ArrangingPayment → PaymentSettled → Fulfilled
     - Reject backward transitions and state skipping
     - Add payment verification guard on Fulfilled transition (require PAID TripayTransaction with matching amount, except zero-value orders)
     - _Requirements: 10.1, 10.2, 10.3_
 
-  - [~] 6.2 Write property test for order state machine forward-only transitions
+  - [-] 6.2 Write property test for order state machine forward-only transitions
     - **Property 6: Order State Machine Forward-Only Transitions**
     - For any order state, verify only forward transitions permitted, backward transitions rejected
     - **Validates: Requirements 10.1, 10.2**
 
-  - [~] 6.3 Write property test for payment integrity
+  - [-] 6.3 Write property test for payment integrity
     - **Property 1: Payment Integrity**
     - For any fulfilled order with total > 0, verify a PAID TripayTransaction with matching amount exists; zero-value orders allowed without
     - **Validates: Requirements 10.3**
@@ -215,7 +215,7 @@ Pendekatan implementasi: setup project structure → backend plugins (Tripay, Di
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 9. Implement Nuxt 3 Storefront - Product Catalog
-  - [~] 9.1 Initialize Nuxt 3 project with GraphQL client
+  - [x] 9.1 Initialize Nuxt 3 project with GraphQL client
     - Create Nuxt 3 project with TypeScript
     - Configure Apollo/GraphQL client to connect to Vendure Shop API
     - Set up Pinia for state management

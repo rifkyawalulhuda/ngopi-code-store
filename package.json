@@ -1,0 +1,13 @@
+{
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "@vendure/cli": "^3.6.3",
+    "@vitest/coverage-v8": "^4.1.7",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.7"
+  },
+  "dependencies": {
+    "cross-spawn": "^7.0.6",
+    "minio": "^8.0.7"
+  }
+}

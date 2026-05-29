@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ngopi Code - Digital Product Catalog</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#43423b",
+                        "surface-container-highest": "#e1e3e4",
+                        "outline-variant": "#c2c8c2",
+                        "on-tertiary-container": "#b1aea5",
+                        "on-secondary-fixed": "#141f05",
+                        "on-primary-fixed-variant": "#324c3e",
+                        "inverse-primary": "#b0cdbb",
+                        "primary-container": "#2d4739",
+                        "on-secondary-container": "#5a6745",
+                        "on-secondary-fixed-variant": "#3f4b2c",
+                        "surface-variant": "#e1e3e4",
+                        "surface-container-low": "#f3f4f5",
+                        "secondary-fixed-dim": "#becca3",
+                        "surface-dim": "#d9dadb",
+                        "on-tertiary-fixed-variant": "#484740",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#c9c6bd",
+                        "surface-bright": "#f8f9fa",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed": "#dae8be",
+                        "primary-fixed-dim": "#b0cdbb",
+                        "surface-container": "#edeeef",
+                        "outline": "#727973",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "tertiary": "#2c2c25",
+                        "inverse-surface": "#2e3132",
+                        "on-tertiary": "#ffffff",
+                        "background": "#f8f9fa",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed": "#ccead6",
+                        "on-surface-variant": "#424844",
+                        "surface": "#f8f9fa",
+                        "primary": "#173124",
+                        "secondary-container": "#d7e5bb",
+                        "on-surface": "#191c1d",
+                        "inverse-on-surface": "#f0f1f2",
+                        "surface-container-high": "#e7e8e9",
+                        "on-tertiary-fixed": "#1c1c16",
+                        "on-primary": "#ffffff",
+                        "surface-tint": "#496455",
+                        "on-background": "#191c1d",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed": "#062014",
+                        "on-primary-container": "#98b5a3",
+                        "tertiary-fixed": "#e6e2d8",
+                        "secondary": "#566342"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "24px",
+                        "xs": "4px",
+                        "gutter": "24px",
+                        "xl": "80px",
+                        "margin-desktop": "64px",
+                        "lg": "48px",
+                        "base": "8px",
+                        "sm": "12px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Manrope"],
+                        "headline-xl-mobile": ["Manrope"],
+                        "headline-xl": ["Manrope"],
+                        "label-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Manrope"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-xl-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "0", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #f8f9fa; }
+        .soft-shadow { box-shadow: 0 4px 20px rgba(45, 71, 57, 0.04); }
+        .hover-soft-shadow:hover { box-shadow: 0 8px 30px rgba(45, 71, 57, 0.08); transform: translateY(-2px); transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface docked full-width top-0 sticky z-50">
+<div class="flex justify-between items-center w-full px-margin-desktop py-md max-w-[1280px] mx-auto">
+<div class="flex items-center gap-lg">
+<a class="font-headline-md text-headline-md font-bold tracking-tight text-primary dark:text-primary-fixed-dim" href="#">Ngopi Code</a>
+<nav class="hidden md:flex items-center gap-md">
+<a class="text-primary dark:text-primary-fixed-dim border-b-2 border-primary dark:border-primary-fixed-dim pb-1 font-label-md text-label-md hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-all duration-200" href="#">Store</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors font-label-md text-label-md hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-all duration-200" href="#">Source Code</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors font-label-md text-label-md hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-all duration-200" href="#">Ebooks</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors font-label-md text-label-md hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-all duration-200" href="#">Services</a>
+</nav>
+</div>
+<div class="flex items-center gap-sm">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors focus:ring-2 ring-primary rounded-full">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors focus:ring-2 ring-primary rounded-full">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Layout -->
+<main class="flex-grow w-full max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-lg flex flex-col md:flex-row gap-xl items-start">
+<!-- SideNavBar / Filters -->
+<aside class="w-full md:w-64 shrink-0 sticky top-32 bg-surface-container-lowest dark:bg-surface-container-low rounded-xl p-md border border-outline-variant/30 soft-shadow">
+<div class="mb-lg">
+<h2 class="font-headline-md text-headline-md text-primary font-bold mb-xs">Categories</h2>
+<p class="font-label-md text-label-md text-on-surface-variant mb-md">Browse Digital Goods</p>
+<nav class="flex flex-col gap-sm">
+<a class="flex items-center gap-sm text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container dark:hover:bg-surface-container-high rounded-lg transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="code">code</span> Source Code
+                    </a>
+<a class="flex items-center gap-sm text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container dark:hover:bg-surface-container-high rounded-lg transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span> Ebooks
+                    </a>
+<a class="flex items-center gap-sm text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container dark:hover:bg-surface-container-high rounded-lg transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span> Web Services
+                    </a>
+</nav>
+</div>
+<div class="mb-lg">
+<h3 class="font-label-md text-label-md text-primary font-bold mb-sm">Price Range</h3>
+<div class="px-2">
+<input class="w-full h-1 bg-surface-container-high rounded-lg appearance-none cursor-pointer accent-primary" max="500" min="0" type="range" value="250"/>
+<div class="flex justify-between mt-xs font-label-sm text-label-sm text-on-surface-variant">
+<span>$0</span>
+<span>$500+</span>
+</div>
+</div>
+</div>
+<div class="mb-lg">
+<h3 class="font-label-md text-label-md text-primary font-bold mb-sm">Customer Ratings</h3>
+<div class="flex flex-col gap-xs">
+<label class="flex items-center gap-sm cursor-pointer">
+<input class="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 bg-transparent" type="checkbox"/>
+<span class="flex items-center text-primary"><span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span><span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span><span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span><span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span><span class="material-symbols-outlined text-[16px]">star</span> &amp; Up</span>
+</label>
+<label class="flex items-center gap-sm cursor-pointer">
+<input class="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 bg-transparent" type="checkbox"/>
+<span class="flex items-center text-primary"><span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span><span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span><span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span><span class="material-symbols-outlined text-[16px]">star</span><span class="material-symbols-outlined text-[16px]">star</span> &amp; Up</span>
+</label>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md py-3 rounded-lg hover:bg-primary-container hover:text-on-primary-container transition-colors focus:ring-2 ring-primary ring-offset-2">
+                Filter Results
+            </button>
+</aside>
+<!-- Product Grid Area -->
+<div class="flex-grow w-full">
+<!-- Grid Toolbar -->
+<div class="flex justify-between items-center mb-lg border-b border-outline-variant/20 pb-sm">
+<h1 class="font-headline-lg text-headline-lg text-primary">All Products</h1>
+<div class="flex items-center gap-sm">
+<span class="font-label-md text-label-md text-on-surface-variant">Sort by:</span>
+<select class="bg-transparent border-none text-primary font-label-md text-label-md focus:ring-0 cursor-pointer pr-8">
+<option>Latest</option>
+<option>Price: Low to High</option>
+<option>Price: High to Low</option>
+</select>
+</div>
+</div>
+<!-- Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-md xl:gap-lg">
+<!-- Product 1 -->
+<article class="bg-surface-container-lowest rounded-xl overflow-hidden hover-soft-shadow group border border-outline-variant/10">
+<div class="aspect-[4/3] bg-surface-container relative overflow-hidden">
+<img alt="SaaS Dashboard Template Interface" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida/ADBb0uiXNNAyx-Ms09CLgK2n7ijVEHEBNzI5OV60PD5vSj8zo4Sou6lQXVHqh5h189b-cRZaHUMPxZJwrgofje9VAgHZGRhjwOhrAYD3q3eKDkohBgGfnRzcKr52B0eX--Oz9WEgkUJBZYVsIpblRcB1X-wBszuDHkfmyYC3ZooOL9hSq9wLpu0AMp9yqA5M985dbu5MYjrniQF3MNDkDUYUDUHRX3UNZvRINndSd_2m-nIPwrhXu2LBaDOIWQk"/>
+<div class="absolute top-4 left-4 bg-tertiary/90 backdrop-blur-sm px-3 py-1 rounded-full">
+<span class="font-label-sm text-label-sm text-on-tertiary tracking-wider">CODE</span>
+</div>
+</div>
+<div class="p-md">
+<h3 class="font-headline-md text-[20px] font-semibold text-primary mb-xs">SaaS Dashboard Template</h3>
+<div class="flex justify-between items-end mt-sm">
+<span class="font-body-lg text-body-lg text-on-surface-variant font-medium">$89.00</span>
+<button class="text-primary hover:text-primary-container transition-colors flex items-center gap-xs font-label-sm text-label-sm">
+                                View Details <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Product 2 -->
+<article class="bg-surface-container-lowest rounded-xl overflow-hidden hover-soft-shadow group border border-outline-variant/10">
+<div class="aspect-[4/3] bg-surface-container relative overflow-hidden flex items-center justify-center p-md">
+<img alt="Mastering Web Architecture Ebook Cover" class="w-[70%] h-auto object-contain transition-transform duration-500 group-hover:scale-105 drop-shadow-lg" src="https://lh3.googleusercontent.com/aida/ADBb0uhV6QCYet1aOPgC6eM4vzdAnBWeSrR6lYNJANc4pHsSdNS9wDSBKdvzkNVIXS9RgOq3PyZUDy-jhCEDE_QWC5UQylOb98zClMo-ypyFXw2rmekkJrfu4ZXhsV8e0f2k4WDj85bWEb6honp8nO6ONJ0ttv3nRLWbYNoseAX9aclsSzIk2E26AUD5Ob9G2hcGHGtNS51scZHJrtcHSADAyS6HROW35zx6C6PznKjEJqejGh2lwo8S1Gf9jgk"/>
+<div class="absolute top-4 left-4 bg-tertiary/90 backdrop-blur-sm px-3 py-1 rounded-full">
+<span class="font-label-sm text-label-sm text-on-tertiary tracking-wider">BOOK</span>
+</div>
+</div>
+<div class="p-md">
+<h3 class="font-headline-md text-[20px] font-semibold text-primary mb-xs">Mastering Web Architecture</h3>
+<div class="flex justify-between items-end mt-sm">
+<span class="font-body-lg text-body-lg text-on-surface-variant font-medium">$39.00</span>
+<button class="text-primary hover:text-primary-container transition-colors flex items-center gap-xs font-label-sm text-label-sm">
+                                View Details <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Product 3 -->
+<article class="bg-surface-container-lowest rounded-xl overflow-hidden hover-soft-shadow group border border-outline-variant/10">
+<div class="aspect-[4/3] bg-surface-container relative overflow-hidden">
+<img alt="Corporate Website Design Mockup" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida/ADBb0ugMEzQGMz7P18rBDSZRt2CAuoDkaOU22mwwnyZHd_lZoLUt5-mvuVZHthrcryDWNTn4LeqiEU1PLfbQ_GYAMmttNbTgKLPXxK_2ewhRKfWKvXA1gekFHgw5SYz6XpMOLNkk1urowuQmOPA30KhMHZJWRyvi_GZDt1robGUrFGDAaTaCmiiudrejObumG78Sh73uqQ3iwlmT3pVZzsQ2ktzF2_xKAbToHBRaOgCjvUdvKM3EBZ7kB4uzew"/>
+<div class="absolute top-4 left-4 bg-tertiary/90 backdrop-blur-sm px-3 py-1 rounded-full">
+<span class="font-label-sm text-label-sm text-on-tertiary tracking-wider">SERVICE</span>
+</div>
+</div>
+<div class="p-md">
+<h3 class="font-headline-md text-[20px] font-semibold text-primary mb-xs">Custom Corporate Website</h3>
+<div class="flex justify-between items-end mt-sm">
+<span class="font-body-lg text-body-lg text-on-surface-variant font-medium">From $2,500.00</span>
+<button class="text-primary hover:text-primary-container transition-colors flex items-center gap-xs font-label-sm text-label-sm">
+                                View Details <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Product 4 -->
+<article class="bg-surface-container-lowest rounded-xl overflow-hidden hover-soft-shadow group border border-outline-variant/10">
+<div class="aspect-[4/3] bg-surface-container relative overflow-hidden p-xl flex items-center justify-center">
+<img alt="React Component Library Code Snippet" class="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 drop-shadow-md" src="https://lh3.googleusercontent.com/aida/ADBb0uhS7DH-FoPDXGgu_k8oI4KX-iKPKBsiSuUKla66PChOYhfMsAqcAFI5KJb2cEUfx7b-rMhiSwh2kSE-2A-xYXcfdxv84ZNAvqlLUD696uy_G84g7hbjOedW5VeZeQX02bNgmwROjcjw5QPhjN_O775XqWDTv90wciLtt3bXlRZh-3uT9ez3Fxt3WbqG2vQ746llabmRMt3COA7_fnFMOZF0yoIljzFa6xpQb4u0I-DFapi-y1-dPqNIefg"/>
+<div class="absolute top-4 left-4 bg-tertiary/90 backdrop-blur-sm px-3 py-1 rounded-full">
+<span class="font-label-sm text-label-sm text-on-tertiary tracking-wider">CODE</span>
+</div>
+</div>
+<div class="p-md">
+<h3 class="font-headline-md text-[20px] font-semibold text-primary mb-xs">React Component Library</h3>
+<div class="flex justify-between items-end mt-sm">
+<span class="font-body-lg text-body-lg text-on-surface-variant font-medium">$120.00</span>
+<button class="text-primary hover:text-primary-container transition-colors flex items-center gap-xs font-label-sm text-label-sm">
+                                View Details <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low dark:bg-tertiary-container full-width">
+<div class="flex flex-col md:flex-row justify-between items-center w-full px-margin-desktop py-xl mt-xl max-w-[1280px] mx-auto gap-lg">
+<div class="font-headline-md text-headline-md font-bold text-primary dark:text-on-tertiary-container">
+                Ngopi Code
+            </div>
+<nav class="flex flex-wrap justify-center gap-md">
+<a class="text-on-surface-variant dark:text-on-tertiary-container/70 hover:text-primary dark:hover:text-on-tertiary-container transition-colors font-label-sm text-label-sm hover:underline transition-all" href="#">About Us</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container/70 hover:text-primary dark:hover:text-on-tertiary-container transition-colors font-label-sm text-label-sm hover:underline transition-all" href="#">Contact</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container/70 hover:text-primary dark:hover:text-on-tertiary-container transition-colors font-label-sm text-label-sm hover:underline transition-all" href="#">Terms of Service</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container/70 hover:text-primary dark:hover:text-on-tertiary-container transition-colors font-label-sm text-label-sm hover:underline transition-all" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container/70 hover:text-primary dark:hover:text-on-tertiary-container transition-colors font-label-sm text-label-sm hover:underline transition-all" href="#">Refund Policy</a>
+</nav>
+<div class="font-body-md text-body-md text-on-surface-variant dark:text-on-tertiary-container/70 text-center md:text-right">
+                © 2024 Ngopi Code Digital Product Store. All rights reserved.
+            </div>
+</div>
+</footer>
+</body></html>

@@ -1,0 +1,105 @@
+/* =========================================================
+   NgopiCode theme tokens
+   Light + Dark mode. Layout is identical across both modes;
+   only these color tokens change.
+   ========================================================= */
+
+:root {
+  --bg: #fbfdfb;
+  --bg-hero-top: #f1f7f3;
+  --surface: #ffffff;
+  --surface-2: #f0f6f2;
+  --text: #14241b;
+  --text-muted: #506258;
+  --border: #eaf0ec;
+  --border-strong: #dfe8e3;
+
+  --primary: #1f7a4d;
+  --primary-hover: #1a6a43;
+  --primary-contrast: #ffffff;
+  --primary-text: #1f7a4d;
+  --primary-soft: #e3f1e9;
+  --accent: #5cc98c;
+
+  --btn-ghost-bg: #ffffff;
+  --btn-ghost-border: #cfe3d7;
+  --btn-ghost-hover: #f0f6f2;
+  --btn-sm-bg: #eef4f0;
+  --btn-sm-hover: #e0ece5;
+
+  --header-bg: rgba(255, 255, 255, 0.92);
+  --shadow-card: rgba(20, 36, 27, 0.08);
+  --shadow-card-strong: rgba(20, 36, 27, 0.1);
+  --placeholder-icon: #9bb3a5;
+  --skeleton-a: #eef2ef;
+  --skeleton-b: #e3e9e5;
+  --hero-glow: rgba(92, 201, 140, 0.22);
+
+  /* Footer + newsletter keep an intentionally dark palette in both modes */
+  --footer-bg: #11201a;
+  --footer-text: #c8d4cd;
+  --footer-heading: #ffffff;
+  --footer-muted: #93a69c;
+  --footer-border: #1d3329;
+  --footer-chip: #1b3128;
+  --footer-accent: #5cc98c;
+}
+
+[data-theme='dark'] {
+  --bg: #0e1411;
+  --bg-hero-top: #131b17;
+  --surface: #161e1a;
+  --surface-2: #1b241f;
+  --text: #eaf2ed;
+  --text-muted: #9fb3a8;
+  --border: #233029;
+  --border-strong: #2a382f;
+
+  --primary: #2f9e63;
+  --primary-hover: #36b06f;
+  --primary-contrast: #ffffff;
+  --primary-text: #5cc98c;
+  --primary-soft: rgba(47, 158, 99, 0.16);
+  --accent: #5cc98c;
+
+  --btn-ghost-bg: #1b241f;
+  --btn-ghost-border: #2c4d3b;
+  --btn-ghost-hover: #22302a;
+  --btn-sm-bg: #1d2b23;
+  --btn-sm-hover: #24362c;
+
+  --header-bg: rgba(14, 20, 17, 0.85);
+  --shadow-card: rgba(0, 0, 0, 0.45);
+  --shadow-card-strong: rgba(0, 0, 0, 0.55);
+  --placeholder-icon: #5e7468;
+  --skeleton-a: #1a221e;
+  --skeleton-b: #232d28;
+  --hero-glow: rgba(47, 158, 99, 0.18);
+
+  --footer-bg: #0b120f;
+  --footer-text: #c8d4cd;
+  --footer-heading: #ffffff;
+  --footer-muted: #859488;
+  --footer-border: #1a2620;
+  --footer-chip: #16211c;
+  --footer-accent: #5cc98c;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+* {
+  box-sizing: border-box;
+}

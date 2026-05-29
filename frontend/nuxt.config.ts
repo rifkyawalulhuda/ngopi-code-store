@@ -8,6 +8,19 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
   ],
 
+  css: ['~/assets/css/theme.css'],
+
+  app: {
+    head: {
+      link: [
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
+        },
+      ],
+    },
+  },
+
   apollo: {
     clients: {
       default: {

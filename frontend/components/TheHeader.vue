@@ -22,6 +22,22 @@
         <NuxtLink to="/products" class="icon-btn" aria-label="Cari produk">
           <AppIcon name="search" :size="20" />
         </NuxtLink>
+        <ClientOnly>
+          <button
+            class="icon-btn"
+            type="button"
+            :aria-label="isDark ? 'Aktifkan mode terang' : 'Aktifkan mode gelap'"
+            :title="isDark ? 'Mode terang' : 'Mode gelap'"
+            @click="toggleTheme"
+          >
+            <AppIcon :name="isDark ? 'sun' : 'moon'" :size="20" />
+          </button>
+          <template #fallback>
+            <button class="icon-btn" type="button" aria-label="Ganti tema">
+              <AppIcon name="moon" :size="20" />
+            </button>
+          </template>
+        </ClientOnly>
         <button class="icon-btn" aria-label="Akun" type="button">
           <AppIcon name="user" :size="20" />
         </button>
@@ -56,8 +72,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useCart } from '~/composables/useCart'
+import { useTheme } from '~/composables/useTheme'
 
 const { cartItemCount } = useCart()
+const { isDark, toggleTheme } = useTheme()
 
 const menuOpen = ref(false)
 function toggleMenu() {
@@ -73,9 +91,9 @@ function closeMenu() {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--header-bg);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid #e8ece9;
+  border-bottom: 1px solid var(--border);
 }
 
 .header-inner {
@@ -94,7 +112,7 @@ function closeMenu() {
   align-items: center;
   gap: 0.6rem;
   text-decoration: none;
-  color: #14241b;
+  color: var(--text);
   font-weight: 700;
   font-size: 1.2rem;
   letter-spacing: -0.02em;
@@ -106,12 +124,12 @@ function closeMenu() {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: #1f7a4d;
+  background: var(--primary);
   color: #fff;
 }
 
 .brand-accent {
-  color: #1f7a4d;
+  color: var(--primary-text);
 }
 
 .nav-desktop {
@@ -122,7 +140,7 @@ function closeMenu() {
 
 .nav-link {
   text-decoration: none;
-  color: #45554c;
+  color: var(--text-muted);
   font-size: 0.95rem;
   font-weight: 500;
   transition: color 0.18s;
@@ -130,7 +148,7 @@ function closeMenu() {
 
 .nav-link:hover,
 .nav-link.router-link-active {
-  color: #1f7a4d;
+  color: var(--primary-text);
 }
 
 .actions {
@@ -147,7 +165,7 @@ function closeMenu() {
   height: 40px;
   border: none;
   background: transparent;
-  color: #2d3b33;
+  color: var(--text);
   border-radius: 10px;
   cursor: pointer;
   text-decoration: none;
@@ -155,8 +173,8 @@ function closeMenu() {
 }
 
 .icon-btn:hover {
-  background: #eef4f0;
-  color: #1f7a4d;
+  background: var(--surface-2);
+  color: var(--primary-text);
 }
 
 .cart-badge {
@@ -167,7 +185,7 @@ function closeMenu() {
   height: 18px;
   padding: 0 4px;
   border-radius: 9px;
-  background: #1f7a4d;
+  background: var(--primary);
   color: #fff;
   font-size: 0.7rem;
   font-weight: 700;
@@ -183,16 +201,16 @@ function closeMenu() {
   display: flex;
   flex-direction: column;
   padding: 0.5rem 1.25rem 1rem;
-  border-top: 1px solid #e8ece9;
-  background: #fff;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
 }
 
 .nav-mobile-link {
   padding: 0.85rem 0.25rem;
   text-decoration: none;
-  color: #2d3b33;
+  color: var(--text);
   font-weight: 500;
-  border-bottom: 1px solid #f0f3f1;
+  border-bottom: 1px solid var(--border);
 }
 
 .nav-mobile-link:last-child {

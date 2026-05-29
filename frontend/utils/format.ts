@@ -1,10 +1,11 @@
 /**
- * Format a price value (in minor units) to Indonesian Rupiah format.
- * Vendure stores prices in minor units (cents), so for IDR we divide by 100.
- * Example: 15000000 -> "Rp 150.000"
+ * Format a price value to Indonesian Rupiah format.
+ * IDR is a zero-decimal currency, so Vendure (with IdrMoneyStrategy, precision 0)
+ * stores the price as the actual Rupiah amount — no division needed.
+ * Example: 150000 -> "Rp 150.000"
  */
-export function formatPriceIDR(priceInMinorUnits: number): string {
-  const amount = Math.round(priceInMinorUnits / 100)
+export function formatPriceIDR(priceInRupiah: number): string {
+  const amount = Math.round(priceInRupiah)
   return `Rp ${amount.toLocaleString('id-ID')}`
 }
 

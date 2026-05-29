@@ -13,6 +13,7 @@ import { TripayTransaction } from '../plugins/tripay-payment/entities/tripay-tra
 
 /** The strict sequential order of allowed states */
 const STATE_SEQUENCE: string[] = [
+  'Created',
   'AddingItems',
   'ArrangingPayment',
   'PaymentSettled',
@@ -54,6 +55,9 @@ let connection: TransactionalConnection | undefined;
  */
 export const customOrderProcess: CustomOrderProcess<string> = {
   transitions: {
+    Created: {
+      to: ['AddingItems'],
+    },
     AddingItems: {
       to: ['ArrangingPayment'],
     },

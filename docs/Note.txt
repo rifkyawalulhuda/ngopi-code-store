@@ -1,0 +1,10 @@
+Tip: Selalu pastikan proses sebelumnya sudah mati sebelum start ulang. Kalau pakai PowerShell, Ctrl+C kadang tidak langsung kill Node. Kamu bisa pakai command ini kapan saja untuk force kill port 3000:
+
+Get-Process -Id (Get-NetTCPConnection -LocalPort 3000).OwningProcess | Stop-Process -Force
+
+cd e:\Github\ngopi-code-store\backend
+npm run dev
+
+
+cd e:\Github\ngopi-code-store\frontend
+npm run dev -- --port 3001

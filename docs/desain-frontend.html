@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ngopi Code | Premium Digital Assets &amp; Modern Web Solutions</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-variant": "#e1e3e4",
+                      "on-primary": "#ffffff",
+                      "tertiary-fixed": "#e6e2d8",
+                      "on-primary-container": "#98b5a3",
+                      "on-surface": "#191c1d",
+                      "primary-container": "#2d4739",
+                      "surface-bright": "#f8f9fa",
+                      "secondary": "#566342",
+                      "tertiary-fixed-dim": "#c9c6bd",
+                      "on-secondary": "#ffffff",
+                      "error": "#ba1a1a",
+                      "on-tertiary-container": "#b1aea5",
+                      "surface-container-low": "#f3f4f5",
+                      "on-background": "#191c1d",
+                      "on-primary-fixed-variant": "#324c3e",
+                      "surface-dim": "#d9dadb",
+                      "on-secondary-container": "#5a6745",
+                      "on-secondary-fixed": "#141f05",
+                      "secondary-fixed": "#dae8be",
+                      "primary": "#173124",
+                      "on-error-container": "#93000a",
+                      "secondary-container": "#d7e5bb",
+                      "error-container": "#ffdad6",
+                      "inverse-primary": "#b0cdbb",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-fixed-variant": "#3f4b2c",
+                      "surface-container": "#edeeef",
+                      "outline-variant": "#c2c8c2",
+                      "on-primary-fixed": "#062014",
+                      "background": "#f8f9fa",
+                      "inverse-surface": "#2e3132",
+                      "outline": "#727973",
+                      "surface-container-lowest": "#ffffff",
+                      "on-error": "#ffffff",
+                      "inverse-on-surface": "#f0f1f2",
+                      "primary-fixed": "#ccead6",
+                      "on-surface-variant": "#424844",
+                      "tertiary": "#2c2c25",
+                      "primary-fixed-dim": "#b0cdbb",
+                      "surface": "#f8f9fa",
+                      "tertiary-container": "#43423b",
+                      "secondary-fixed-dim": "#becca3",
+                      "surface-container-high": "#e7e8e9",
+                      "surface-tint": "#496455",
+                      "on-tertiary-fixed-variant": "#484740",
+                      "surface-container-highest": "#e1e3e4",
+                      "on-tertiary-fixed": "#1c1c16"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "16px",
+                      "md": "24px",
+                      "gutter": "24px",
+                      "margin-desktop": "64px",
+                      "lg": "48px",
+                      "xl": "80px",
+                      "sm": "12px",
+                      "xs": "4px",
+                      "base": "8px"
+              },
+              "fontFamily": {
+                      "label-md": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "headline-lg": ["Manrope"],
+                      "headline-md": ["Manrope"],
+                      "headline-xl": ["Manrope"],
+                      "body-md": ["Inter"],
+                      "headline-xl-mobile": ["Manrope"],
+                      "label-sm": ["Inter"]
+              },
+              "fontSize": {
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "0", "fontWeight": "600"}],
+                      "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-xl-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ccead6 100%);
+        }
+        .product-card:hover .product-action {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- TopNavBar -->
+<header class="bg-surface docked full-width top-0 sticky z-50 transition-all duration-300">
+<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop max-w-[1280px] mx-auto h-20">
+<div class="flex items-center gap-md">
+<a class="font-headline-md text-headline-md font-bold text-primary tracking-tighter" href="#">Ngopi Code</a>
+<nav class="hidden md:flex items-center gap-md ml-xl">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary hover:opacity-80 transition-all duration-200 border-b-2 border-primary pb-1" href="#">Store</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary hover:opacity-80 transition-all duration-200" href="#">Source Code</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary hover:opacity-80 transition-all duration-200" href="#">Ebooks</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary hover:opacity-80 transition-all duration-200" href="#">Services</a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<div class="hidden md:flex items-center bg-surface-container-low rounded-full px-md py-xs">
+<span class="material-symbols-outlined text-outline text-[20px]" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-label-md font-label-md ml-sm w-32" placeholder="Search assets..." type="text"/>
+</div>
+<div class="flex items-center gap-sm">
+<button class="hover:opacity-80 transition-opacity duration-200 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary" data-icon="person">person</span>
+</button>
+<button class="hover:opacity-80 transition-opacity duration-200 active:scale-95 transition-transform relative">
+<span class="material-symbols-outlined text-primary" data-icon="shopping_cart">shopping_cart</span>
+<span class="absolute -top-1 -right-1 bg-primary text-on-primary text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">1</span>
+</button>
+<button class="md:hidden">
+<span class="material-symbols-outlined text-primary" data-icon="menu">menu</span>
+</button>
+</div>
+</div>
+</div>
+</header>
+<main>
+<!-- Hero Section -->
+<section class="hero-gradient relative overflow-hidden py-xl md:py-0 md:h-[600px] flex items-center">
+<div class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop grid md:grid-cols-2 gap-xl items-center w-full">
+<div class="flex flex-col gap-md z-10">
+<span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">Premium Digital Assets</span>
+<h1 class="font-headline-xl-mobile md:font-headline-xl text-headline-xl-mobile md:text-headline-xl text-primary max-w-lg leading-tight">Modern Web Solutions</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-md">Elevate your development workflow with our curated collection of source code, technical ebooks, and bespoke web services.</p>
+<div class="mt-sm">
+<button class="bg-primary text-on-primary px-xl py-md rounded-lg font-label-md text-label-md hover:bg-primary-container transition-all shadow-sm hover:shadow-md active:scale-95">
+                            Browse Catalog
+                        </button>
+</div>
+</div>
+<div class="relative h-[400px] md:h-[500px]">
+<img alt="Professional minimalist workspace with laptop showing code and tablet showing an ebook cover" class="w-full h-full object-cover rounded-xl shadow-2xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVuzNL35YpmOoVrWGXGNJCHfoRSxEQ5R3IPaybjbAeUrqir5QngoeDIrodKN0JN2DOlEoA1D83nvd5qFO5xPeW9M9P1b21XkImTFgUuoKlocziq690_aInatraiWhhzEb6i5HZHyemN-VY1emwclKqRhuT3XTqqBGKwLAQnrnIg5p7AfQjhxNUW1UYPKOUi6-o-QwmJXeQAs0eaFOASm_nGjfetBibB0k5cPqgKL26QaGYWf3UAD1nl-NrzAQmuKOInW9Ydk1u8Ng"/>
+</div>
+</div>
+</section>
+<!-- Featured Categories -->
+<section class="py-xl max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<div class="group relative overflow-hidden rounded-xl h-[450px] cursor-pointer">
+<img alt="Premium Source Code illustration" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDz3m5ZnT4RtB_LABOPumTACzJRyvCKsRqXIsMRni6agJsfdOmjJerdlRaigEPB8zpPSfwNSoW3hzz1rlXsYxjBWOwNPY_OL6lZJuLagzN9rr_rK8gCp9RmHPp-4rYGsYrWKIDyYgJP-xeeugMTnhg4rPrGAxvemmy6pTTyZM2eQorZm9YCta0p2row_soTm9Ns4-PJT-bK-qvzynDfwdFeGnsaPelyCnPymFOodbJO8kac2vBZfLHjbgUmfBvbVudbMV4CgSTTeRs"/>
+<div class="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors duration-300"></div>
+<div class="absolute bottom-lg left-lg">
+<h3 class="font-headline-md text-headline-md text-white">Source Code</h3>
+<p class="font-label-md text-label-md text-white/90 underline underline-offset-4 decoration-white/50 group-hover:decoration-white transition-all">Shop Scripts</p>
+</div>
+</div>
+<div class="group relative overflow-hidden rounded-xl h-[450px] cursor-pointer">
+<img alt="Professional Ebooks illustration" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCR851asKCpC0sOg_fG6_wjQ_RI9lXQRo2F_zYhrXedT3wSFNTJ7rY4xcDEoYxkdqergJzLTX1j31OJKvsLtqw7lSH6tNxwvCDOcg_by4IrdK1PRc8p9lBbjIafoSJHrMKt-XClPbBCnluvZZiKB3zx0mpbn6ANBBBFgjJE-A9FaObEEfXiFJF-MHIczpFbzKpnNQKKlsJQ95yHeFrOmkZr8W6f96EqIQUQnlp8p8xh3CFscgEOk8ZF3KvLmFOJ86CdGaTdxM5Jsks"/>
+<div class="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors duration-300"></div>
+<div class="absolute bottom-lg left-lg">
+<h3 class="font-headline-md text-headline-md text-white">Ebooks</h3>
+<p class="font-label-md text-label-md text-white/90 underline underline-offset-4 decoration-white/50 group-hover:decoration-white transition-all">Learn More</p>
+</div>
+</div>
+<div class="group relative overflow-hidden rounded-xl h-[450px] cursor-pointer">
+<img alt="Web Development services illustration" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBRRyELYu82z0_qGbX4SCQBqAlTLLa4hsFbyNugfcqwXF9b60S-81e7mfRv3Wp-xTZSKFFze0vZ7hzmE9XgF6WTcXzvp0OK80I7swE5u2e5TavgEmDRuJEXSkYAVEDv0O3CCgc6BOmd0ytRh9eERbDDrbE1-QJqjjCg5YvVgFU9ihKYi1CWH8_Nf_YP-vAUgz4fBjPnp4zdNNQb6KtGoYFrSRSIZx575acajnpCMKYlJphLBecMRQ8FZOst1rFY3JnXtZhHoQqkjY"/>
+<div class="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors duration-300"></div>
+<div class="absolute bottom-lg left-lg">
+<h3 class="font-headline-md text-headline-md text-white">Web Services</h3>
+<p class="font-label-md text-label-md text-white/90 underline underline-offset-4 decoration-white/50 group-hover:decoration-white transition-all">View Services</p>
+</div>
+</div>
+</div>
+</section>
+<!-- New Arrivals Section -->
+<section class="py-xl bg-surface-container-lowest">
+<div class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="flex justify-between items-end mb-lg">
+<div class="flex flex-col gap-xs">
+<span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">Expert Selection</span>
+<h2 class="font-headline-lg text-headline-lg text-primary">Digital Best-Sellers</h2>
+</div>
+<a class="font-label-md text-label-md text-primary border-b border-primary pb-1 hover:opacity-70 transition-opacity" href="#">View All</a>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter">
+<!-- Product Card 1 -->
+<div class="product-card group flex flex-col gap-sm">
+<div class="relative aspect-[3/4] overflow-hidden rounded-lg bg-surface-container">
+<img alt="SaaS Dashboard Template source code preview" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBa6mxAuV61qaJ-yG4N85efpTRVCy5Q-aOmCLgi9MMT0ONEy6k3ywenP3DQx2UAkgXWqCN-1MaSLe2WgNL1oK6yStp2sVdqiH_6kWA_HHhIzUXFnE6wLckmYNoNu1VLizXU3Q85wjdGV3ImQNWAc-vhSIhpY7RkbfrV6BeUvWpA7SYoqyetzAp5zD1GisYCgHI5IrLxyyqRUBiY4jaIHcbM3hwA4321HBx-EXJS9JyL11nteBnlbR9VSnuzUx_qDkvf2z543PDWJfQ"/>
+<div class="product-action absolute bottom-sm left-sm right-sm opacity-0 translate-y-2 transition-all duration-300">
+<button class="w-full bg-white/90 backdrop-blur-md text-primary font-label-md text-label-md py-sm rounded-md shadow-sm hover:bg-white active:scale-95">Get Access</button>
+</div>
+<span class="absolute top-sm left-sm bg-primary-fixed text-on-primary-fixed px-sm py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">Bestseller</span>
+</div>
+<div class="flex flex-col">
+<h3 class="font-body-md text-body-md text-on-surface">SaaS Dashboard Template</h3>
+<p class="font-label-md text-label-md text-on-surface-variant">$89.00</p>
+</div>
+</div>
+<!-- Product Card 2 -->
+<div class="product-card group flex flex-col gap-sm">
+<div class="relative aspect-[3/4] overflow-hidden rounded-lg bg-surface-container">
+<img alt="Mastering Web Architecture Ebook cover" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9rkWxPnJDJZpzwbv7ZLKbzUD8jtZLdQpXTn2Vrjhm5IIMrBAeVw64AZzELmm1wxqJj7w-LYpLPzPmvNy4MRm_INNJwLVcUppILIizvO_Ij3nqd6ZPimG1Dsk0zISaC-PiLb1weKq5k1yR-vesvShh3utOPDk_wRq637hYu_sN0yFaEVlConzqgfypjpvK0lc7rSEDOaUF9S6139_IbqULTQGBnldGmbk_haOkdxigee43ewg28o35BCpjiVnJi4KEFbnAKVJaIpA"/>
+<div class="product-action absolute bottom-sm left-sm right-sm opacity-0 translate-y-2 transition-all duration-300">
+<button class="w-full bg-white/90 backdrop-blur-md text-primary font-label-md text-label-md py-sm rounded-md shadow-sm hover:bg-white active:scale-95">Download Now</button>
+</div>
+</div>
+<div class="flex flex-col">
+<h3 class="font-body-md text-body-md text-on-surface">Mastering Web Architecture</h3>
+<p class="font-label-md text-label-md text-on-surface-variant">$39.00</p>
+</div>
+</div>
+<!-- Product Card 3 -->
+<div class="product-card group flex flex-col gap-sm">
+<div class="relative aspect-[3/4] overflow-hidden rounded-lg bg-surface-container">
+<img alt="Custom Corporate Website portfolio showcase" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBsXBdN2EnbJXxM4V089QZkReYcIdR_B0OFsjMadTyfdyJvG5dOOmTdiXx1sx36L6Dx53mwZkMY0m1cKDsVHOBFjWa-OTtw6CaFShrxjIv5kuo6rX1M4g_eFw8EZnVZj8Qbm3LZ0vhxKAYUQuCQzPUFp6CLymTMuoLpJ4C9eGU2AqBd8p_jBd5EwAVTA5g3sSvHb80u_2GSBFWiylXsGUM48YLJbZsokxNz0_80jWQzMQZIakd4egKz987WzAKhxa2NaYry0mpVrq0"/>
+<div class="product-action absolute bottom-sm left-sm right-sm opacity-0 translate-y-2 transition-all duration-300">
+<button class="w-full bg-white/90 backdrop-blur-md text-primary font-label-md text-label-md py-sm rounded-md shadow-sm hover:bg-white active:scale-95">Inquire Now</button>
+</div>
+</div>
+<div class="flex flex-col">
+<h3 class="font-body-md text-body-md text-on-surface">Custom Corporate Website</h3>
+<p class="font-label-md text-label-md text-on-surface-variant">From $2,500.00</p>
+</div>
+</div>
+<!-- Product Card 4 -->
+<div class="product-card group flex flex-col gap-sm">
+<div class="relative aspect-[3/4] overflow-hidden rounded-lg bg-surface-container">
+<img alt="React Component Library code preview" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBa6mxAuV61qaJ-yG4N85efpTRVCy5Q-aOmCLgi9MMT0ONEy6k3ywenP3DQx2UAkgXWqCN-1MaSLe2WgNL1oK6yStp2sVdqiH_6kWA_HHhIzUXFnE6wLckmYNoNu1VLizXU3Q85wjdGV3ImQNWAc-vhSIhpY7RkbfrV6BeUvWpA7SYoqyetzAp5zD1GisYCgHI5IrLxyyqRUBiY4jaIHcbM3hwA4321HBx-EXJS9JyL11nteBnlbR9VSnuzUx_qDkvf2z543PDWJfQ"/>
+<div class="product-action absolute bottom-sm left-sm right-sm opacity-0 translate-y-2 transition-all duration-300">
+<button class="w-full bg-white/90 backdrop-blur-md text-primary font-label-md text-label-md py-sm rounded-md shadow-sm hover:bg-white active:scale-95">Get Access</button>
+</div>
+</div>
+<div class="flex flex-col">
+<h3 class="font-body-md text-body-md text-on-surface">React Component Library</h3>
+<p class="font-label-md text-label-md text-on-surface-variant">$120.00</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Value Proposition -->
+<section class="py-xl">
+<div class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-3 gap-xl">
+<div class="flex flex-col items-center text-center gap-sm p-lg bg-surface rounded-xl border border-tertiary/10 transition-all hover:shadow-lg">
+<span class="material-symbols-outlined text-primary text-4xl" data-icon="download">download</span>
+<h4 class="font-headline-md text-headline-md text-primary">Instant Delivery</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Receive your digital assets immediately after purchase via secure download links.</p>
+</div>
+<div class="flex flex-col items-center text-center gap-sm p-lg bg-surface rounded-xl border border-tertiary/10 transition-all hover:shadow-lg">
+<span class="material-symbols-outlined text-primary text-4xl" data-icon="lock">lock</span>
+<h4 class="font-headline-md text-headline-md text-primary">Secure Access</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Your downloads and data are protected with enterprise-grade encryption and secure auth.</p>
+</div>
+<div class="flex flex-col items-center text-center gap-sm p-lg bg-surface rounded-xl border border-tertiary/10 transition-all hover:shadow-lg">
+<span class="material-symbols-outlined text-primary text-4xl" data-icon="support_agent">support_agent</span>
+<h4 class="font-headline-md text-headline-md text-primary">24/7 Support</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Our technical team is always available to help you implement your new assets.</p>
+</div>
+</div>
+</section>
+<!-- Newsletter -->
+<section class="py-xl bg-primary-container text-on-primary">
+<div class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-lg">
+<div class="max-w-xl text-center md:text-left">
+<h2 class="font-headline-lg text-headline-lg text-inverse-primary mb-sm">Join the Developer Circle</h2>
+<p class="font-body-md text-body-md text-on-primary-container/80">Subscribe to receive early access to new code releases, technical insights, and exclusive service discounts.</p>
+</div>
+<div class="w-full md:w-auto">
+<form class="flex flex-col sm:flex-row gap-sm w-full">
+<input class="bg-primary text-on-primary border-outline focus:border-inverse-primary focus:ring-1 focus:ring-inverse-primary rounded-lg px-lg py-md w-full sm:w-[300px] font-label-md" placeholder="Email Address" type="email"/>
+<button class="bg-inverse-primary text-primary px-xl py-md rounded-lg font-label-md text-label-md hover:bg-white transition-all active:scale-95 whitespace-nowrap">
+                            Subscribe
+                        </button>
+</form>
+<p class="font-label-sm text-label-sm text-on-primary-container/60 mt-sm text-center md:text-left">By subscribing, you agree to our Privacy Policy.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container full-width border-t border-tertiary/10">
+<div class="w-full py-xl px-margin-mobile md:px-margin-desktop max-w-[1280px] mx-auto flex flex-col md:flex-row justify-between gap-xl">
+<div class="flex flex-col gap-md max-w-sm">
+<a class="font-headline-sm text-headline-sm font-bold text-on-surface tracking-tighter" href="#">Ngopi Code</a>
+<p class="font-body-md text-body-md text-on-surface-variant">Premium digital products defined by efficiency and minimal design. We build tools that empower creators and developers.</p>
+<div class="flex gap-md">
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined" data-icon="terminal">terminal</span></a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined" data-icon="code">code</span></a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined" data-icon="mail">mail</span></a>
+</div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-xl">
+<div class="flex flex-col gap-sm">
+<h5 class="font-label-md text-label-md text-primary font-semibold">Store</h5>
+<nav class="flex flex-col gap-xs">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">New Releases</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Source Code</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Ebooks</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Components</a>
+</nav>
+</div>
+<div class="flex flex-col gap-sm">
+<h5 class="font-label-md text-label-md text-primary font-semibold">Services</h5>
+<nav class="flex flex-col gap-xs">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Web Dev</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Consulting</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">UI Design</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Maintenance</a>
+</nav>
+</div>
+<div class="flex flex-col gap-sm">
+<h5 class="font-label-md text-label-md text-primary font-semibold">Support</h5>
+<nav class="flex flex-col gap-xs">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Licensing</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Documentation</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Terms</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Contact</a>
+</nav>
+</div>
+</div>
+</div>
+<div class="w-full py-md px-margin-mobile md:px-margin-desktop max-w-[1280px] mx-auto border-t border-tertiary/5 flex justify-center">
+<p class="font-label-sm text-label-sm text-on-surface-variant/60">© 2024 Ngopi Code Digital Assets. All rights reserved.</p>
+</div>
+</footer>
+<script>
+        // Interactive Navbar Scroll Effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 20) {
+                header.classList.add('shadow-sm', 'bg-white/80', 'backdrop-blur-md');
+            } else {
+                header.classList.remove('shadow-sm', 'bg-white/80', 'backdrop-blur-md');
+            }
+        });
+
+        // Simple button active state visual
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.style.transform = 'scale(0.95)';
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.style.transform = 'scale(1)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body></html>

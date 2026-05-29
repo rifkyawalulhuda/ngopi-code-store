@@ -1,9 +1,11 @@
-import { VendureConfig } from '@vendure/core';
+import { VendureConfig, DefaultSearchPlugin } from '@vendure/core';
 import { AssetServerPlugin } from '@vendure/asset-server-plugin';
+import { AdminUiPlugin } from '@vendure/admin-ui-plugin';
 import path from 'path';
 import { memoryGuardMiddleware } from './middleware/memory-guard.middleware';
 import { healthCheckMiddleware } from './middleware/health-check.middleware';
 import { customOrderProcess } from './config/custom-order-process';
+import { IdrMoneyStrategy } from './config/idr-money-strategy';
 
 /**
  * Vendure configuration for NgopiCode Digital Store.
@@ -72,6 +74,10 @@ export const config: VendureConfig = {
     // and payment verification guard
     process: [customOrderProcess],
   },
+  entityOptions: {
+    // IDR is a zero-decimal currency: store Rp 150.000 as 150000 (precision 0)
+    moneyStrategy: new IdrMoneyStrategy(),
+  },
   paymentOptions: {
     paymentMethodHandlers: [],
   },
@@ -81,6 +87,11 @@ export const config: VendureConfig = {
       route: 'assets',
       assetUploadDir: path.join(__dirname, '..', 'static', 'assets'),
     }),
+    AdminUiPlugin.init({
+      route: 'admin',
+      port: 3002,
+    }),
+    DefaultSearchPlugin,
   ],
   // Requirement 12.4: Disable background worker, execute jobs inline for MVP.
   // In Vendure 3.x, jobs run in the main process by default (no separate worker).

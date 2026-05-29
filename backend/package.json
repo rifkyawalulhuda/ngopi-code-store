@@ -7,13 +7,14 @@
     "dev": "ts-node --project tsconfig.json src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "migration:generate": "ts-node -r tsconfig-paths/register node_modules/.bin/typeorm migration:generate",
-    "migration:run": "ts-node -r tsconfig-paths/register node_modules/.bin/typeorm migration:run",
+    "migration:generate": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate -d src/data-source.ts",
+    "migration:run": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d src/data-source.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:pbt": "jest --testPathPattern=\\.pbt\\.spec\\.ts$"
   },
   "dependencies": {
+    "@vendure/admin-ui-plugin": "^3.6.3",
     "@vendure/asset-server-plugin": "^3.6.3",
     "@vendure/core": "^3.6.3",
     "@vendure/email-plugin": "^3.6.3",

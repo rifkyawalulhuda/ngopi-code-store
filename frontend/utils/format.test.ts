@@ -3,8 +3,8 @@ import { formatPriceIDR, truncateDescription } from './format'
 
 describe('formatPriceIDR', () => {
   it('formats a standard price correctly', () => {
-    // 15000000 minor units = Rp 150.000
-    expect(formatPriceIDR(15000000)).toBe('Rp 150.000')
+    // IDR zero-decimal: 150000 = Rp 150.000
+    expect(formatPriceIDR(150000)).toBe('Rp 150.000')
   })
 
   it('formats zero price', () => {
@@ -12,18 +12,18 @@ describe('formatPriceIDR', () => {
   })
 
   it('formats small price', () => {
-    // 5000 minor units = Rp 50
-    expect(formatPriceIDR(5000)).toBe('Rp 50')
+    // 50 = Rp 50
+    expect(formatPriceIDR(50)).toBe('Rp 50')
   })
 
   it('formats large price', () => {
-    // 100000000 minor units = Rp 1.000.000
-    expect(formatPriceIDR(100000000)).toBe('Rp 1.000.000')
+    // 1000000 = Rp 1.000.000
+    expect(formatPriceIDR(1000000)).toBe('Rp 1.000.000')
   })
 
   it('rounds fractional amounts', () => {
-    // 1550 minor units = 15.5 -> rounds to 16
-    expect(formatPriceIDR(1550)).toBe('Rp 16')
+    // 15.5 -> rounds to 16
+    expect(formatPriceIDR(15.5)).toBe('Rp 16')
   })
 })
 

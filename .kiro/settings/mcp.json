@@ -1,13 +1,3 @@
 {
-  "mcpServers": {
-    "vendure-mcp": {
-      "command": "npx",
-      "args": [
-        "@vendure/mcp-server@latest",
-        "--projectPath",
-        "e:\\Github\\ngopi-code-store"
-      ],
-      "disabled": true
-    }
-  }
+  "mcpServers": {}
 }

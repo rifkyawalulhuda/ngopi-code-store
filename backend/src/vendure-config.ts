@@ -6,6 +6,7 @@ import { memoryGuardMiddleware } from './middleware/memory-guard.middleware';
 import { healthCheckMiddleware } from './middleware/health-check.middleware';
 import { customOrderProcess } from './config/custom-order-process';
 import { IdrMoneyStrategy } from './config/idr-money-strategy';
+import { TripayPaymentPlugin } from './plugins/tripay-payment/tripay-payment.plugin';
 
 /**
  * Vendure configuration for NgopiCode Digital Store.
@@ -92,6 +93,7 @@ export const config: VendureConfig = {
       port: 3002,
     }),
     DefaultSearchPlugin,
+    TripayPaymentPlugin,
   ],
   // Requirement 12.4: Disable background worker, execute jobs inline for MVP.
   // In Vendure 3.x, jobs run in the main process by default (no separate worker).

@@ -57,8 +57,16 @@
       </div>
     </div>
 
-    <!-- Mobile nav -->
-    <transition name="slide">
+    <!-- Mobile nav overlay (does not push page content) -->
+    <transition name="backdrop">
+      <div
+        v-if="menuOpen"
+        class="nav-backdrop"
+        aria-hidden="true"
+        @click="closeMenu"
+      />
+    </transition>
+    <transition name="drawer">
       <nav v-if="menuOpen" class="nav-mobile" aria-label="Navigasi seluler">
         <NuxtLink to="/products" class="nav-mobile-link" @click="closeMenu">Store</NuxtLink>
         <NuxtLink to="/products?category=source-code" class="nav-mobile-link" @click="closeMenu">Source Code</NuxtLink>
@@ -70,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, onBeforeUnmount } from 'vue'
 import { useCart } from '~/composables/useCart'
 import { useTheme } from '~/composables/useTheme'
 
@@ -78,12 +86,43 @@ const { cartItemCount } = useCart()
 const { isDark, toggleTheme } = useTheme()
 
 const menuOpen = ref(false)
+
+function lockScroll(lock: boolean) {
+  if (!import.meta.client) return
+  document.body.style.overflow = lock ? 'hidden' : ''
+}
+
 function toggleMenu() {
   menuOpen.value = !menuOpen.value
 }
 function closeMenu() {
   menuOpen.value = false
 }
+
+// Lock background scroll while the mobile menu is open.
+watch(menuOpen, (open) => lockScroll(open))
+
+// Close the menu whenever navigation occurs.
+const route = useRoute()
+watch(
+  () => route.fullPath,
+  () => closeMenu(),
+)
+
+// Close on Escape key for accessibility.
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') closeMenu()
+}
+if (import.meta.client) {
+  window.addEventListener('keydown', onKeydown)
+}
+
+onBeforeUnmount(() => {
+  lockScroll(false)
+  if (import.meta.client) {
+    window.removeEventListener('keydown', onKeydown)
+  }
+})
 </script>
 
 <style scoped>
@@ -197,16 +236,32 @@ function closeMenu() {
   display: none;
 }
 
+/* Backdrop behind the mobile menu */
+.nav-backdrop {
+  position: fixed;
+  inset: 0;
+  top: 68px;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.4);
+}
+
 .nav-mobile {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 45;
   display: flex;
   flex-direction: column;
   padding: 0.5rem 1.25rem 1rem;
   border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   background: var(--surface);
+  box-shadow: 0 16px 32px var(--shadow-card-strong);
 }
 
 .nav-mobile-link {
-  padding: 0.85rem 0.25rem;
+  padding: 0.95rem 0.25rem;
   text-decoration: none;
   color: var(--text);
   font-weight: 500;
@@ -217,14 +272,25 @@ function closeMenu() {
   border-bottom: none;
 }
 
-.slide-enter-active,
-.slide-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+/* Drawer slide-down animation */
+.drawer-enter-active,
+.drawer-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s ease;
 }
-.slide-enter-from,
-.slide-leave-to {
+.drawer-enter-from,
+.drawer-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translateY(-12px);
+}
+
+/* Backdrop fade animation */
+.backdrop-enter-active,
+.backdrop-leave-active {
+  transition: opacity 0.22s ease;
+}
+.backdrop-enter-from,
+.backdrop-leave-to {
+  opacity: 0;
 }
 
 @media (max-width: 860px) {

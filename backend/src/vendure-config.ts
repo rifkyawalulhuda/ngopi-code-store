@@ -1,4 +1,4 @@
-import { VendureConfig, DefaultSearchPlugin } from '@vendure/core';
+import { VendureConfig, DefaultSearchPlugin, DefaultJobQueuePlugin } from '@vendure/core';
 import { AssetServerPlugin } from '@vendure/asset-server-plugin';
 import { AdminUiPlugin } from '@vendure/admin-ui-plugin';
 import path from 'path';
@@ -93,12 +93,13 @@ export const config: VendureConfig = {
       port: 3002,
     }),
     DefaultSearchPlugin,
+    DefaultJobQueuePlugin.init({}),
     TripayPaymentPlugin,
   ],
-  // Requirement 12.4: Disable background worker, execute jobs inline for MVP.
-  // In Vendure 3.x, jobs run in the main process by default (no separate worker).
-  // Using InMemoryJobQueueStrategy ensures jobs execute inline without external queue.
-  jobQueueOptions: {
-    // Empty activeQueues means all queues run in this process (inline execution)
-  },
+  // Requirement 12.4: Single-process deployment for 8GB hardware.
+  // DefaultJobQueuePlugin provides a DB-backed (SQL) job queue. The worker that
+  // processes these jobs is started inline in index.ts via bootstrapWorker, so
+  // search indexing and collection-filter jobs actually run without a separate
+  // worker process.
+  jobQueueOptions: {},
 };

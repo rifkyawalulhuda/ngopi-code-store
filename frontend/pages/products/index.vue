@@ -267,12 +267,7 @@ const priceMax = ref(PRICE_CEILING)
 const totalPages = computed(() => Math.ceil(totalItems.value / PAGE_SIZE))
 
 let searchDebounce: ReturnType<typeof setTimeout> | null = null
-
-function buildSort() {
-  if (sortValue.value === 'price-asc') return { price: 'ASC' as const }
-  if (sortValue.value === 'price-desc') return { price: 'DESC' as const }
-  return { createdAt: 'DESC' as const }
-}
+let priceDebounce: ReturnType<typeof setTimeout> | null = null
 
 async function loadCollections() {
   try {
@@ -285,7 +280,11 @@ async function loadCollections() {
 }
 
 async function loadProducts() {
-  await fetchProducts({ ...filterOptions.value, sort: buildSort() })
+  await fetchProducts({
+    ...filterOptions.value,
+    sort: sortValue.value,
+    priceMax: priceMax.value,
+  })
 }
 
 function onCategoryChange(slug: string) {
@@ -310,7 +309,13 @@ function onSortChange() {
 }
 
 function onPriceInput() {
-  // Client-side hint only; backend filtering by price is a future enhancement.
+  // Debounced reload; price filtering is applied client-side (DefaultSearchPlugin
+  // has no server-side price range). Reset to page 1 on change.
+  setPage(1)
+  if (priceDebounce) clearTimeout(priceDebounce)
+  priceDebounce = setTimeout(() => {
+    loadProducts()
+  }, 300)
 }
 
 function goToPage(newPage: number) {

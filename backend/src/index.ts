@@ -1,4 +1,4 @@
-import { bootstrap, runMigrations } from '@vendure/core';
+import { bootstrap, runMigrations, bootstrapWorker } from '@vendure/core';
 import { config } from './vendure-config';
 import dotenv from 'dotenv';
 
@@ -37,6 +37,12 @@ async function main() {
       (config.dbConnectionOptions as any).synchronize = false;
       await runMigrations(config);
     }
+
+    // Start the job queue worker inline in this same process (Req 12.4:
+    // single-process deployment for 8GB hardware). Without this, background
+    // jobs (search indexing, apply-collection-filters) stay PENDING forever.
+    const worker = await bootstrapWorker(config);
+    await worker.startJobQueue();
   } catch (err) {
     console.error('Failed to start Vendure server:', err);
     process.exit(1);

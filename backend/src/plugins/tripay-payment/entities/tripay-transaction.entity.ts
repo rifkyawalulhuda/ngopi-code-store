@@ -18,7 +18,7 @@ export class TripayTransaction extends VendureEntity {
   }
 
   /** The Vendure order ID associated with this transaction */
-  @Column()
+  @Column({ type: 'int' })
   @Index()
   orderId: ID;
 

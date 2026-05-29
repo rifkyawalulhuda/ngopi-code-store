@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SaaS Dashboard Template - Ngopi Code</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#5a6745",
+                    "error": "#ba1a1a",
+                    "tertiary-fixed-dim": "#c9c6bd",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-fixed": "#141f05",
+                    "outline-variant": "#c2c8c2",
+                    "surface-tint": "#496455",
+                    "surface-dim": "#d9dadb",
+                    "surface-container-high": "#e7e8e9",
+                    "primary-fixed": "#ccead6",
+                    "on-primary-container": "#98b5a3",
+                    "tertiary-container": "#43423b",
+                    "inverse-on-surface": "#f0f1f2",
+                    "surface-container-lowest": "#ffffff",
+                    "outline": "#727973",
+                    "tertiary": "#2c2c25",
+                    "primary-container": "#2d4739",
+                    "on-tertiary-container": "#b1aea5",
+                    "secondary": "#566342",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed-variant": "#484740",
+                    "background": "#f8f9fa",
+                    "on-surface-variant": "#424844",
+                    "on-secondary-fixed-variant": "#3f4b2c",
+                    "on-background": "#191c1d",
+                    "surface-variant": "#e1e3e4",
+                    "surface-container-low": "#f3f4f5",
+                    "on-primary-fixed-variant": "#324c3e",
+                    "on-error": "#ffffff",
+                    "surface-bright": "#f8f9fa",
+                    "on-primary": "#ffffff",
+                    "surface-container": "#edeeef",
+                    "secondary-container": "#d7e5bb",
+                    "inverse-surface": "#2e3132",
+                    "on-secondary": "#ffffff",
+                    "primary": "#173124",
+                    "error-container": "#ffdad6",
+                    "on-tertiary-fixed": "#1c1c16",
+                    "tertiary-fixed": "#e6e2d8",
+                    "on-primary-fixed": "#062014",
+                    "primary-fixed-dim": "#b0cdbb",
+                    "inverse-primary": "#b0cdbb",
+                    "secondary-fixed-dim": "#becca3",
+                    "secondary-fixed": "#dae8be",
+                    "on-surface": "#191c1d",
+                    "surface-container-highest": "#e1e3e4",
+                    "surface": "#f8f9fa"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "sm": "12px",
+                    "margin-desktop": "64px",
+                    "xl": "80px",
+                    "base": "8px",
+                    "md": "24px",
+                    "margin-mobile": "16px",
+                    "gutter": "24px",
+                    "lg": "48px"
+            },
+            "fontFamily": {
+                    "headline-xl-mobile": ["Manrope"],
+                    "headline-xl": ["Manrope"],
+                    "headline-md": ["Manrope"],
+                    "body-md": ["Inter"],
+                    "headline-lg": ["Manrope"],
+                    "label-sm": ["Inter"],
+                    "label-md": ["Inter"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-xl-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "0", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased selection:bg-primary-fixed selection:text-on-primary-fixed">
+<nav class="bg-surface dark:bg-surface-dim docked full-width top-0 z-50">
+<div class="flex justify-between items-center w-full px-margin-desktop py-md max-w-[1280px] mx-auto">
+<div class="flex items-center gap-lg">
+<a class="font-headline-md text-headline-md tracking-tight font-bold text-primary dark:text-primary-fixed-dim" href="#">Ngopi Code</a>
+<div class="hidden md:flex items-center gap-md">
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-200" href="#">Store</a>
+<a class="font-label-md text-label-md text-primary dark:text-primary-fixed-dim border-b-2 border-primary pb-1 Active: opacity-80 transition-opacity" href="#">Source Code</a>
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-200" href="#">Ebooks</a>
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-200" href="#">Services</a>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="hidden md:flex items-center bg-surface-container rounded-full px-sm py-xs border border-outline-variant focus-within:border-primary transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] mr-xs">search</span>
+<input class="bg-transparent border-none focus:ring-0 font-body-md text-body-md w-[200px] text-on-surface placeholder:text-on-surface-variant py-0" placeholder="Search..." type="text"/>
+</div>
+<button class="flex items-center gap-xs font-label-md text-label-md text-primary dark:text-primary-fixed-dim hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined">shopping_cart</span>
+                    Cart
+                </button>
+<button class="text-primary dark:text-primary-fixed-dim hover:text-primary-container transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</div>
+</nav>
+<main class="w-full px-margin-desktop max-w-[1280px] mx-auto pb-xl">
+<nav class="py-md flex items-center gap-xs font-body-md text-body-md text-on-surface-variant">
+<a class="hover:text-primary transition-colors" href="#">Home</a>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">Store</a>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">Source Code</a>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="text-on-surface">SaaS Dashboard Template</span>
+</nav>
+<section class="grid grid-cols-1 md:grid-cols-12 gap-lg mt-sm">
+<div class="col-span-1 md:col-span-7 flex flex-col gap-sm">
+<div class="w-full bg-surface-container rounded-lg overflow-hidden flex items-center justify-center aspect-[4/3]">
+<img alt="Main product preview" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/ADBb0uiXNNAyx-Ms09CLgK2n7ijVEHEBNzI5OV60PD5vSj8zo4Sou6lQXVHqh5h189b-cRZaHUMPxZJwrgofje9VAgHZGRhjwOhrAYD3q3eKDkohBgGfnRzcKr52B0eX--Oz9WEgkUJBZYVsIpblRcB1X-wBszuDHkfmyYC3ZooOL9hSq9wLpu0AMp9yqA5M985dbu5MYjrniQF3MNDkDUYUDUHRX3UNZvRINndSd_2m-nIPwrhXu2LBaDOIWQk"/>
+</div>
+<div class="grid grid-cols-4 gap-sm">
+<div class="aspect-[4/3] rounded bg-surface-container overflow-hidden cursor-pointer border-2 border-primary">
+<img class="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" data-alt="A close-up shot of a modern code editor interface displaying React components. The theme is a dark mode variant with subtle forest green syntax highlighting. The typography is crisp and monospaced, reflecting a premium developer experience." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPN3rbz73L8Oshn_Df4G8v2UVfxIQdzotkcOiU6qMAqZqbGppCRx6gUXE0TFrkVUP42xCcsEcUBPOA7fRDj6f6x6xUtjc-ekqeVNTmtHwWNZFcVuu0dDxtm6L50Gsc5U0CGBIyMjqeGs3tcjolAA5-mCwijNto2gGphXnSNm0kHuR0NZdvbkHiluiBLloAzeDRavC6wPn7EqKTy5UUhSfTAX58M90Y4M7LQqomtjt2BbGh_X4MKEqyeGHVwPUomoHcG5NkPEZJouc"/>
+</div>
+<div class="aspect-[4/3] rounded bg-surface-container overflow-hidden cursor-pointer border-2 border-transparent hover:border-outline-variant transition-colors">
+<img class="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" data-alt="A minimalist data visualization dashboard showing sleek line graphs and stat cards. The background is pure white with very soft, ambient shadows giving the cards a floating effect. The primary accent color is a muted, sophisticated forest green." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvffYoUWdTzRjvJvJoCRa6-bMOEHVxIYyxzLIdKWJjLkilAtfIS5uG0A9YaUo3WKc8gCvYItnzF31pbMYOTej34YNcSJm122402fXh5CjleDdgaeqaU_rxpsmRvsUhlXFQQ_bU3EfYCagThy1AVrz6hpB8XCDxJGdc3JWfQ7XXoTaU1t5q3UPq5wGn0Ty-y02wRs__HI80Jd7rwFH9PPvlVWXMO9-oNIF9utPZmwcV5OMKGdq1dNLsCAj9xoAEmnLQ6jYE64RtpXM"/>
+</div>
+<div class="aspect-[4/3] rounded bg-surface-container overflow-hidden cursor-pointer border-2 border-transparent hover:border-outline-variant transition-colors">
+<img class="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" data-alt="A mobile responsive view of a premium web application dashboard displayed on a sleek smartphone screen. The layout is clean and airy, utilizing generous whitespace and delicate grey borders to separate content sections elegantly." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC11S956SJFRtcVg-A_gO9HVhyYjWm1E0RFFJPFenI3cfUuE4bO3Y_3_3HFAG3YzvEA2Q86te5SH_4HuXdUNYvjxUQLnOIxVl-nZampkzDkNrQmFKWH-HUXjiGejkpBU5ujeHlo_HKZPINL0DHCiAZKXee559MN8CFzDUdlj7rqvmzoj7ALojtyA64GJjxlSK-mom2U5kzDnkM78c0FF9ihpyrrB0Q3FvD6KjAagJFaPev0oo1KbxKnMbNvURfMWM-5CYO-7SLki9w"/>
+</div>
+<div class="aspect-[4/3] rounded bg-surface-container-low flex items-center justify-center cursor-pointer border-2 border-transparent hover:border-outline-variant transition-colors group">
+<span class="material-symbols-outlined text-[32px] text-on-surface-variant group-hover:text-primary transition-colors">add_photo_alternate</span>
+</div>
+</div>
+</div>
+<div class="col-span-1 md:col-span-5 flex flex-col gap-md pt-sm">
+<div class="flex items-start justify-between w-full">
+<span class="inline-flex items-center px-sm py-xs bg-tertiary text-on-tertiary rounded-full font-label-sm text-label-sm tracking-wide">SOURCE CODE</span>
+</div>
+<div class="flex flex-col gap-xs">
+<h1 class="font-headline-xl text-headline-xl text-on-surface">SaaS Dashboard Template</h1>
+<p class="font-headline-md text-headline-md text-primary mt-xs">$89.00</p>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant border-b border-surface-variant pb-md">
+                    A comprehensive, developer-friendly dashboard template built with React and Tailwind CSS. Perfect for modern admin panels and data-rich applications.
+                </p>
+<div class="flex flex-col gap-sm">
+<h3 class="font-label-md text-label-md text-on-surface font-semibold">Key Features</h3>
+<ul class="flex flex-col gap-xs">
+<li class="flex items-center gap-sm font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                            Clean Architecture
+                        </li>
+<li class="flex items-center gap-sm font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                            Fully Responsive
+                        </li>
+<li class="flex items-center gap-sm font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                            Dark Mode Support
+                        </li>
+<li class="flex items-center gap-sm font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                            50+ Custom Components
+                        </li>
+</ul>
+</div>
+<div class="bg-surface-container-low p-md rounded-lg flex flex-col gap-sm mt-xs">
+<h4 class="font-label-md text-label-md text-on-surface font-semibold flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">inventory_2</span>
+                        Digital Delivery Info
+                    </h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Instant download, Lifetime updates, Personal &amp; Commercial license included upon purchase.</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-sm mt-md">
+<button class="flex-1 bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md py-sm px-lg rounded transition-colors duration-200 flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined">shopping_bag</span>
+                        Buy Now
+                    </button>
+<button class="flex-1 sm:flex-none border border-primary text-primary hover:bg-surface-container font-label-md text-label-md py-sm px-lg rounded transition-colors duration-200 flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined">favorite</span>
+                        Add to Wishlist
+                    </button>
+</div>
+</div>
+</section>
+<section class="mt-xl pt-lg border-t border-surface-variant">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-md">Product Description &amp; Specifications</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg font-body-md text-body-md text-on-surface-variant">
+<div class="flex flex-col gap-sm">
+<p>
+                        Elevate your application's user interface with our meticulously crafted SaaS Dashboard Template. Designed with the "Quiet Premium" aesthetic in mind, this toolkit provides developers with everything needed to launch sophisticated, performant web applications rapidly.
+                    </p>
+<p>
+                        The architecture is deeply modular, ensuring that you only bundle what you use. We've prioritized clear, readable code over complex abstractions, making it effortless for your engineering team to adopt and extend the existing components.
+                    </p>
+</div>
+<div class="bg-surface-container-low p-md rounded-lg">
+<ul class="flex flex-col gap-sm">
+<li class="flex justify-between border-b border-surface-variant pb-xs">
+<span class="font-semibold text-on-surface">Framework</span>
+<span>React 18+</span>
+</li>
+<li class="flex justify-between border-b border-surface-variant pb-xs">
+<span class="font-semibold text-on-surface">Styling</span>
+<span>Tailwind CSS v3</span>
+</li>
+<li class="flex justify-between border-b border-surface-variant pb-xs">
+<span class="font-semibold text-on-surface">State Management</span>
+<span>Zustand (Optional)</span>
+</li>
+<li class="flex justify-between pb-xs">
+<span class="font-semibold text-on-surface">File Size</span>
+<span>12.4 MB (Zipped)</span>
+</li>
+</ul>
+</div>
+</div>
+</section>
+<section class="mt-xl">
+<div class="flex items-center justify-between mb-lg">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Related Products</h2>
+<a class="font-label-md text-label-md text-primary hover:underline flex items-center gap-xs" href="#">
+                    View all
+                    <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-md">
+<a class="group flex flex-col gap-sm cursor-pointer" href="#">
+<div class="aspect-[4/3] bg-surface-container-low rounded-lg overflow-hidden relative shadow-sm hover:shadow-md transition-shadow duration-300">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A clean, minimalist presentation of a wireframe UI kit. The layout features subtle grey lines forming abstract web interface components on a pristine white background. The aesthetic is highly professional, focusing on structure and spatial balance." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCc1_s-NJETx22ggo2TCR2GIxZbPOgPHujsyFiLurNlBhK7Ej23oxCQSl2X8v8a1GDjRjW6_tf7n-AJOWa87k9jjpsvNqGBRAldmsB_8Dfaei7Y4GAC1J9Cs4TSV6AnESJkgA-Kbj9e4lp36whzVJTH3a8wMRoj4Ak3DS6v961c2km7LVdMD3NImovynC6NuZFCdShYLNjorlr0TYPKEH9aKj8NlrnUVu3VMdkjf35_XDwKIYDqaTOOWY9Kx2iAt-FPAvVNRYHYc8w"/>
+</div>
+<div>
+<h3 class="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors">Wireframe Pro Kit</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">$49.00</p>
+</div>
+</a>
+<a class="group flex flex-col gap-sm cursor-pointer" href="#">
+<div class="aspect-[4/3] bg-surface-container-low rounded-lg overflow-hidden relative shadow-sm hover:shadow-md transition-shadow duration-300">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A vibrant yet sophisticated data analytics report interface displayed on a high-resolution screen. The chart lines are smooth and elegant, utilizing a refined palette of deep greens and soft creams. The surrounding UI elements are barely visible, emphasizing the data." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDH6eGCYcLG_GgO_SHm6rm6U6cZAAvqz-SGnv7J3iBpp1KR8bjuVmcy7moGCAO-3YQYzPdhxePURC5P8vSaaQ1f_SyKJ7puBQbHD4jOeKENgIYtm7emZlINO1xuaDmCQmAuXpLXYqxMK2kMVzqHnogRZytzH6GKx5D20bNPA4z19tKmG6KyOadiLJrbFzwwaInMTdMoPXDperdbLTRR5bODNo1YffAyA0QbB53OrhqD3LZoy1qsRL74tl9l4ulroBVXTYFrD1KMNgY"/>
+</div>
+<div>
+<h3 class="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors">Analytics UI Components</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">$69.00</p>
+</div>
+</a>
+<a class="group flex flex-col gap-sm cursor-pointer" href="#">
+<div class="aspect-[4/3] bg-surface-container-low rounded-lg overflow-hidden relative shadow-sm hover:shadow-md transition-shadow duration-300">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A close-up view of a beautifully designed landing page template. The header features bold, crisp typography and a strategic call-to-action button in forest green. The background is an abstract, soft geometric pattern that adds depth without distraction." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYYUpWH2FTvkFpBzZwZYyLLaAej8bpy-bUR0PzdQ9bDbSrnKOCnOixRxy6hW7mmrJM7CSFQHbHnpWBlIJoKC0rZvWq2pJoCoGT6WQxrBCWDnPyZ2Fw_JN1fH1cTL-zn5W1GRxgGOZyrk8vYsQi6ZAY3pxcH8jprdMR_qYUKhAQISEi5mt6L_sRIcHEC2kmVsLmQm2aIWwJlT_TiC54Id5cwK2-Ree8L6gDQSRksBowtdDDEEuAXgj97R8qMBQjpafysTQW2fFyN-c"/>
+</div>
+<div>
+<h3 class="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors">Landing Page Boilerplate</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">$39.00</p>
+</div>
+</a>
+<a class="group flex flex-col gap-sm cursor-pointer" href="#">
+<div class="aspect-[4/3] bg-surface-container-low rounded-lg overflow-hidden relative shadow-sm hover:shadow-md transition-shadow duration-300">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A premium developer workspace setup. A sleek laptop sits on a clean wooden desk beside a small potted plant and a ceramic mug. The screen displays lines of perfectly formatted code. The lighting is soft and natural, evoking a calm, productive environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvZFxQs8ybgjuJ_VBEwMrhNTR4zgsbNx2MT0-r4ueOWsPZtkiGzwcR_QSpAHk1v_PDVb1M3nxySVN7QgyUZlvHUX4aZnz8EEXDwQXt2BX1n_OzPHMSJrf_suL7rxJzRzeMX5pI_xvwvI0DC7DaQgEkk-3_4Cja7TxjPo3jWbXkPVdZ41KsGLcH4Kjx-xpJRbbQWdbOjkV42a7hahqFCcvZ6fgkkugHZyrmW80E3pik4RQev0mVCDSIBNx_cOnYVCA4WlJSz2QZRL4"/>
+</div>
+<div>
+<h3 class="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors">Master Digital Craft - Ebook</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">$24.00</p>
+</div>
+</a>
+</div>
+</section>
+</main>
+<footer class="bg-surface-container dark:bg-surface-container-low w-full py-xl mt-xl flex flex-col md:flex-row justify-between items-start px-margin-desktop gap-lg max-w-[1280px] mx-auto Focus: outline-none focus:ring-2 focus:ring-primary">
+<div class="flex flex-col gap-sm">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">Ngopi Code</span>
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-surface-variant mt-xs">© 2024 Ngopi Code Digital. All rights reserved.</p>
+</div>
+<div class="flex flex-wrap gap-md font-body-md text-body-md text-on-surface-variant dark:text-surface-variant">
+<a class="hover:text-primary dark:hover:text-primary-fixed underline transition-colors" href="#">About Us</a>
+<a class="hover:text-primary dark:hover:text-primary-fixed underline transition-colors" href="#">Contact</a>
+<a class="hover:text-primary dark:hover:text-primary-fixed underline transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-primary dark:hover:text-primary-fixed underline transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-primary dark:hover:text-primary-fixed underline transition-colors" href="#">FAQ</a>
+<a class="hover:text-primary dark:hover:text-primary-fixed underline transition-colors" href="#">Support</a>
+</div>
+</footer>
+</body></html>

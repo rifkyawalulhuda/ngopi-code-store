@@ -5,22 +5,27 @@
     <main>
       <!-- Hero -->
       <section class="hero">
-        <div class="hero-inner">
-          <span class="hero-eyebrow">Premium Digital Assets</span>
-          <h1 class="hero-title">
-            Solusi Web Modern untuk
-            <span class="hl">Developer</span>
-          </h1>
-          <p class="hero-sub">
-            Tingkatkan alur kerja pengembangan Anda dengan koleksi kurasi source code,
-            ebook teknis, dan layanan web khusus.
-          </p>
-          <div class="hero-cta">
-            <NuxtLink to="/products" class="btn btn-primary">
-              Jelajahi Katalog
-              <AppIcon name="arrowRight" :size="18" />
-            </NuxtLink>
-            <a href="#bestsellers" class="btn btn-ghost">Lihat Best-Seller</a>
+        <div class="hero-inner hero-split">
+          <div class="hero-lottie">
+            <LottiePlayer src="/animations/hero-rocket.lottie" :loop="true" :autoplay="true" />
+          </div>
+          <div class="hero-content">
+            <span class="hero-eyebrow">Premium Digital Assets</span>
+            <h1 class="hero-title">
+              Solusi Web Modern untuk
+              <span class="hl">Developer</span>
+            </h1>
+            <p class="hero-sub">
+              Tingkatkan alur kerja pengembangan Anda dengan koleksi kurasi source code,
+              ebook teknis, dan layanan web khusus.
+            </p>
+            <div class="hero-cta">
+              <NuxtLink to="/products" class="btn btn-primary">
+                Jelajahi Katalog
+                <AppIcon name="arrowRight" :size="18" />
+              </NuxtLink>
+              <a href="#bestsellers" class="btn btn-ghost">Lihat Best-Seller</a>
+            </div>
           </div>
         </div>
         <div class="hero-glow" aria-hidden="true" />
@@ -263,10 +268,27 @@ main {
 .hero-inner {
   position: relative;
   z-index: 1;
-  max-width: 820px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 5.5rem 1.25rem 6rem;
-  text-align: center;
+  padding: 4rem 1.25rem 4.5rem;
+}
+
+.hero-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.hero-lottie {
+  width: 100%;
+  max-width: 480px;
+  aspect-ratio: 1;
+  margin: 0 auto;
+}
+
+.hero-content {
+  text-align: left;
 }
 
 .hero-eyebrow {
@@ -298,14 +320,13 @@ main {
   font-size: clamp(1rem, 2.2vw, 1.15rem);
   line-height: 1.6;
   color: var(--text-muted);
-  max-width: 620px;
-  margin: 0 auto 2.25rem;
+  max-width: 520px;
+  margin: 0 0 2.25rem;
 }
 
 .hero-cta {
   display: flex;
   gap: 0.9rem;
-  justify-content: center;
   flex-wrap: wrap;
 }
 
@@ -713,7 +734,21 @@ main {
     grid-template-columns: 1fr;
   }
   .hero-inner {
-    padding: 4rem 1.25rem 4.5rem;
+    padding: 3rem 1.25rem 3.5rem;
+  }
+  .hero-split {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .hero-content {
+    text-align: center;
+  }
+  .hero-lottie {
+    max-width: 280px;
+    order: -1;
+  }
+  .hero-cta {
+    justify-content: center;
   }
   .hero-cta .btn {
     width: 100%;

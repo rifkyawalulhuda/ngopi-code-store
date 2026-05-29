@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.13.8",
+    "@lottiefiles/dotlottie-wc": "^0.9.16",
     "@nuxtjs/apollo": "5.0.0-alpha.14",
     "@pinia/nuxt": "^0.11.3",
     "graphql": "^16.11.0",

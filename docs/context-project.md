@@ -4,10 +4,11 @@
 
 NgopiCode Digital Store adalah platform e-commerce headless untuk menjual produk digital (source code, ebook, template) kepada developer Indonesia. Dibangun dengan pendekatan headless commerce menggunakan Vendure (NestJS + TypeScript) sebagai backend dan Nuxt 3 sebagai frontend. Deployment self-hosted pada hardware terbatas (8GB RAM) menggunakan Dokploy.
 
-**Status:** Core implementation complete; now in local-development / refinement phase. Recent work: IDR zero-decimal pricing, light/dark theming, redesigned storefront homepage, Admin UI enabled, Tripay credentials moved to Admin UI.
+**Status:** Core implementation complete; now in local-development / refinement phase. Recent work: IDR zero-decimal pricing, light/dark theming, redesigned storefront (homepage + catalog + product detail), Admin UI enabled, Tripay credentials moved to Admin UI, job queue fixed (inline worker), search index operational.
 
 **Known pending work:**
 - Wire the Tripay webhook as an HTTP endpoint (`/payments/tripay/webhook`). The controller logic exists (`tripay-webhook.controller.ts`) but is not yet exposed as a NestJS route, so end-to-end payment confirmation is not live.
+- Checkout flow (add-to-cart → payment redirect) not yet wired in the storefront UI.
 
 ---
 
@@ -23,6 +24,8 @@ NgopiCode Digital Store adalah platform e-commerce headless untuk menjual produk
 | Email | Resend | Transactional emails |
 | Admin UI | @vendure/admin-ui-plugin | Prebuilt Angular dashboard at `/admin` |
 | Search | DefaultSearchPlugin | DB-based catalog search (no Elasticsearch) |
+| Job Queue | DefaultJobQueuePlugin | SQL-backed, inline worker (single process) |
+| Lottie | @lottiefiles/dotlottie-wc | Hero animation (client-only web component) |
 | Testing (Backend) | Jest + fast-check | Unit + property-based tests |
 | Testing (Frontend) | Vitest + fast-check | Unit + property-based tests |
 | State (Frontend) | Pinia 3 | Upgraded from v2 (SSR + Apollo fix) |
@@ -93,8 +96,8 @@ ngopi-code-store/
 │   │   │   ├── email.types.ts
 │   │   │   └── index.ts
 │   │   ├── data-source.ts            # Standalone TypeORM DataSource for CLI migrations
-│   │   ├── index.ts                  # Bootstrap: dev auto-syncs schema then runs migrations
-│   │   └── vendure-config.ts
+│   │   ├── index.ts                  # Bootstrap: dev auto-syncs schema, runs migrations, starts inline worker
+│   │   └── vendure-config.ts         # Plugins: AssetServer, AdminUi, DefaultSearch, DefaultJobQueue, Tripay
 │   ├── Dockerfile                    # Multi-stage, 900MB heap limit
 │   ├── .env.example
 │   ├── jest.config.js
@@ -105,12 +108,13 @@ ngopi-code-store/
 │   ├── assets/css/
 │   │   └── theme.css                # Light + dark theme tokens (CSS variables)
 │   ├── components/
-│   │   ├── AppIcon.vue              # Inline SVG icon set
-│   │   ├── TheHeader.vue            # Sticky header, responsive nav, theme toggle, cart badge
+│   │   ├── AppIcon.vue              # Inline SVG icon set (search, cart, code, check, heart, etc.)
+│   │   ├── LottiePlayer.client.vue  # Client-only dotLottie web component wrapper
+│   │   ├── TheHeader.vue            # Sticky header, responsive nav (overlay mobile menu), theme toggle, cart badge
 │   │   └── TheFooter.vue            # Responsive footer
 │   ├── composables/
-│   │   ├── useShop.ts               # Product fetching
-│   │   ├── useProductFilters.ts     # Category/search/pagination
+│   │   ├── useShop.ts               # Product fetching (uses search query for category/price/sort)
+│   │   ├── useProductFilters.ts     # Category/search/pagination (URL query sync)
 │   │   ├── useCart.ts               # Shopping cart (Vendure active order)
 │   │   ├── useCheckout.ts           # Payment initiation + validation
 │   │   ├── useOrderConfirmation.ts  # Payment return handling
@@ -126,13 +130,16 @@ ngopi-code-store/
 │   │       ├── order.ts             # ADD_ITEM, ADJUST_LINE, REMOVE_LINE, ADD_PAYMENT
 │   │       └── downloads.ts         # REQUEST_DOWNLOAD_LINK
 │   ├── pages/
-│   │   ├── index.vue                # Homepage (hero, categories, best-sellers, features, newsletter)
-│   │   ├── products/index.vue       # Product catalog with SSR
+│   │   ├── index.vue                # Homepage (split hero with Lottie, categories, best-sellers, features, newsletter)
+│   │   ├── products/index.vue       # Product catalog (sidebar filters, search, price range, sort, grid)
+│   │   ├── products/[slug].vue      # Product detail (gallery, info, features, specs, related products)
 │   │   ├── checkout.vue             # Guest checkout + payment methods
 │   │   ├── order/[code].vue         # Payment return confirmation
 │   │   └── downloads/[orderCode].vue # Download page
 │   ├── stores/
 │   │   └── cart.ts                  # Pinia cart store
+│   ├── public/
+│   │   └── animations/hero-rocket.lottie  # Lottie animation for homepage hero
 │   ├── utils/
 │   │   ├── format.ts               # formatPriceIDR, truncateDescription
 │   │   └── pagination.ts           # clampPageSize, computeSkip, computeTotalPages
@@ -206,6 +213,9 @@ Tripay POST /payments/tripay/webhook → Verify HMAC SHA256 signature
 10. **Dev bootstrap auto-sync**: In development, `index.ts` bootstraps Vendure with `synchronize: true` to create core schema, then runs custom migrations. In production `synchronize` stays false (run migrations after deploy).
 11. **Tripay credentials via Admin UI**: Managed through Settings → Payment methods (PaymentMethodHandler `configArgs`), not env vars. No custom Admin UI build required.
 12. **Theming via CSS variables**: Light/dark mode driven by `data-theme` on `<html>`, backed by a cookie for SSR-safe rendering (no flash). Layout is identical across modes; only color tokens change.
+13. **Inline job queue worker**: `DefaultJobQueuePlugin` (SQL-backed) + `bootstrapWorker().startJobQueue()` in the same process. Without this, background jobs (search indexing, apply-collection-filters) stay PENDING forever. Critical for search and category filtering to work.
+14. **Catalog uses `search` query**: The product catalog page routes all filtering (category, text search, sort, pagination) through Vendure's `search` query (DefaultSearchPlugin). Price filtering is client-side because DefaultSearchPlugin has no server-side price range. Products must be indexed (reindex via Admin API if needed after plugin addition).
+15. **Collections must be public**: Vendure collections default to `isPrivate: true` when created in admin. They must be set to public (`isPrivate: false`) to appear in the Shop API and storefront category filters.
 
 ---
 

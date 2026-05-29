@@ -166,7 +166,7 @@
               :key="product.id"
               class="product-card"
             >
-              <NuxtLink :to="`/products`" class="thumb">
+              <NuxtLink :to="`/products/${product.slug}`" class="thumb">
                 <img
                   v-if="product.featuredAsset"
                   :src="product.featuredAsset.preview"
@@ -183,7 +183,7 @@
                 <p class="card-desc">{{ truncate(product.description) }}</p>
                 <div class="card-foot">
                   <span class="card-price">{{ priceLabel(product) }}</span>
-                  <NuxtLink :to="`/products`" class="card-link">
+                  <NuxtLink :to="`/products/${product.slug}`" class="card-link">
                     Detail
                     <AppIcon name="arrowRight" :size="15" />
                   </NuxtLink>

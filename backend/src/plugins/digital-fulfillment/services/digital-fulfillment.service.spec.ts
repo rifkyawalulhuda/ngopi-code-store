@@ -37,9 +37,11 @@ describe('DigitalFulfillmentService', () => {
       statObject: jest.fn(),
       putObject: jest.fn(),
       removeObject: jest.fn(),
+      presignedGetObject: jest.fn(),
     };
     mockRepository = {
       save: jest.fn(),
+      findByVariantId: jest.fn(),
     };
     service = new DigitalFulfillmentService(mockMinioClient, mockRepository);
   });

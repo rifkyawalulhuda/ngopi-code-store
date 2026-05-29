@@ -47,6 +47,60 @@ export const SET_CUSTOMER_FOR_ORDER = gql`
   }
 `
 
+export const ADJUST_ORDER_LINE = gql`
+  mutation AdjustOrderLine($orderLineId: ID!, $quantity: Int!) {
+    adjustOrderLine(orderLineId: $orderLineId, quantity: $quantity) {
+      ... on Order {
+        id
+        code
+        totalQuantity
+        subTotal
+        lines {
+          id
+          productVariant {
+            id
+            name
+          }
+          quantity
+          unitPrice
+          linePrice
+        }
+      }
+      ... on ErrorResult {
+        errorCode
+        message
+      }
+    }
+  }
+`
+
+export const REMOVE_ORDER_LINE = gql`
+  mutation RemoveOrderLine($orderLineId: ID!) {
+    removeOrderLine(orderLineId: $orderLineId) {
+      ... on Order {
+        id
+        code
+        totalQuantity
+        subTotal
+        lines {
+          id
+          productVariant {
+            id
+            name
+          }
+          quantity
+          unitPrice
+          linePrice
+        }
+      }
+      ... on ErrorResult {
+        errorCode
+        message
+      }
+    }
+  }
+`
+
 export const ADD_PAYMENT_TO_ORDER = gql`
   mutation AddPaymentToOrder($input: PaymentInput!) {
     addPaymentToOrder(input: $input) {

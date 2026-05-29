@@ -2,6 +2,7 @@ import { VendureConfig } from '@vendure/core';
 import { AssetServerPlugin } from '@vendure/asset-server-plugin';
 import path from 'path';
 import { memoryGuardMiddleware } from './middleware/memory-guard.middleware';
+import { healthCheckMiddleware } from './middleware/health-check.middleware';
 import { customOrderProcess } from './config/custom-order-process';
 
 /**
@@ -11,6 +12,16 @@ import { customOrderProcess } from './config/custom-order-process';
  * - PostgreSQL connection pool: max 10 connections (Req 12.2)
  * - Worker runs inline (no background process) for MVP (Req 12.4)
  * - Memory limit: 900MB normal operation, 1GB rejection threshold (Req 12.1, 12.5)
+ *
+ * Plugin Registration:
+ * - Tripay Payment Plugin: handles payment creation and webhook processing
+ * - Digital Fulfillment Plugin: manages file storage and download record creation
+ * - Email Plugin: sends order confirmation emails
+ *
+ * Integration Wiring (Req 2.3, 2.4, 4.1, 6.1):
+ * - PAID webhook → order transition to Fulfilled
+ * - Order Fulfilled → DigitalDownload records created for all digital items
+ * - Order Fulfilled → order confirmation email sent
  */
 export const config: VendureConfig = {
   apiOptions: {
@@ -18,6 +29,11 @@ export const config: VendureConfig = {
     adminApiPath: 'admin-api',
     shopApiPath: 'shop-api',
     middleware: [
+      {
+        handler: healthCheckMiddleware,
+        route: '*splat',
+        beforeListen: true,
+      },
       {
         handler: memoryGuardMiddleware,
         route: '*splat',

@@ -1,0 +1,1 @@
+export { renderOrderConfirmationEmail } from './templates';

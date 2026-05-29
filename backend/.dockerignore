@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+.env.local
+.env.production
+*.spec.ts
+*.pbt.spec.ts
+jest.config.js
+static/assets
+coverage
+.git

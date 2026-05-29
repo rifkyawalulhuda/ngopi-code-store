@@ -7,3 +7,13 @@ export {
   MinioClientAdapter,
   DigitalProductRepository,
 } from './digital-fulfillment.service';
+
+export {
+  OrderFulfillmentService,
+  DigitalProductLookup,
+  DigitalDownloadPersistence,
+  EmailSender,
+  FulfillmentOrderData,
+  FulfillmentLineItem,
+  FulfillmentResult,
+} from './order-fulfillment.service';

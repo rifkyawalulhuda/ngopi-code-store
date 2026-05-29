@@ -4,7 +4,7 @@ import { ID } from '@vendure/core';
 import { Connection, Repository } from 'typeorm';
 import { DigitalProduct } from '../entities/digital-product.entity';
 import { DigitalDownload } from '../entities/digital-download.entity';
-import { DigitalProductInput } from '../../../shared/types/digital-fulfillment.types';
+import { DigitalProductInput, DownloadLinkResponse } from '../../../shared/types/digital-fulfillment.types';
 
 /**
  * Allowed MIME types for digital product uploads.
@@ -59,6 +59,26 @@ export class FulfillmentError extends Error {
 }
 
 /**
+ * Error thrown when download link generation fails.
+ * @see Requirements 5.6, 5.7, 5.8, 5.9, 5.10
+ */
+export class DownloadError extends Error {
+  constructor(
+    message: string,
+    public readonly code:
+      | 'FORBIDDEN'
+      | 'EXPIRED'
+      | 'LIMIT_REACHED'
+      | 'NOT_FOUND'
+      | 'STORAGE_UNAVAILABLE',
+    public readonly httpStatus: 403 | 404 | 410 | 503,
+  ) {
+    super(message);
+    this.name = 'DownloadError';
+  }
+}
+
+/**
  * Represents a line item in an order for download record creation.
  */
 export interface OrderLineItem {
@@ -88,6 +108,7 @@ export interface MinioClientAdapter {
     metaData?: Record<string, string>,
   ): Promise<unknown>;
   removeObject(bucket: string, objectKey: string): Promise<void>;
+  presignedGetObject(bucket: string, objectKey: string, expirySeconds: number): Promise<string>;
 }
 
 /**
@@ -96,6 +117,16 @@ export interface MinioClientAdapter {
  */
 export interface DigitalProductRepository {
   save(entity: DigitalProduct): Promise<DigitalProduct>;
+  findByVariantId(variantId: ID): Promise<DigitalProduct | null>;
+}
+
+/**
+ * Interface for the DigitalDownload repository operations.
+ * Allows dependency injection and easier testing.
+ */
+export interface DigitalDownloadRepository {
+  save(entity: DigitalDownload): Promise<DigitalDownload>;
+  removeByOrderId(orderId: ID): Promise<void>;
 }
 
 /**

@@ -1,0 +1,37 @@
+# Cloudflare Tunnel Configuration
+# HTTPS enforcement for NgopiCode Digital Store
+#
+# This configuration routes all external traffic through Cloudflare Tunnel,
+# ensuring HTTPS encryption for all client-facing communications.
+#
+# @see Requirements 13.5 - HTTPS enforcement via Cloudflare Tunnel
+#
+# Setup instructions:
+# 1. Create a tunnel in Cloudflare Zero Trust dashboard
+# 2. Copy the tunnel token to CLOUDFLARE_TUNNEL_TOKEN env var
+# 3. Configure DNS records in Cloudflare dashboard to point to the tunnel
+# 4. The cloudflared service in docker-compose.yml handles the connection
+#
+# Architecture:
+#   Client (HTTPS) → Cloudflare Edge (TLS termination) → Tunnel → Vendure (HTTP internal)
+#
+# Security guarantees:
+# - All client traffic encrypted with TLS 1.2+
+# - Cloudflare provides DDoS protection
+# - Backend not directly exposed to internet
+# - Certificate management handled by Cloudflare
+
+tunnel: ngopicode-store
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  # Route API traffic to Vendure backend
+  - hostname: api.yourdomain.com
+    service: http://vendure:3000
+    originRequest:
+      noTLSVerify: true
+      connectTimeout: 30s
+      keepAliveTimeout: 90s
+
+  # Catch-all rule (required by cloudflared)
+  - service: http_status:404

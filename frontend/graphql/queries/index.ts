@@ -1,1 +1,5 @@
 export { GET_PRODUCTS, GET_PRODUCT_BY_SLUG, SEARCH_PRODUCTS } from './products'
+export { GET_COLLECTIONS } from './collections'
+export { GET_ACTIVE_ORDER, GET_ORDER_BY_CODE } from './order'
+export { GET_ELIGIBLE_PAYMENT_METHODS } from './checkout'
+export { GET_ORDER_DOWNLOADS } from './downloads'

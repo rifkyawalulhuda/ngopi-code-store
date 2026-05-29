@@ -12,21 +12,22 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@apollo/client": "^3.13.8",
     "@nuxtjs/apollo": "5.0.0-alpha.14",
     "@pinia/nuxt": "^0.9.0",
-    "pinia": "^2.3.0",
-    "nuxt": "^3.17.5",
-    "vue": "^3.5.16",
-    "vue-router": "^4.5.1",
-    "@apollo/client": "^3.13.8",
     "graphql": "^16.11.0",
-    "graphql-tag": "^2.12.6"
+    "graphql-tag": "^2.12.6",
+    "nuxt": "^3.17.5",
+    "pinia": "^2.3.0",
+    "vue": "^3.5.16",
+    "vue-router": "^4.5.1"
   },
   "devDependencies": {
-    "@vue/test-utils": "^2.4.6",
-    "vitest": "^3.2.0",
     "@vitejs/plugin-vue": "^5.2.4",
+    "@vue/test-utils": "^2.4.6",
+    "fast-check": "^4.8.0",
     "jsdom": "^26.1.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.0"
   }
 }

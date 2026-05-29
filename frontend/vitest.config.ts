@@ -12,7 +12,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    include: ['**/*.{test,spec}.{ts,tsx}'],
+    include: ['**/*.{test,spec,pbt.spec}.{ts,tsx}'],
     exclude: ['node_modules', '.nuxt', 'dist'],
   },
 })

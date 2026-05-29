@@ -1,0 +1,175 @@
+# NgopiCode Digital Store - Docker Compose Configuration
+# Designed for self-hosted deployment on 8GB RAM hardware via Dokploy
+# Services: Vendure backend, PostgreSQL, MinIO, Cloudflare Tunnel
+
+services:
+  # Vendure Backend (NestJS)
+  # Requirements: 12.1, 12.2, 12.4, 12.5
+  vendure:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ngopicode-vendure
+    restart: unless-stopped
+    ports:
+      - "${VENDURE_PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-ngopicode}
+      - DB_SCHEMA=${DB_SCHEMA:-public}
+      - DB_USERNAME=${DB_USERNAME:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_LOGGING=${DB_LOGGING:-false}
+      - SUPERADMIN_USERNAME=${SUPERADMIN_USERNAME:-superadmin}
+      - SUPERADMIN_PASSWORD=${SUPERADMIN_PASSWORD}
+      - COOKIE_SECRET=${COOKIE_SECRET}
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_USE_SSL=false
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-products}
+      - TRIPAY_API_KEY=${TRIPAY_API_KEY}
+      - TRIPAY_PRIVATE_KEY=${TRIPAY_PRIVATE_KEY}
+      - TRIPAY_MERCHANT_CODE=${TRIPAY_MERCHANT_CODE}
+      - TRIPAY_SANDBOX=${TRIPAY_SANDBOX:-false}
+      - TRIPAY_CALLBACK_URL=${TRIPAY_CALLBACK_URL}
+      - TRIPAY_RETURN_URL=${TRIPAY_RETURN_URL}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS}
+      - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-NgopiCode Store}
+      - STOREFRONT_URL=${STOREFRONT_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - ngopicode-network
+
+  # PostgreSQL Database
+  # Requirements: 12.1, 12.2, 12.4
+  postgres:
+    image: postgres:16-alpine
+    container_name: ngopicode-postgres
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_EXTERNAL_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_DB=${DB_NAME:-ngopicode}
+      - POSTGRES_USER=${DB_USERNAME:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./deploy/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_NAME:-ngopicode}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - ngopicode-network
+
+  # MinIO Object Storage
+  # Requirements: 12.1, 12.3
+  minio:
+    image: minio/minio:latest
+    container_name: ngopicode-minio
+    restart: unless-stopped
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - ngopicode-network
+
+  # MinIO bucket initialization (one-shot)
+  minio-init:
+    image: minio/mc:latest
+    container_name: ngopicode-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY};
+      mc mb --ignore-existing local/products;
+      mc anonymous set none local/products;
+      echo 'MinIO bucket initialized: products (private)';
+      "
+    environment:
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+    networks:
+      - ngopicode-network
+
+  # Cloudflare Tunnel for HTTPS
+  # Requirements: 12.5, 13.5
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: ngopicode-cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+    depends_on:
+      vendure:
+        condition: service_healthy
+    networks:
+      - ngopicode-network
+
+volumes:
+  postgres-data:
+    driver: local
+  minio-data:
+    driver: local
+
+networks:
+  ngopicode-network:
+    driver: bridge

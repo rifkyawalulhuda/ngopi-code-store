@@ -1,0 +1,89 @@
+# =============================================================================
+# NgopiCode Digital Store - Dokploy Configuration
+# =============================================================================
+# Dokploy uses Docker Compose under the hood. This file provides
+# Dokploy-specific metadata and deployment instructions.
+#
+# Deployment steps:
+# 1. Create a new "Compose" project in Dokploy dashboard
+# 2. Point to this repository (or paste docker-compose.yml content)
+# 3. Set environment variables in Dokploy's environment section
+# 4. Deploy
+#
+# Dokploy will use docker-compose.yml as the primary configuration.
+# =============================================================================
+
+# Project metadata
+name: ngopicode-digital-store
+description: NgopiCode Digital Store - Headless e-commerce for digital products
+
+# Compose file reference
+compose:
+  file: docker-compose.yml
+
+# Build configuration
+build:
+  # Vendure backend is built from Dockerfile
+  vendure:
+    context: ./backend
+    dockerfile: Dockerfile
+
+# Domain configuration (managed via Cloudflare Tunnel)
+# Dokploy does NOT need to manage SSL/domains - Cloudflare Tunnel handles this
+domains: []
+
+# Resource allocation summary (8GB total system RAM)
+# - Vendure:     1GB limit  / 512MB reserved
+# - PostgreSQL:  1GB limit  / 256MB reserved
+# - MinIO:       512MB limit / 128MB reserved
+# - Cloudflared: 128MB limit / 64MB reserved
+# - OS + Dokploy: ~5.3GB available for system overhead
+#
+# Total allocated: ~2.6GB limits, leaving headroom for OS and Dokploy itself
+
+# Persistent volumes
+volumes:
+  - postgres-data: PostgreSQL database files
+  - minio-data: MinIO object storage files
+
+# Health check endpoints
+healthchecks:
+  vendure: http://localhost:3000/health
+  postgres: pg_isready
+  minio: mc ready local
+
+# Deployment notes
+notes: |
+  ## Pre-deployment Checklist
+
+  1. **Cloudflare Tunnel Setup**
+     - Create tunnel: `cloudflared tunnel create ngopicode`
+     - Configure tunnel to route traffic to vendure:3000
+     - Copy tunnel token to CLOUDFLARE_TUNNEL_TOKEN env var
+
+  2. **Environment Variables**
+     - Copy .env.example to .env
+     - Fill in all required values (passwords, API keys, secrets)
+     - Ensure TRIPAY_CALLBACK_URL uses your Cloudflare domain
+
+  3. **MinIO Bucket**
+     - The minio-init service auto-creates the "products" bucket
+     - Bucket is set to private (no public access)
+
+  4. **Database**
+     - Migrations run automatically on Vendure startup
+     - PostgreSQL max_connections=20, Vendure pool=10
+
+  5. **Memory Budget (8GB total)**
+     | Service      | Limit | Reserved |
+     |-------------|-------|----------|
+     | Vendure     | 1GB   | 512MB    |
+     | PostgreSQL  | 1GB   | 256MB    |
+     | MinIO       | 512MB | 128MB    |
+     | Cloudflared | 128MB | 64MB     |
+     | OS/Dokploy  | ~5.3GB| -        |
+
+  6. **Monitoring**
+     - Vendure health: GET /health
+     - MinIO console: port 9001 (internal only)
+     - PostgreSQL: pg_isready check every 10s

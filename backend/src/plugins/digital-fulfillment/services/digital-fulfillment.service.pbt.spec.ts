@@ -22,9 +22,11 @@ describe('Property 11: MIME Type Validation', () => {
       statObject: jest.fn(),
       putObject: jest.fn(),
       removeObject: jest.fn(),
+      presignedGetObject: jest.fn(),
     };
     const mockRepository: DigitalProductRepository = {
       save: jest.fn(),
+      findByVariantId: jest.fn(),
     };
     service = new DigitalFulfillmentService(mockMinioClient, mockRepository);
   });

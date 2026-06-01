@@ -102,7 +102,7 @@
         </section>
 
         <!-- Stats row -->
-        <div class="stats-row">
+        <div class="stats-row" :class="{ 'mobile-hidden': activeTab !== 'library' }">
           <div class="stat-card">
             <span class="stat-label">Total Pesanan</span>
             <span class="stat-value">{{ orders.length }}</span>
@@ -1071,6 +1071,13 @@ onMounted(async () => {
   .welcome {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+/* On mobile, show stats only on the Library (home) tab */
+@media (max-width: 860px) {
+  .stats-row.mobile-hidden {
+    display: none;
   }
 }
 

@@ -40,7 +40,7 @@
         <button type="button" class="icon-btn" aria-label="Cari produk (Ctrl+K)" @click="openSearch">
           <AppIcon name="search" :size="20" />
         </button>
-        <NuxtLink to="/auth" class="icon-btn" aria-label="Akun">
+        <NuxtLink :to="accountLink" class="icon-btn" :aria-label="isLoggedIn ? 'Akun saya' : 'Masuk'">
           <AppIcon name="user" :size="20" />
         </NuxtLink>
         <NuxtLink to="/checkout" class="icon-btn cart-btn" aria-label="Keranjang belanja">
@@ -83,9 +83,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onBeforeUnmount } from 'vue'
+import { ref, watch, onBeforeUnmount, computed, onMounted } from 'vue'
 import { useCart } from '~/composables/useCart'
 import { useTheme } from '~/composables/useTheme'
+import { useAuth } from '~/composables/useAuth'
 import SearchCommand from '~/components/SearchCommand.vue'
 
 const searchRef = ref<InstanceType<typeof SearchCommand> | null>(null)
@@ -93,6 +94,14 @@ const searchRef = ref<InstanceType<typeof SearchCommand> | null>(null)
 function openSearch() {
   searchRef.value?.open()
 }
+
+const { isLoggedIn, ensureSession } = useAuth()
+const accountLink = computed(() => (isLoggedIn.value ? '/account' : '/auth'))
+
+// Check session once on mount so the user icon points to the right place
+onMounted(() => {
+  ensureSession()
+})
 
 const { cartItemCount } = useCart()
 const { isDark, toggleTheme } = useTheme()

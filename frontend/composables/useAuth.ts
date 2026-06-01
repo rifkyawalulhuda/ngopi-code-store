@@ -1,5 +1,4 @@
-import { ref, readonly } from 'vue'
-import type { Ref } from 'vue'
+import { computed } from 'vue'
 import {
   REGISTER_CUSTOMER,
   LOGIN,
@@ -19,17 +18,22 @@ export type AuthError = string | null
 
 /**
  * Composable for customer authentication.
- * Handles register, login, logout, email verification, and session state.
+ * Uses Nuxt useState so the session is shared across all components/pages
+ * (header, account page, auth page) within the same request/app instance.
  */
 export function useAuth() {
-  const customer: Ref<ActiveCustomer | null> = ref(null)
-  const loading: Ref<boolean> = ref(false)
-  const error: Ref<AuthError> = ref(null)
+  // Shared, SSR-safe state across the app
+  const customer = useState<ActiveCustomer | null>('auth.customer', () => null)
+  // Tracks whether we've attempted to fetch the session at least once
+  const initialized = useState<boolean>('auth.initialized', () => false)
+  const loading = useState<boolean>('auth.loading', () => false)
+  const error = useState<AuthError>('auth.error', () => null)
+
+  const isLoggedIn = computed(() => customer.value !== null)
 
   /**
    * Register a new customer account.
-   * Vendure will send a verification email automatically (via our EmailVerificationPlugin).
-   * Returns true if registration was successful.
+   * Vendure will send a verification email automatically (via EmailVerificationPlugin).
    */
   async function register(input: {
     firstName: string
@@ -51,7 +55,6 @@ export function useAuth() {
         return true
       }
 
-      // Handle errors
       error.value = result?.message || result?.validationErrorMessage || 'Registrasi gagal'
       return false
     } catch (err: any) {
@@ -64,7 +67,6 @@ export function useAuth() {
 
   /**
    * Login with email and password.
-   * Returns true if login was successful.
    */
   async function login(email: string, password: string, rememberMe = false): Promise<boolean> {
     loading.value = true
@@ -78,12 +80,10 @@ export function useAuth() {
 
       const result = data?.login
       if (result?.__typename === 'CurrentUser') {
-        // Fetch full customer data after login
         await fetchActiveCustomer()
         return true
       }
 
-      // Handle specific errors
       if (result?.__typename === 'NotVerifiedError') {
         error.value = 'Email belum diverifikasi. Silakan cek inbox email Anda.'
       } else if (result?.__typename === 'InvalidCredentialsError') {
@@ -107,22 +107,21 @@ export function useAuth() {
     try {
       const { $apollo } = useNuxtApp()
       await $apollo.defaultClient.mutate({ mutation: LOGOUT })
-      customer.value = null
     } catch {
       // Silent fail on logout
+    } finally {
+      customer.value = null
     }
   }
 
   /**
    * Verify customer email with the token from the verification link.
-   * Also passes the stored password if available (needed when requireVerification is true).
-   * Returns true if verification was successful.
+   * Replays the password stored during registration (needed when requireVerification is true).
    */
   async function verifyEmail(token: string): Promise<boolean> {
     loading.value = true
     error.value = null
     try {
-      // Retrieve password stored during registration
       let password: string | null = null
       if (import.meta.client) {
         password = sessionStorage.getItem('_reg_pw')
@@ -136,7 +135,6 @@ export function useAuth() {
 
       const result = data?.verifyCustomerAccount
       if (result?.__typename === 'CurrentUser') {
-        // Clean up stored password
         if (import.meta.client) {
           sessionStorage.removeItem('_reg_pw')
         }
@@ -148,7 +146,6 @@ export function useAuth() {
       } else if (result?.__typename === 'VerificationTokenInvalidError') {
         error.value = 'Link verifikasi tidak valid.'
       } else if (result?.__typename === 'PasswordAlreadySetError') {
-        // Password was already set during registration — verification still succeeded
         return true
       } else {
         error.value = result?.message || 'Verifikasi gagal'
@@ -163,9 +160,10 @@ export function useAuth() {
   }
 
   /**
-   * Fetch the currently logged-in customer.
+   * Fetch the currently logged-in customer and update shared state.
+   * Returns the customer (or null).
    */
-  async function fetchActiveCustomer(): Promise<void> {
+  async function fetchActiveCustomer(): Promise<ActiveCustomer | null> {
     try {
       const { $apollo } = useNuxtApp()
       const { data } = await $apollo.defaultClient.query({
@@ -175,17 +173,32 @@ export function useAuth() {
       customer.value = data?.activeCustomer || null
     } catch {
       customer.value = null
+    } finally {
+      initialized.value = true
     }
+    return customer.value
+  }
+
+  /**
+   * Ensure the session has been checked at least once.
+   * Safe to call from multiple places — only hits the API on first call.
+   */
+  async function ensureSession(): Promise<ActiveCustomer | null> {
+    if (initialized.value) return customer.value
+    return fetchActiveCustomer()
   }
 
   return {
-    customer: readonly(customer),
-    loading: readonly(loading),
+    customer,
+    isLoggedIn,
+    loading,
     error,
+    initialized,
     register,
     login,
     logout,
     verifyEmail,
     fetchActiveCustomer,
+    ensureSession,
   }
 }

@@ -244,14 +244,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useAuth } from '~/composables/useAuth'
 
 useHead({
   title: 'Login / Register - NgopiCode',
 })
 
-const { login, register, error: authError, loading: authLoading } = useAuth()
+const { login, register, ensureSession, isLoggedIn, error: authError, loading: authLoading } = useAuth()
+
+// If already logged in, skip the auth page and go to the account dashboard
+onMounted(async () => {
+  await ensureSession()
+  if (isLoggedIn.value) {
+    navigateTo('/account')
+  }
+})
 
 const activeTab = ref<'login' | 'register'>('login')
 const showLoginPassword = ref(false)
@@ -279,8 +287,8 @@ async function onLogin() {
   try {
     const success = await login(loginForm.email, loginForm.password)
     if (success) {
-      // Redirect to homepage or previous page
-      navigateTo('/')
+      // Redirect to account dashboard
+      navigateTo('/account')
     }
   } finally {
     loginLoading.value = false

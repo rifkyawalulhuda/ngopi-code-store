@@ -85,3 +85,36 @@ export const GET_ACTIVE_CUSTOMER = gql`
     }
   }
 `
+
+export const GET_ACTIVE_CUSTOMER_ORDERS = gql`
+  query GetActiveCustomerOrders {
+    activeCustomer {
+      id
+      firstName
+      lastName
+      emailAddress
+      orders(options: { sort: { createdAt: DESC } }) {
+        totalItems
+        items {
+          id
+          code
+          state
+          orderPlacedAt
+          totalWithTax
+          currencyCode
+          lines {
+            id
+            quantity
+            productVariant {
+              id
+              name
+            }
+            featuredAsset {
+              preview
+            }
+          }
+        }
+      }
+    }
+  }
+`

@@ -6,6 +6,8 @@ export const GET_ACTIVE_CHANNEL = gql`
       id
       customFields {
         whatsappNumber
+        githubLink
+        ownerEmail
       }
     }
   }

@@ -11,9 +11,37 @@
           alat yang memberdayakan kreator dan developer.
         </p>
         <div class="footer-socials">
-          <a href="#" class="social" aria-label="Terminal"><AppIcon name="terminal" :size="18" /></a>
-          <a href="#" class="social" aria-label="Kode"><AppIcon name="code" :size="18" /></a>
-          <a href="#" class="social" aria-label="Email"><AppIcon name="mail" :size="18" /></a>
+          <a
+            v-if="whatsappLink"
+            :href="whatsappLink"
+            class="social"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Hubungi via WhatsApp"
+            title="Chat WhatsApp"
+          >
+            <AppIcon name="whatsapp" :size="18" />
+          </a>
+          <a
+            v-if="githubLink"
+            :href="githubLink"
+            class="social"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub"
+            title="GitHub"
+          >
+            <AppIcon name="github" :size="18" />
+          </a>
+          <a
+            v-if="ownerEmail"
+            :href="`mailto:${ownerEmail}`"
+            class="social"
+            aria-label="Email"
+            title="Email"
+          >
+            <AppIcon name="mail" :size="18" />
+          </a>
         </div>
       </div>
 
@@ -49,7 +77,24 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { useWhatsapp } from '~/composables/useWhatsapp'
+
 const year = new Date().getFullYear()
+
+const { whatsappNumber, githubLink, ownerEmail, fetchWhatsappNumber } = useWhatsapp()
+
+// Direct WhatsApp link to the owner (general inquiry, no specific product)
+const whatsappLink = computed(() => {
+  if (!whatsappNumber.value) return ''
+  const cleanNumber = whatsappNumber.value.replace(/\D/g, '')
+  const message = encodeURIComponent('Halo NgopiCode, saya ingin bertanya.')
+  return `https://wa.me/${cleanNumber}?text=${message}`
+})
+
+onMounted(() => {
+  fetchWhatsappNumber()
+})
 </script>
 
 <style scoped>

@@ -100,6 +100,22 @@ export const config: VendureConfig = {
         nullable: true,
         public: true,
       },
+      {
+        name: 'githubLink',
+        type: 'string',
+        label: [{ languageCode: LanguageCode.en, value: 'GitHub Link' }],
+        description: [{ languageCode: LanguageCode.en, value: 'Owner GitHub profile/organization URL (e.g. https://github.com/ngopicode). Displayed in the storefront footer.' }],
+        nullable: true,
+        public: true,
+      },
+      {
+        name: 'ownerEmail',
+        type: 'string',
+        label: [{ languageCode: LanguageCode.en, value: 'Owner Email' }],
+        description: [{ languageCode: LanguageCode.en, value: 'Contact email shown in the storefront footer (e.g. hello@ngopicode.com).' }],
+        nullable: true,
+        public: true,
+      },
     ],
     Customer: [
       {

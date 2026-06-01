@@ -1,13 +1,31 @@
 <template>
   <header class="site-header">
     <div class="header-inner">
-      <!-- Brand -->
-      <NuxtLink to="/" class="brand" @click="closeMenu">
-        <span class="brand-mark">
-          <AppIcon name="terminal" :size="20" />
-        </span>
-        <span class="brand-name">Ngopi<span class="brand-accent">Code</span></span>
-      </NuxtLink>
+      <!-- Brand + Theme toggle -->
+      <div class="brand-group">
+        <NuxtLink to="/" class="brand" @click="closeMenu">
+          <span class="brand-mark">
+            <AppIcon name="terminal" :size="20" />
+          </span>
+          <span class="brand-name">Ngopi<span class="brand-accent">Code</span></span>
+        </NuxtLink>
+        <ClientOnly>
+          <button
+            class="theme-toggle"
+            type="button"
+            :aria-label="isDark ? 'Aktifkan mode terang' : 'Aktifkan mode gelap'"
+            :title="isDark ? 'Mode terang' : 'Mode gelap'"
+            @click="toggleTheme"
+          >
+            <AppIcon :name="isDark ? 'sun' : 'moon'" :size="16" />
+          </button>
+          <template #fallback>
+            <button class="theme-toggle" type="button" aria-label="Ganti tema">
+              <AppIcon name="moon" :size="16" />
+            </button>
+          </template>
+        </ClientOnly>
+      </div>
 
       <!-- Desktop nav -->
       <nav class="nav-desktop" aria-label="Navigasi utama">
@@ -22,22 +40,6 @@
         <button type="button" class="icon-btn" aria-label="Cari produk (Ctrl+K)" @click="openSearch">
           <AppIcon name="search" :size="20" />
         </button>
-        <ClientOnly>
-          <button
-            class="icon-btn"
-            type="button"
-            :aria-label="isDark ? 'Aktifkan mode terang' : 'Aktifkan mode gelap'"
-            :title="isDark ? 'Mode terang' : 'Mode gelap'"
-            @click="toggleTheme"
-          >
-            <AppIcon :name="isDark ? 'sun' : 'moon'" :size="20" />
-          </button>
-          <template #fallback>
-            <button class="icon-btn" type="button" aria-label="Ganti tema">
-              <AppIcon name="moon" :size="20" />
-            </button>
-          </template>
-        </ClientOnly>
         <button class="icon-btn" aria-label="Akun" type="button">
           <AppIcon name="user" :size="20" />
         </button>
@@ -165,6 +167,31 @@ onBeforeUnmount(() => {
   font-weight: 700;
   font-size: 1.2rem;
   letter-spacing: -0.02em;
+}
+
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+}
+
+.theme-toggle:hover {
+  background: var(--btn-ghost-hover);
+  color: var(--primary-text);
+  border-color: var(--primary-text);
 }
 
 .brand-mark {

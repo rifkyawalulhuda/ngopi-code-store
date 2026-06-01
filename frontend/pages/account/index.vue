@@ -195,117 +195,172 @@
             <h2 class="panel-title">Pengaturan Akun</h2>
           </div>
 
-          <!-- Profile form: name + whatsapp -->
-          <form class="settings-form" @submit.prevent="onSaveProfile">
-            <h3 class="settings-subtitle">Profil</h3>
+          <div class="accordion">
+            <!-- Profile section -->
+            <div class="accordion-item" :class="{ open: openSection === 'profile' }">
+              <button
+                type="button"
+                class="accordion-header"
+                :aria-expanded="openSection === 'profile'"
+                aria-controls="acc-profile"
+                @click="toggleSection('profile')"
+              >
+                <span class="accordion-head-text">
+                  <span class="accordion-icon"><AppIcon name="user" :size="18" /></span>
+                  <span>
+                    <span class="accordion-title">Profil</span>
+                    <span class="accordion-sub">Nama dan nomor WhatsApp</span>
+                  </span>
+                </span>
+                <AppIcon name="chevronDown" :size="18" class="accordion-chevron" />
+              </button>
 
-            <div class="settings-grid">
-              <div class="form-group">
-                <label for="set-first" class="form-label">Nama Depan</label>
-                <input id="set-first" v-model="profileForm.firstName" type="text" class="form-input" autocomplete="given-name" />
-              </div>
-              <div class="form-group">
-                <label for="set-last" class="form-label">Nama Belakang</label>
-                <input id="set-last" v-model="profileForm.lastName" type="text" class="form-input" autocomplete="family-name" />
-              </div>
-            </div>
+              <div v-show="openSection === 'profile'" id="acc-profile" class="accordion-body">
+                <form class="settings-form" @submit.prevent="onSaveProfile">
+                  <div class="settings-grid">
+                    <div class="form-group">
+                      <label for="set-first" class="form-label">Nama Depan</label>
+                      <input id="set-first" v-model="profileForm.firstName" type="text" class="form-input" autocomplete="given-name" />
+                    </div>
+                    <div class="form-group">
+                      <label for="set-last" class="form-label">Nama Belakang</label>
+                      <input id="set-last" v-model="profileForm.lastName" type="text" class="form-input" autocomplete="family-name" />
+                    </div>
+                  </div>
 
-            <div class="form-group">
-              <label for="set-wa" class="form-label">Nomor WhatsApp <span class="optional">(opsional)</span></label>
-              <input
-                id="set-wa"
-                v-model="profileForm.whatsappNumber"
-                type="tel"
-                class="form-input"
-                placeholder="Contoh: 6281234567890"
-                inputmode="numeric"
-                autocomplete="tel"
-              />
-              <p class="form-help">Gunakan format internasional dengan kode negara (62 untuk Indonesia).</p>
-            </div>
+                  <div class="form-group">
+                    <label for="set-wa" class="form-label">Nomor WhatsApp <span class="optional">(opsional)</span></label>
+                    <input
+                      id="set-wa"
+                      v-model="profileForm.whatsappNumber"
+                      type="tel"
+                      class="form-input"
+                      placeholder="Contoh: 6281234567890"
+                      inputmode="numeric"
+                      autocomplete="tel"
+                    />
+                    <p class="form-help">Gunakan format internasional dengan kode negara (62 untuk Indonesia).</p>
+                  </div>
 
-            <div v-if="profileMsg" class="form-feedback" :class="profileOk ? 'feedback-success' : 'feedback-error'" role="status">
-              {{ profileMsg }}
-            </div>
+                  <div v-if="profileMsg" class="form-feedback" :class="profileOk ? 'feedback-success' : 'feedback-error'" role="status">
+                    {{ profileMsg }}
+                  </div>
 
-            <button type="submit" class="btn btn-primary" :disabled="profileSaving">
-              <span v-if="profileSaving" class="btn-spinner-sm" />
-              <span v-else>Simpan Profil</span>
-            </button>
-          </form>
-
-          <hr class="settings-divider" />
-
-          <!-- Email change form -->
-          <form class="settings-form" @submit.prevent="onRequestEmailChange">
-            <h3 class="settings-subtitle">Ubah Email</h3>
-            <p class="settings-desc">
-              Email kamu saat ini: <strong>{{ customer?.emailAddress }}</strong>.
-              Setelah mengirim permintaan, cek email <strong>baru</strong> kamu untuk verifikasi.
-              Email tidak akan berubah sampai kamu verifikasi.
-            </p>
-
-            <div class="form-group">
-              <label for="set-new-email" class="form-label">Email Baru</label>
-              <input id="set-new-email" v-model="emailForm.newEmail" type="email" class="form-input" placeholder="email-baru@email.com" autocomplete="email" />
-            </div>
-
-            <div class="form-group">
-              <label for="set-email-pw" class="form-label">Password Saat Ini</label>
-              <input id="set-email-pw" v-model="emailForm.password" type="password" class="form-input" placeholder="Konfirmasi dengan password" autocomplete="current-password" />
-            </div>
-
-            <div v-if="emailMsg" class="form-feedback" :class="emailOk ? 'feedback-success' : 'feedback-error'" role="status">
-              {{ emailMsg }}
-            </div>
-
-            <button type="submit" class="btn btn-primary" :disabled="emailSaving">
-              <span v-if="emailSaving" class="btn-spinner-sm" />
-              <span v-else>Kirim Verifikasi Email Baru</span>
-            </button>
-          </form>
-
-          <hr class="settings-divider" />
-
-          <!-- Password change form -->
-          <form class="settings-form" @submit.prevent="onChangePassword">
-            <h3 class="settings-subtitle">Ubah Password</h3>
-
-            <div class="form-group">
-              <label for="set-old-pw" class="form-label">Password Lama</label>
-              <input id="set-old-pw" v-model="passwordForm.current" type="password" class="form-input" placeholder="Password saat ini" autocomplete="current-password" />
-            </div>
-
-            <div class="settings-grid">
-              <div class="form-group">
-                <label for="set-new-pw" class="form-label">Password Baru</label>
-                <input id="set-new-pw" v-model="passwordForm.next" type="password" class="form-input" placeholder="Minimal 8 karakter" minlength="8" autocomplete="new-password" />
-              </div>
-              <div class="form-group">
-                <label for="set-new-pw2" class="form-label">Konfirmasi Password Baru</label>
-                <input
-                  id="set-new-pw2"
-                  v-model="passwordForm.confirm"
-                  type="password"
-                  class="form-input"
-                  :class="{ 'input-error': pwMismatch }"
-                  placeholder="Ulangi password baru"
-                  minlength="8"
-                  autocomplete="new-password"
-                />
+                  <button type="submit" class="btn btn-primary" :disabled="profileSaving">
+                    <span v-if="profileSaving" class="btn-spinner-sm" />
+                    <span v-else>Simpan Profil</span>
+                  </button>
+                </form>
               </div>
             </div>
-            <p v-if="pwMismatch" class="field-error" role="alert">Password baru tidak cocok.</p>
 
-            <div v-if="pwMsg" class="form-feedback" :class="pwOk ? 'feedback-success' : 'feedback-error'" role="status">
-              {{ pwMsg }}
+            <!-- Email section -->
+            <div class="accordion-item" :class="{ open: openSection === 'email' }">
+              <button
+                type="button"
+                class="accordion-header"
+                :aria-expanded="openSection === 'email'"
+                aria-controls="acc-email"
+                @click="toggleSection('email')"
+              >
+                <span class="accordion-head-text">
+                  <span class="accordion-icon"><AppIcon name="mail" :size="18" /></span>
+                  <span>
+                    <span class="accordion-title">Ubah Email</span>
+                    <span class="accordion-sub">{{ customer?.emailAddress }}</span>
+                  </span>
+                </span>
+                <AppIcon name="chevronDown" :size="18" class="accordion-chevron" />
+              </button>
+
+              <div v-show="openSection === 'email'" id="acc-email" class="accordion-body">
+                <form class="settings-form" @submit.prevent="onRequestEmailChange">
+                  <p class="settings-desc">
+                    Setelah mengirim permintaan, cek email <strong>baru</strong> kamu untuk verifikasi.
+                    Email tidak akan berubah sampai kamu verifikasi.
+                  </p>
+
+                  <div class="form-group">
+                    <label for="set-new-email" class="form-label">Email Baru</label>
+                    <input id="set-new-email" v-model="emailForm.newEmail" type="email" class="form-input" placeholder="email-baru@email.com" autocomplete="email" />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="set-email-pw" class="form-label">Password Saat Ini</label>
+                    <input id="set-email-pw" v-model="emailForm.password" type="password" class="form-input" placeholder="Konfirmasi dengan password" autocomplete="current-password" />
+                  </div>
+
+                  <div v-if="emailMsg" class="form-feedback" :class="emailOk ? 'feedback-success' : 'feedback-error'" role="status">
+                    {{ emailMsg }}
+                  </div>
+
+                  <button type="submit" class="btn btn-primary" :disabled="emailSaving">
+                    <span v-if="emailSaving" class="btn-spinner-sm" />
+                    <span v-else>Kirim Verifikasi Email Baru</span>
+                  </button>
+                </form>
+              </div>
             </div>
 
-            <button type="submit" class="btn btn-primary" :disabled="pwSaving || pwMismatch">
-              <span v-if="pwSaving" class="btn-spinner-sm" />
-              <span v-else>Ganti Password</span>
-            </button>
-          </form>
+            <!-- Password section -->
+            <div class="accordion-item" :class="{ open: openSection === 'password' }">
+              <button
+                type="button"
+                class="accordion-header"
+                :aria-expanded="openSection === 'password'"
+                aria-controls="acc-password"
+                @click="toggleSection('password')"
+              >
+                <span class="accordion-head-text">
+                  <span class="accordion-icon"><AppIcon name="lock" :size="18" /></span>
+                  <span>
+                    <span class="accordion-title">Ubah Password</span>
+                    <span class="accordion-sub">Ganti kata sandi akun</span>
+                  </span>
+                </span>
+                <AppIcon name="chevronDown" :size="18" class="accordion-chevron" />
+              </button>
+
+              <div v-show="openSection === 'password'" id="acc-password" class="accordion-body">
+                <form class="settings-form" @submit.prevent="onChangePassword">
+                  <div class="form-group">
+                    <label for="set-old-pw" class="form-label">Password Lama</label>
+                    <input id="set-old-pw" v-model="passwordForm.current" type="password" class="form-input" placeholder="Password saat ini" autocomplete="current-password" />
+                  </div>
+
+                  <div class="settings-grid">
+                    <div class="form-group">
+                      <label for="set-new-pw" class="form-label">Password Baru</label>
+                      <input id="set-new-pw" v-model="passwordForm.next" type="password" class="form-input" placeholder="Minimal 8 karakter" minlength="8" autocomplete="new-password" />
+                    </div>
+                    <div class="form-group">
+                      <label for="set-new-pw2" class="form-label">Konfirmasi Password Baru</label>
+                      <input
+                        id="set-new-pw2"
+                        v-model="passwordForm.confirm"
+                        type="password"
+                        class="form-input"
+                        :class="{ 'input-error': pwMismatch }"
+                        placeholder="Ulangi password baru"
+                        minlength="8"
+                        autocomplete="new-password"
+                      />
+                    </div>
+                  </div>
+                  <p v-if="pwMismatch" class="field-error" role="alert">Password baru tidak cocok.</p>
+
+                  <div v-if="pwMsg" class="form-feedback" :class="pwOk ? 'feedback-success' : 'feedback-error'" role="status">
+                    {{ pwMsg }}
+                  </div>
+
+                  <button type="submit" class="btn btn-primary" :disabled="pwSaving || pwMismatch">
+                    <span v-if="pwSaving" class="btn-spinner-sm" />
+                    <span v-else>Ganti Password</span>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
         </section>
       </main>
     </div>
@@ -436,6 +491,14 @@ async function onLogout() {
 }
 
 /* ---------- Settings forms ---------- */
+
+// Accordion: which section is open (only one at a time). Default: profile open.
+type SettingsSection = 'profile' | 'email' | 'password'
+const openSection = ref<SettingsSection>('profile')
+
+function toggleSection(section: SettingsSection) {
+  openSection.value = openSection.value === section ? ('' as SettingsSection) : section
+}
 
 // Profile (name + whatsapp)
 const profileForm = reactive({ firstName: '', lastName: '', whatsappNumber: '' })
@@ -1049,11 +1112,100 @@ onMounted(async () => {
   color: var(--primary-text);
 }
 
+/* Accordion */
+.accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.accordion-item {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface);
+  transition: border-color 0.18s;
+}
+
+.accordion-item.open {
+  border-color: var(--primary);
+}
+
+.accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 1rem 1.1rem;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.accordion-header:hover {
+  background: var(--surface-2);
+}
+
+.accordion-head-text {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.accordion-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background: var(--primary-soft);
+  color: var(--primary-text);
+  flex-shrink: 0;
+}
+
+.accordion-title {
+  display: block;
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.accordion-sub {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 360px;
+}
+
+.accordion-chevron {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+
+.accordion-item.open .accordion-chevron {
+  transform: rotate(180deg);
+}
+
+.accordion-body {
+  padding: 0.25rem 1.1rem 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
 /* Settings forms */
 .settings-form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  padding-top: 1rem;
 }
 
 .settings-subtitle {

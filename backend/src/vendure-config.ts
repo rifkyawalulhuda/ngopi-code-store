@@ -1,6 +1,5 @@
 ﻿import { VendureConfig, DefaultSearchPlugin, DefaultJobQueuePlugin, LanguageCode } from '@vendure/core';
 import { AssetServerPlugin } from '@vendure/asset-server-plugin';
-import { AdminUiPlugin } from '@vendure/admin-ui-plugin';
 import path from 'path';
 import { memoryGuardMiddleware } from './middleware/memory-guard.middleware';
 import { healthCheckMiddleware } from './middleware/health-check.middleware';
@@ -145,10 +144,6 @@ export const config: VendureConfig = {
     AssetServerPlugin.init({
       route: 'assets',
       assetUploadDir: path.join(__dirname, '..', 'static', 'assets'),
-    }),
-    AdminUiPlugin.init({
-      route: 'admin',
-      port: 3002,
     }),
     DefaultSearchPlugin,
     DefaultJobQueuePlugin.init({}),

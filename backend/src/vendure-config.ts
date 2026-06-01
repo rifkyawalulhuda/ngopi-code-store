@@ -1,4 +1,4 @@
-import { VendureConfig, DefaultSearchPlugin, DefaultJobQueuePlugin } from '@vendure/core';
+﻿import { VendureConfig, DefaultSearchPlugin, DefaultJobQueuePlugin, LanguageCode } from '@vendure/core';
 import { AssetServerPlugin } from '@vendure/asset-server-plugin';
 import { AdminUiPlugin } from '@vendure/admin-ui-plugin';
 import path from 'path';
@@ -22,9 +22,9 @@ import { TripayPaymentPlugin } from './plugins/tripay-payment/tripay-payment.plu
  * - Email Plugin: sends order confirmation emails
  *
  * Integration Wiring (Req 2.3, 2.4, 4.1, 6.1):
- * - PAID webhook → order transition to Fulfilled
- * - Order Fulfilled → DigitalDownload records created for all digital items
- * - Order Fulfilled → order confirmation email sent
+ * - PAID webhook â†’ order transition to Fulfilled
+ * - Order Fulfilled â†’ DigitalDownload records created for all digital items
+ * - Order Fulfilled â†’ order confirmation email sent
  */
 export const config: VendureConfig = {
   apiOptions: {
@@ -82,7 +82,46 @@ export const config: VendureConfig = {
   paymentOptions: {
     paymentMethodHandlers: [],
   },
-  customFields: {},
+  customFields: {
+    Product: [
+      {
+        name: 'keyFeatures',
+        type: 'text',
+        label: [{ languageCode: LanguageCode.en, value: 'Key Features (one per line)' }],
+        description: [{ languageCode: LanguageCode.en, value: 'List of key features, separated by newlines. Displayed as a checklist on the product page.' }],
+        nullable: true,
+        ui: { component: 'textarea-form-input' },
+      },
+      {
+        name: 'deliveryInfo',
+        type: 'string',
+        label: [{ languageCode: LanguageCode.en, value: 'Delivery Info' }],
+        description: [{ languageCode: LanguageCode.en, value: 'Digital delivery description shown on the product page (e.g. "Instant download, lifetime updates").' }],
+        nullable: true,
+      },
+      {
+        name: 'productType',
+        type: 'string',
+        label: [{ languageCode: LanguageCode.en, value: 'Product Type' }],
+        description: [{ languageCode: LanguageCode.en, value: 'Type label shown as badge and in specs (e.g. Source Code, Ebook, Template).' }],
+        nullable: true,
+      },
+      {
+        name: 'fileFormat',
+        type: 'string',
+        label: [{ languageCode: LanguageCode.en, value: 'File Format' }],
+        description: [{ languageCode: LanguageCode.en, value: 'File format for specs table (e.g. ZIP Archive, PDF, etc.).' }],
+        nullable: true,
+      },
+      {
+        name: 'licenseType',
+        type: 'string',
+        label: [{ languageCode: LanguageCode.en, value: 'License Type' }],
+        description: [{ languageCode: LanguageCode.en, value: 'License type for specs table (e.g. Personal & Commercial).' }],
+        nullable: true,
+      },
+    ],
+  },
   plugins: [
     AssetServerPlugin.init({
       route: 'assets',
@@ -103,3 +142,4 @@ export const config: VendureConfig = {
   // worker process.
   jobQueueOptions: {},
 };
+

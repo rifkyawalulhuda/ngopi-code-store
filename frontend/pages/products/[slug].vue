@@ -45,7 +45,7 @@
               <div v-else class="gallery-placeholder">
                 <AppIcon name="image" :size="48" />
               </div>
-              <span class="gallery-badge">SOURCE CODE</span>
+              <span class="gallery-badge">{{ badgeLabel }}</span>
             </div>
             <!-- Thumbnails (if multiple assets in future) -->
           </div>
@@ -72,7 +72,7 @@
               <AppIcon name="package" :size="20" class="delivery-icon" />
               <div>
                 <strong>Info Pengiriman Digital</strong>
-                <p>Download instan, update seumur hidup, lisensi personal &amp; komersial.</p>
+                <p>{{ deliveryInfo }}</p>
               </div>
             </div>
 
@@ -166,22 +166,35 @@ const cleanDescription = computed(() => {
   return desc.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 })
 
-// Static features (could be dynamic from custom fields in future)
-const features = [
-  'Arsitektur Bersih',
-  'Fully Responsive',
-  'Dukungan Dark Mode',
-  'Dokumentasi Lengkap',
-]
+// Dynamic features from custom field (one per line), with fallback
+const features = computed(() => {
+  const raw = product.value?.customFields?.keyFeatures
+  if (raw) {
+    return raw.split('\n').map((f: string) => f.trim()).filter(Boolean)
+  }
+  return ['Arsitektur Bersih', 'Fully Responsive', 'Dukungan Dark Mode', 'Dokumentasi Lengkap']
+})
 
-// Static specs (could be dynamic from custom fields in future)
+// Dynamic delivery info from custom field, with fallback
+const deliveryInfo = computed(() => {
+  return product.value?.customFields?.deliveryInfo
+    || 'Download instan, update seumur hidup, lisensi personal & komersial.'
+})
+
+// Dynamic specs from custom fields, with fallback
 const specs = computed(() => {
   if (!product.value) return []
+  const cf = product.value.customFields
   return [
-    { label: 'Tipe', value: 'Source Code' },
-    { label: 'Format', value: 'ZIP Archive' },
-    { label: 'Lisensi', value: 'Personal & Komersial' },
+    { label: 'Tipe', value: cf?.productType || 'Source Code' },
+    { label: 'Format', value: cf?.fileFormat || 'ZIP Archive' },
+    { label: 'Lisensi', value: cf?.licenseType || 'Personal & Komersial' },
   ]
+})
+
+// Badge label from custom field
+const badgeLabel = computed(() => {
+  return (product.value?.customFields?.productType || 'SOURCE CODE').toUpperCase()
 })
 
 function onBuyNow() {

@@ -17,6 +17,13 @@ export interface Product {
     price: number
     currencyCode: string
   }>
+  customFields?: {
+    keyFeatures?: string | null
+    deliveryInfo?: string | null
+    productType?: string | null
+    fileFormat?: string | null
+    licenseType?: string | null
+  }
 }
 
 export type SortOption = 'latest' | 'price-asc' | 'price-desc'

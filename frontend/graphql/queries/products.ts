@@ -46,6 +46,13 @@ export const GET_PRODUCT_BY_SLUG = gql`
         name
         slug
       }
+      customFields {
+        keyFeatures
+        deliveryInfo
+        productType
+        fileFormat
+        licenseType
+      }
     }
   }
 `

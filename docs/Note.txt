@@ -8,3 +8,8 @@ npm run dev
 
 cd e:\Github\ngopi-code-store\frontend
 npm run dev -- --port 3001
+
+
+Akses Vendure admin :
+
+http://localhost:3000/admin/

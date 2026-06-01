@@ -139,13 +139,17 @@
 
             <!-- Actions -->
             <div class="actions">
-              <button class="btn btn-primary btn-lg" type="button" @click="onBuyNow">
+              <button class="btn btn-primary btn-lg actions-buy" type="button" @click="onBuyNow">
                 <AppIcon name="shoppingBag" :size="20" />
                 Beli Sekarang
               </button>
-              <button class="btn btn-ghost btn-lg" type="button" @click="onWishlist">
+              <button
+                class="btn-icon-only"
+                type="button"
+                :aria-label="'Tambah ke wishlist'"
+                @click="onWishlist"
+              >
                 <AppIcon name="heart" :size="20" />
-                Wishlist
               </button>
             </div>
 
@@ -155,11 +159,11 @@
               :href="whatsappUrl"
               target="_blank"
               rel="noopener noreferrer"
-              class="wa-btn"
+              class="wa-link"
               aria-label="Tanya via WhatsApp"
             >
-              <AppIcon name="whatsapp" :size="20" />
-              <span class="wa-btn-text">Tanya via WhatsApp</span>
+              <AppIcon name="whatsapp" :size="18" />
+              <span>Tanya via WhatsApp</span>
             </a>
           </div>
         </div>
@@ -680,8 +684,54 @@ onMounted(async () => {
 /* Actions */
 .actions {
   display: flex;
+  align-items: center;
   gap: 0.75rem;
-  flex-wrap: wrap;
+}
+
+.actions-buy {
+  flex: 1;
+}
+
+.btn-icon-only {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--btn-ghost-border);
+  background: var(--btn-ghost-bg);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+  flex-shrink: 0;
+}
+
+.btn-icon-only:hover {
+  background: var(--btn-ghost-hover);
+  color: #e74c6f;
+  border-color: #e74c6f;
+}
+
+.btn-icon-only:active {
+  transform: scale(0.95);
+}
+
+/* WhatsApp link (subtle, not competing with CTA) */
+.wa-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #25D366;
+  text-decoration: none;
+  padding: 0.35rem 0;
+  transition: opacity 0.18s;
+}
+
+.wa-link:hover {
+  opacity: 0.75;
+  text-decoration: underline;
 }
 
 .btn {
@@ -716,48 +766,6 @@ onMounted(async () => {
 
 .btn-primary:hover {
   background: var(--primary-hover);
-}
-
-.btn-ghost {
-  background: var(--btn-ghost-bg);
-  color: var(--primary-text);
-  border-color: var(--btn-ghost-border);
-}
-
-.btn-ghost:hover {
-  background: var(--btn-ghost-hover);
-}
-
-/* WhatsApp button */
-.wa-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.75rem 1.25rem;
-  border-radius: 10px;
-  font-size: 0.92rem;
-  font-weight: 600;
-  text-decoration: none;
-  color: #fff;
-  background: #25D366;
-  border: none;
-  cursor: pointer;
-  transition: background 0.18s, transform 0.15s, box-shadow 0.18s;
-  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.25);
-  width: fit-content;
-}
-
-.wa-btn:hover {
-  background: #1ebe5a;
-  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.35);
-}
-
-.wa-btn:active {
-  transform: translateY(1px);
-}
-
-.wa-btn .app-icon {
-  flex-shrink: 0;
 }
 
 /* Detail section */
@@ -993,14 +1001,10 @@ onMounted(async () => {
 
 @media (max-width: 540px) {
   .actions {
-    flex-direction: column;
-  }
-  .actions .btn {
     width: 100%;
-    justify-content: center;
   }
-  .wa-btn {
-    width: 100%;
+  .actions-buy {
+    flex: 1;
     justify-content: center;
   }
   .related-grid {

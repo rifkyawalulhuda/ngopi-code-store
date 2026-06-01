@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sign In | Ngopi Code Digital Product Store</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed-variant": "#324c3e",
+                        "surface": "#f8f9fa",
+                        "on-primary-fixed": "#062014",
+                        "on-error-container": "#93000a",
+                        "primary-fixed-dim": "#b0cdbb",
+                        "on-tertiary-fixed-variant": "#484740",
+                        "on-secondary": "#ffffff",
+                        "inverse-on-surface": "#f0f1f2",
+                        "secondary-container": "#d7e5bb",
+                        "inverse-surface": "#2e3132",
+                        "surface-container-high": "#e7e8e9",
+                        "on-surface-variant": "#424844",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-background": "#191c1d",
+                        "inverse-primary": "#b0cdbb",
+                        "surface-bright": "#f8f9fa",
+                        "on-secondary-fixed-variant": "#3f4b2c",
+                        "on-secondary-container": "#5a6745",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed": "#dae8be",
+                        "primary-container": "#2d4739",
+                        "tertiary-fixed-dim": "#c9c6bd",
+                        "surface-tint": "#496455",
+                        "primary": "#173124",
+                        "background": "#f8f9fa",
+                        "on-tertiary-container": "#b1aea5",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#98b5a3",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#ccead6",
+                        "outline": "#727973",
+                        "surface-variant": "#e1e3e4",
+                        "on-surface": "#191c1d",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-error": "#ffffff",
+                        "surface-container-low": "#f3f4f5",
+                        "surface-container": "#edeeef",
+                        "outline-variant": "#c2c8c2",
+                        "tertiary": "#2c2c25",
+                        "on-tertiary-fixed": "#1c1c16",
+                        "secondary-fixed-dim": "#becca3",
+                        "tertiary-fixed": "#e6e2d8",
+                        "on-secondary-fixed": "#141f05",
+                        "secondary": "#566342",
+                        "tertiary-container": "#43423b",
+                        "surface-dim": "#d9dadb"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "24px",
+                        "margin-mobile": "16px",
+                        "xs": "4px",
+                        "sm": "12px",
+                        "lg": "48px",
+                        "margin-desktop": "64px",
+                        "xl": "80px",
+                        "gutter": "24px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-xl": ["Manrope"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Manrope"],
+                        "headline-xl-mobile": ["Manrope"],
+                        "label-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "headline-xl-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "0", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .transition-soft {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .auth-card-shadow {
+            box-shadow: 0 4px 20px -2px rgba(23, 49, 36, 0.05), 0 2px 10px -2px rgba(23, 49, 36, 0.03);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<nav class="bg-surface/80 backdrop-blur-md top-0 sticky z-50 border-b border-outline-variant/30">
+<div class="flex justify-between items-center w-full px-margin-desktop py-md max-w-[1280px] mx-auto">
+<div class="font-headline-md text-headline-md font-bold tracking-tight text-primary">Ngopi Code</div>
+<div class="hidden md:flex gap-lg items-center">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Store</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Source Code</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Ebooks</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Services</a>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-2 hover:bg-surface-container-low rounded-full transition-all duration-200">
+<span class="material-symbols-outlined text-primary" data-icon="shopping_cart">shopping_cart</span>
+</button>
+<button class="p-2 hover:bg-surface-container-low rounded-full transition-all duration-200 opacity-80 scale-95 border-b-2 border-primary pb-1">
+<span class="material-symbols-outlined text-primary" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</div>
+</nav>
+<main class="flex-grow flex items-center justify-center p-margin-mobile md:p-xl">
+<div class="w-full max-w-[480px] bg-surface-container-lowest p-lg md:p-xl rounded-xl auth-card-shadow transition-soft" id="auth-card">
+<!-- Sign In View -->
+<div class="space-y-lg" id="signin-view">
+<header class="text-center space-y-xs">
+<h2 class="font-headline-lg text-headline-lg text-primary">Welcome Back</h2>
+<p class="font-body-md text-on-surface-variant">Access your premium digital library</p>
+</header>
+<form class="space-y-md" onsubmit="event.preventDefault();">
+<div class="space-y-xs">
+<label class="font-label-md text-on-surface-variant" for="email">Email Address</label>
+<input class="w-full px-md py-3.5 rounded-lg border border-outline-variant/60 focus:border-primary focus:ring-1 focus:ring-primary/20 bg-surface-container-lowest transition-soft outline-none text-body-md" id="email" placeholder="name@company.com" type="email"/>
+</div>
+<div class="space-y-xs">
+<div class="flex justify-between">
+<label class="font-label-md text-on-surface-variant" for="password">Password</label>
+<a class="font-label-sm text-primary hover:underline" href="#">Forgot Password?</a>
+</div>
+<input class="w-full px-md py-3.5 rounded-lg border border-outline-variant/60 focus:border-primary focus:ring-1 focus:ring-primary/20 bg-surface-container-lowest transition-soft outline-none text-body-md" id="password" placeholder="••••••••" type="password"/>
+</div>
+<button class="w-full bg-primary text-on-primary py-4 rounded-lg font-label-md text-headline-md hover:bg-primary-container hover:text-on-primary-container transition-soft shadow-sm active:scale-[0.98]" type="submit">
+                        Sign In
+                    </button>
+</form>
+<div class="relative py-2">
+<div class="absolute inset-0 flex items-center"><div class="w-full border-t border-outline-variant/40"></div></div>
+<div class="relative flex justify-center text-xs uppercase"><span class="bg-surface-container-lowest px-md text-on-surface-variant/60 font-label-sm">Or continue with</span></div>
+</div>
+<div class="grid grid-cols-2 gap-sm">
+<button class="flex items-center justify-center gap-sm border border-outline-variant/60 py-3 rounded-lg hover:bg-surface-container-low transition-soft font-label-md text-on-surface-variant">
+<img alt="Google" class="w-5 h-5 opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9d4arb6ZeKlBjtWPeit4xeRVLemuu5o3sjsO9Zy0BIWSAof7Rr7d5U86gkbAf8Cahcco9HCCBIlpFllQ2QEeQMlkxEUGr9VMaXHwan2bAeZ9dLMe8PfnvmLHCL4sfskWAA0w0S1a413u4mgdUL9ju--7RFB1uK_tqRwOUZiLloPZcmCQux7LwiWaAvX3cL_leLbpVoO0cM6V3UGVEYqZ5PKuodlAWFoV8BB_CjkqYlGf4BJgT4Ms7MvXzriZEELgcVfEclRzwxV0"/>
+                        Google
+                    </button>
+<button class="flex items-center justify-center gap-sm border border-outline-variant/60 py-3 rounded-lg hover:bg-surface-container-low transition-soft font-label-md text-on-surface-variant">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]" data-icon="terminal">terminal</span>
+                        GitHub
+                    </button>
+</div>
+<p class="text-center font-body-md text-on-surface-variant">
+                    New to Ngopi Code? 
+                    <button class="text-primary font-semibold hover:underline" onclick="toggleAuth('signup')">Create an account</button>
+</p>
+</div>
+<!-- Sign Up View (Hidden by default) -->
+<div class="hidden space-y-lg" id="signup-view">
+<header class="text-center space-y-xs">
+<h2 class="font-headline-lg text-headline-lg text-primary">Create Account</h2>
+<p class="font-body-md text-on-surface-variant">Join our exclusive digital community</p>
+</header>
+<form class="space-y-md" onsubmit="event.preventDefault();">
+<div class="space-y-xs">
+<label class="font-label-md text-on-surface-variant" for="name">Full Name</label>
+<input class="w-full px-md py-3.5 rounded-lg border border-outline-variant/60 focus:border-primary focus:ring-1 focus:ring-primary/20 bg-surface-container-lowest transition-soft outline-none text-body-md" id="name" placeholder="Alex Rivera" type="text"/>
+</div>
+<div class="space-y-xs">
+<label class="font-label-md text-on-surface-variant" for="reg-email">Email Address</label>
+<input class="w-full px-md py-3.5 rounded-lg border border-outline-variant/60 focus:border-primary focus:ring-1 focus:ring-primary/20 bg-surface-container-lowest transition-soft outline-none text-body-md" id="reg-email" placeholder="name@company.com" type="email"/>
+</div>
+<div class="space-y-xs">
+<label class="font-label-md text-on-surface-variant" for="reg-password">Password</label>
+<input class="w-full px-md py-3.5 rounded-lg border border-outline-variant/60 focus:border-primary focus:ring-1 focus:ring-primary/20 bg-surface-container-lowest transition-soft outline-none text-body-md" id="reg-password" placeholder="Create a strong password" type="password"/>
+</div>
+<div class="flex items-start gap-sm py-1">
+<input class="mt-1 w-4 h-4 text-primary border-outline-variant/60 rounded focus:ring-primary/20" id="terms" type="checkbox"/>
+<label class="font-label-sm text-on-surface-variant leading-relaxed" for="terms">
+                            I agree to the <a class="text-primary underline font-medium" href="#">Terms of Service</a> and <a class="text-primary underline font-medium" href="#">Privacy Policy</a>.
+                        </label>
+</div>
+<button class="w-full bg-primary text-on-primary py-4 rounded-lg font-label-md text-headline-md hover:bg-primary-container hover:text-on-primary-container transition-soft shadow-sm active:scale-[0.98]" type="submit">
+                        Create Account
+                    </button>
+</form>
+<p class="text-center font-body-md text-on-surface-variant">
+                    Already have an account? 
+                    <button class="text-primary font-semibold hover:underline" onclick="toggleAuth('signin')">Sign In</button>
+</p>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low">
+<div class="flex flex-col md:flex-row justify-between items-center w-full px-margin-desktop py-lg max-w-[1280px] mx-auto border-t border-outline-variant/30">
+<div class="mb-lg md:mb-0 text-center md:text-left">
+<div class="font-headline-md text-headline-md font-bold text-primary mb-xs">Ngopi Code</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant/60">© 2024 Ngopi Code Digital Product Store. All rights reserved.</p>
+</div>
+<div class="flex flex-wrap justify-center gap-md">
+<a class="font-label-sm text-label-sm text-on-surface-variant/70 hover:text-primary transition-colors hover:underline" href="#">About Us</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant/70 hover:text-primary transition-colors hover:underline" href="#">Contact</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant/70 hover:text-primary transition-colors hover:underline" href="#">Terms</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant/70 hover:text-primary transition-colors hover:underline" href="#">Privacy</a>
+</div>
+</div>
+</footer>
+<script>
+        function toggleAuth(view) {
+            const signin = document.getElementById('signin-view');
+            const signup = document.getElementById('signup-view');
+            const card = document.getElementById('auth-card');
+            
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(10px)';
+            
+            setTimeout(() => {
+                if (view === 'signup') {
+                    signin.classList.add('hidden');
+                    signup.classList.remove('hidden');
+                } else {
+                    signup.classList.add('hidden');
+                    signin.classList.remove('hidden');
+                }
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 200);
+        }
+    </script>
+</body></html>

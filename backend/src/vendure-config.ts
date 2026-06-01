@@ -4,9 +4,11 @@ import { AdminUiPlugin } from '@vendure/admin-ui-plugin';
 import path from 'path';
 import { memoryGuardMiddleware } from './middleware/memory-guard.middleware';
 import { healthCheckMiddleware } from './middleware/health-check.middleware';
+import { authRateLimiterMiddleware } from './middleware/auth-rate-limiter.middleware';
 import { customOrderProcess } from './config/custom-order-process';
 import { IdrMoneyStrategy } from './config/idr-money-strategy';
 import { TripayPaymentPlugin } from './plugins/tripay-payment/tripay-payment.plugin';
+import { EmailVerificationPlugin } from './plugins/email/email-verification.handler';
 
 /**
  * Vendure configuration for NgopiCode Digital Store.
@@ -42,10 +44,16 @@ export const config: VendureConfig = {
         route: '*splat',
         beforeListen: true,
       },
+      {
+        handler: authRateLimiterMiddleware,
+        route: 'shop-api',
+      },
     ],
   },
   authOptions: {
     tokenMethod: ['bearer', 'cookie'],
+    requireVerification: true,
+    verificationTokenDuration: '7d',
     superadminCredentials: {
       identifier: process.env.SUPERADMIN_USERNAME || 'superadmin',
       password: process.env.SUPERADMIN_PASSWORD || 'superadmin',
@@ -144,6 +152,7 @@ export const config: VendureConfig = {
     DefaultSearchPlugin,
     DefaultJobQueuePlugin.init({}),
     TripayPaymentPlugin,
+    EmailVerificationPlugin,
   ],
   // Requirement 12.4: Single-process deployment for 8GB hardware.
   // DefaultJobQueuePlugin provides a DB-backed (SQL) job queue. The worker that

@@ -46,6 +46,11 @@
               <p class="auth-subtitle">Akses koleksi produk digital premium kamu</p>
             </div>
 
+            <!-- Error/Success messages -->
+            <div v-if="authError && activeTab === 'login'" class="auth-message auth-error" role="alert">
+              {{ authError }}
+            </div>
+
             <div class="form-group">
               <label for="login-email" class="form-label">Email Address</label>
               <div class="input-wrapper">
@@ -136,6 +141,15 @@
               </div>
               <h1 class="auth-title">Create Account</h1>
               <p class="auth-subtitle">Bergabung dengan komunitas digital eksklusif kami</p>
+            </div>
+
+            <!-- Success message (after registration) -->
+            <div v-if="successMessage" class="auth-message auth-success" role="status">
+              {{ successMessage }}
+            </div>
+            <!-- Error message -->
+            <div v-if="authError && activeTab === 'register'" class="auth-message auth-error" role="alert">
+              {{ authError }}
             </div>
 
             <div class="form-group">
@@ -231,16 +245,20 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
+import { useAuth } from '~/composables/useAuth'
 
 useHead({
   title: 'Login / Register - NgopiCode',
 })
+
+const { login, register, error: authError, loading: authLoading } = useAuth()
 
 const activeTab = ref<'login' | 'register'>('login')
 const showLoginPassword = ref(false)
 const showRegPassword = ref(false)
 const loginLoading = ref(false)
 const registerLoading = ref(false)
+const successMessage = ref('')
 
 const loginForm = reactive({
   email: '',
@@ -256,10 +274,14 @@ const registerForm = reactive({
 
 async function onLogin() {
   loginLoading.value = true
+  successMessage.value = ''
+  authError.value = null
   try {
-    // TODO: Implement Vendure authentication
-    await new Promise((r) => setTimeout(r, 1000))
-    alert('Login berhasil! (placeholder)')
+    const success = await login(loginForm.email, loginForm.password)
+    if (success) {
+      // Redirect to homepage or previous page
+      navigateTo('/')
+    }
   } finally {
     loginLoading.value = false
   }
@@ -267,10 +289,32 @@ async function onLogin() {
 
 async function onRegister() {
   registerLoading.value = true
+  successMessage.value = ''
+  authError.value = null
   try {
-    // TODO: Implement Vendure registration
-    await new Promise((r) => setTimeout(r, 1000))
-    alert('Registrasi berhasil! (placeholder)')
+    // Split name into first/last
+    const nameParts = registerForm.name.trim().split(' ')
+    const firstName = nameParts[0] || ''
+    const lastName = nameParts.slice(1).join(' ') || ''
+
+    const success = await register({
+      firstName,
+      lastName,
+      emailAddress: registerForm.email,
+      password: registerForm.password,
+    })
+    if (success) {
+      // Store password temporarily for verification step
+      if (import.meta.client) {
+        sessionStorage.setItem('_reg_pw', registerForm.password)
+      }
+      successMessage.value = 'Registrasi berhasil! Silakan cek email Anda untuk verifikasi akun.'
+      // Reset form
+      registerForm.name = ''
+      registerForm.email = ''
+      registerForm.password = ''
+      registerForm.agreeTerms = false
+    }
   } finally {
     registerLoading.value = false
   }
@@ -605,6 +649,39 @@ function onSocialLogin(provider: string) {
   margin: 1.5rem 0 0;
   font-size: 0.9rem;
   color: var(--text-muted);
+}
+
+/* Auth messages */
+.auth-message {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.auth-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+[data-theme='dark'] .auth-error {
+  background: rgba(185, 28, 28, 0.12);
+  color: #fca5a5;
+  border-color: rgba(185, 28, 28, 0.3);
+}
+
+.auth-success {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+[data-theme='dark'] .auth-success {
+  background: rgba(6, 95, 70, 0.12);
+  color: #6ee7b7;
+  border-color: rgba(6, 95, 70, 0.3);
 }
 
 .link-btn {

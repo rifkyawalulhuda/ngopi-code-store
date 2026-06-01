@@ -10,8 +10,8 @@ Headless e-commerce platform for selling digital products (source code, ebooks, 
 
 ## Metrics
 
-- **Total files**: 135 source files
-- **Total tokens**: ~102K
+- **Total files**: 136 source files
+- **Total tokens**: ~103K
 - **Languages**: TypeScript, Vue 3 (SFC), CSS
 
 ## Architecture
@@ -23,6 +23,7 @@ ngopi-code-store/
 ├── deploy/           # Cloudflare tunnel config
 ├── docs/             # Architecture docs
 ├── docker-compose.yml
+├── dev.bat           # Auto-start backend + frontend dev servers
 └── .kiro/            # Specs, steering, settings
 ```
 
@@ -43,16 +44,16 @@ ngopi-code-store/
 
 | File | Purpose |
 |------|---------|
-| `frontend/nuxt.config.ts` | Nuxt config (Apollo, Pinia, SSR) |
+| `frontend/nuxt.config.ts` | Nuxt config (Apollo, Pinia, SSR, devServer port 3001) |
 | `frontend/assets/css/theme.css` | Design tokens (light/dark mode) |
-| `frontend/components/TheHeader.vue` | Site header with nav + search |
+| `frontend/components/TheHeader.vue` | Site header (brand+theme toggle, nav, search, user→/auth, cart) |
 | `frontend/components/TheFooter.vue` | Site footer |
 | `frontend/components/SearchCommand.vue` | Command palette search (Ctrl+K) |
-| `frontend/components/AppIcon.vue` | SVG icon system |
+| `frontend/components/AppIcon.vue` | SVG icon system (incl. whatsapp icon) |
 | `frontend/pages/index.vue` | Homepage |
 | `frontend/pages/products/index.vue` | Product catalog (SSR, filters) |
-| `frontend/pages/products/[slug].vue` | Product detail page |
-| `frontend/pages/auth.vue` | Login/Register page |
+| `frontend/pages/products/[slug].vue` | Product detail (minimalist actions: Buy + ♡ + WA link) |
+| `frontend/pages/auth.vue` | Login/Register page (tab switcher, social login) |
 | `frontend/pages/checkout.vue` | Guest checkout |
 | `frontend/pages/order/[code].vue` | Payment confirmation |
 | `frontend/pages/downloads/[orderCode].vue` | Download page |
@@ -60,18 +61,37 @@ ngopi-code-store/
 | `frontend/composables/useCart.ts` | Cart management |
 | `frontend/composables/useCheckout.ts` | Payment flow |
 | `frontend/composables/useDownload.ts` | Download access |
-| `frontend/composables/useWhatsapp.ts` | WhatsApp contact button |
+| `frontend/composables/useWhatsapp.ts` | WhatsApp contact (via activeChannel custom field) |
 | `frontend/composables/useTheme.ts` | Dark/light mode toggle |
 | `frontend/composables/useProductFilters.ts` | Catalog filtering |
 | `frontend/graphql/queries/products.ts` | Product queries (GET_PRODUCT_BY_SLUG, SEARCH_PRODUCTS) |
-| `frontend/graphql/queries/settings.ts` | Channel settings (WhatsApp number) |
+| `frontend/graphql/queries/settings.ts` | Channel settings (WhatsApp number via activeChannel) |
 | `frontend/stores/cart.ts` | Pinia cart store |
 | `frontend/utils/format.ts` | Price formatting (IDR) |
+
+## Header Layout
+
+```
+[>] NgopiCode [🌙]     Store  Source Code  Ebooks  Services     [🔍] [👤→/auth] [🛒]
+└── brand-group ──┘     └────────── nav-desktop ──────────┘     └──── actions ────┘
+```
+
+- Theme toggle: next to logo (subtle, 32px, border style)
+- Search: opens Command Palette (Ctrl+K)
+- User icon: links to /auth
+- Cart: links to /checkout with badge
+
+## Product Page Actions Layout
+
+```
+[████████████ Beli Sekarang ████████████] [♡]    ← Primary CTA + icon-only wishlist
+💬 Tanya via WhatsApp                            ← Subtle text link
+```
 
 ## Custom Fields (Vendure)
 
 ### Channel
-- `whatsappNumber` (string, public) — Owner WhatsApp for product page contact button
+- `whatsappNumber` (string, public) — Owner WhatsApp for product page contact
 
 ### Product
 - `keyFeatures` (text) — Bullet features list
@@ -100,12 +120,15 @@ ngopi-code-store/
 ## Commands
 
 ```bash
-# Backend
+# Quick start (Windows)
+dev.bat                            # Opens both servers in separate terminals
+
+# Backend (port 3000)
 cd backend && npm run dev          # Dev server
 cd backend && npm test             # Jest tests
 cd backend && npm run migration:run # Run migrations
 
-# Frontend
+# Frontend (port 3001)
 cd frontend && npm run dev         # Nuxt dev
 cd frontend && npm run test        # Vitest (single run)
 cd frontend && npm run build       # Production build

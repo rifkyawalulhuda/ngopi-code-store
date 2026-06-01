@@ -40,7 +40,13 @@
         <button type="button" class="icon-btn" aria-label="Cari produk (Ctrl+K)" @click="openSearch">
           <AppIcon name="search" :size="20" />
         </button>
-        <NuxtLink :to="accountLink" class="icon-btn" :aria-label="isLoggedIn ? 'Akun saya' : 'Masuk'">
+        <NuxtLink
+          :to="accountLink"
+          class="icon-btn"
+          :class="{ active: isAccountActive }"
+          :aria-label="isLoggedIn ? 'Akun saya' : 'Masuk'"
+          :aria-current="isAccountActive ? 'page' : undefined"
+        >
           <AppIcon name="user" :size="20" />
         </NuxtLink>
         <NuxtLink to="/checkout" class="icon-btn cart-btn" aria-label="Keranjang belanja">
@@ -97,6 +103,9 @@ function openSearch() {
 
 const { isLoggedIn, ensureSession } = useAuth()
 const accountLink = computed(() => (isLoggedIn.value ? '/account' : '/auth'))
+// Highlight the profile button while on the account page
+const currentRoute = useRoute()
+const isAccountActive = computed(() => currentRoute.path.startsWith('/account'))
 
 // Check session once on mount so the user icon points to the right place
 onMounted(() => {
@@ -259,6 +268,11 @@ onBeforeUnmount(() => {
 
 .icon-btn:hover {
   background: var(--surface-2);
+  color: var(--primary-text);
+}
+
+.icon-btn.active {
+  background: var(--primary-soft);
   color: var(--primary-text);
 }
 

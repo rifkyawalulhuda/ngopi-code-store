@@ -82,6 +82,81 @@ export const GET_ACTIVE_CUSTOMER = gql`
       firstName
       lastName
       emailAddress
+      customFields {
+        whatsappNumber
+      }
+    }
+  }
+`
+
+export const UPDATE_CUSTOMER = gql`
+  mutation UpdateCustomer($input: UpdateCustomerInput!) {
+    updateCustomer(input: $input) {
+      id
+      firstName
+      lastName
+      emailAddress
+      customFields {
+        whatsappNumber
+      }
+    }
+  }
+`
+
+export const UPDATE_CUSTOMER_PASSWORD = gql`
+  mutation UpdateCustomerPassword($currentPassword: String!, $newPassword: String!) {
+    updateCustomerPassword(currentPassword: $currentPassword, newPassword: $newPassword) {
+      ... on Success {
+        success
+      }
+      ... on InvalidCredentialsError {
+        message
+      }
+      ... on PasswordValidationError {
+        message
+        validationErrorMessage
+      }
+      ... on NativeAuthStrategyError {
+        message
+      }
+    }
+  }
+`
+
+export const REQUEST_UPDATE_EMAIL = gql`
+  mutation RequestUpdateEmail($password: String!, $newEmailAddress: String!) {
+    requestUpdateCustomerEmailAddress(password: $password, newEmailAddress: $newEmailAddress) {
+      ... on Success {
+        success
+      }
+      ... on InvalidCredentialsError {
+        message
+      }
+      ... on EmailAddressConflictError {
+        message
+      }
+      ... on NativeAuthStrategyError {
+        message
+      }
+    }
+  }
+`
+
+export const UPDATE_EMAIL_ADDRESS = gql`
+  mutation UpdateEmailAddress($token: String!) {
+    updateCustomerEmailAddress(token: $token) {
+      ... on Success {
+        success
+      }
+      ... on IdentifierChangeTokenInvalidError {
+        message
+      }
+      ... on IdentifierChangeTokenExpiredError {
+        message
+      }
+      ... on NativeAuthStrategyError {
+        message
+      }
     }
   }
 `
@@ -93,6 +168,9 @@ export const GET_ACTIVE_CUSTOMER_ORDERS = gql`
       firstName
       lastName
       emailAddress
+      customFields {
+        whatsappNumber
+      }
       orders(options: { sort: { createdAt: DESC } }) {
         totalItems
         items {

@@ -5,6 +5,10 @@ import {
   LOGOUT,
   VERIFY_CUSTOMER,
   GET_ACTIVE_CUSTOMER,
+  UPDATE_CUSTOMER,
+  UPDATE_CUSTOMER_PASSWORD,
+  REQUEST_UPDATE_EMAIL,
+  UPDATE_EMAIL_ADDRESS,
 } from '~/graphql/mutations/auth'
 
 export interface ActiveCustomer {
@@ -12,6 +16,9 @@ export interface ActiveCustomer {
   firstName: string
   lastName: string
   emailAddress: string
+  customFields?: {
+    whatsappNumber?: string | null
+  } | null
 }
 
 export type AuthError = string | null
@@ -116,21 +123,19 @@ export function useAuth() {
 
   /**
    * Verify customer email with the token from the verification link.
-   * Replays the password stored during registration (needed when requireVerification is true).
+   *
+   * IMPORTANT: Since registration already sets the password (Vendure "Scenario 1"),
+   * verification must be called WITHOUT a password. Sending a password here would
+   * trigger PasswordAlreadySetError and can leave the account in a confusing state.
    */
   async function verifyEmail(token: string): Promise<boolean> {
     loading.value = true
     error.value = null
     try {
-      let password: string | null = null
-      if (import.meta.client) {
-        password = sessionStorage.getItem('_reg_pw')
-      }
-
       const { $apollo } = useNuxtApp()
       const { data } = await $apollo.defaultClient.mutate({
         mutation: VERIFY_CUSTOMER,
-        variables: { token, password },
+        variables: { token, password: null },
       })
 
       const result = data?.verifyCustomerAccount
@@ -144,8 +149,9 @@ export function useAuth() {
       if (result?.__typename === 'VerificationTokenExpiredError') {
         error.value = 'Link verifikasi sudah kedaluwarsa. Silakan daftar ulang.'
       } else if (result?.__typename === 'VerificationTokenInvalidError') {
-        error.value = 'Link verifikasi tidak valid.'
+        error.value = 'Link verifikasi tidak valid atau sudah pernah digunakan.'
       } else if (result?.__typename === 'PasswordAlreadySetError') {
+        // Account already verified previously — treat as success
         return true
       } else {
         error.value = result?.message || 'Verifikasi gagal'
@@ -188,6 +194,127 @@ export function useAuth() {
     return fetchActiveCustomer()
   }
 
+  /**
+   * Update profile fields (firstName, lastName, whatsappNumber).
+   * Name can be changed anytime; whatsappNumber is optional.
+   */
+  async function updateProfile(input: {
+    firstName?: string
+    lastName?: string
+    whatsappNumber?: string | null
+  }): Promise<boolean> {
+    error.value = null
+    try {
+      const { $apollo } = useNuxtApp()
+      const { data } = await $apollo.defaultClient.mutate({
+        mutation: UPDATE_CUSTOMER,
+        variables: {
+          input: {
+            firstName: input.firstName,
+            lastName: input.lastName,
+            customFields: { whatsappNumber: input.whatsappNumber ?? null },
+          },
+        },
+      })
+      if (data?.updateCustomer) {
+        customer.value = data.updateCustomer
+        return true
+      }
+      error.value = 'Gagal memperbarui profil'
+      return false
+    } catch (err: any) {
+      error.value = err.message || 'Terjadi kesalahan saat memperbarui profil'
+      return false
+    }
+  }
+
+  /**
+   * Change password. Requires the current password.
+   */
+  async function changePassword(currentPassword: string, newPassword: string): Promise<boolean> {
+    error.value = null
+    try {
+      const { $apollo } = useNuxtApp()
+      const { data } = await $apollo.defaultClient.mutate({
+        mutation: UPDATE_CUSTOMER_PASSWORD,
+        variables: { currentPassword, newPassword },
+      })
+      const result = data?.updateCustomerPassword
+      if (result?.__typename === 'Success') return true
+
+      if (result?.__typename === 'InvalidCredentialsError') {
+        error.value = 'Password lama salah.'
+      } else {
+        error.value = result?.validationErrorMessage || result?.message || 'Gagal mengganti password'
+      }
+      return false
+    } catch (err: any) {
+      error.value = err.message || 'Terjadi kesalahan saat mengganti password'
+      return false
+    }
+  }
+
+  /**
+   * Request an email change. Sends a verification email to the NEW address.
+   * The email only changes after the customer verifies via that email.
+   * Requires the current password.
+   */
+  async function requestEmailChange(password: string, newEmailAddress: string): Promise<boolean> {
+    error.value = null
+    try {
+      const { $apollo } = useNuxtApp()
+      const { data } = await $apollo.defaultClient.mutate({
+        mutation: REQUEST_UPDATE_EMAIL,
+        variables: { password, newEmailAddress },
+      })
+      const result = data?.requestUpdateCustomerEmailAddress
+      if (result?.__typename === 'Success') return true
+
+      if (result?.__typename === 'InvalidCredentialsError') {
+        error.value = 'Password salah.'
+      } else if (result?.__typename === 'EmailAddressConflictError') {
+        error.value = 'Email tersebut sudah digunakan akun lain.'
+      } else {
+        error.value = result?.message || 'Gagal meminta perubahan email'
+      }
+      return false
+    } catch (err: any) {
+      error.value = err.message || 'Terjadi kesalahan saat meminta perubahan email'
+      return false
+    }
+  }
+
+  /**
+   * Confirm an email change using the token from the verification link.
+   */
+  async function confirmEmailChange(token: string): Promise<boolean> {
+    error.value = null
+    try {
+      const { $apollo } = useNuxtApp()
+      const { data } = await $apollo.defaultClient.mutate({
+        mutation: UPDATE_EMAIL_ADDRESS,
+        variables: { token },
+      })
+      const result = data?.updateCustomerEmailAddress
+      if (result?.__typename === 'Success') {
+        await fetchActiveCustomer()
+        return true
+      }
+
+      if (result?.__typename === 'IdentifierChangeTokenExpiredError') {
+        error.value = 'Link konfirmasi sudah kedaluwarsa.'
+      } else if (result?.__typename === 'IdentifierChangeTokenInvalidError') {
+        error.value = 'Link konfirmasi tidak valid.'
+      } else {
+        error.value = result?.message || 'Gagal mengkonfirmasi perubahan email'
+      }
+      return false
+    } catch (err: any) {
+      error.value = err.message || 'Terjadi kesalahan saat konfirmasi email'
+      return false
+    }
+  }
+
   return {
     customer,
     isLoggedIn,
@@ -200,5 +327,9 @@ export function useAuth() {
     verifyEmail,
     fetchActiveCustomer,
     ensureSession,
+    updateProfile,
+    changePassword,
+    requestEmailChange,
+    confirmEmailChange,
   }
 }

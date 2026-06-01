@@ -101,6 +101,16 @@ export const config: VendureConfig = {
         public: true,
       },
     ],
+    Customer: [
+      {
+        name: 'whatsappNumber',
+        type: 'string',
+        label: [{ languageCode: LanguageCode.en, value: 'WhatsApp Number' }],
+        description: [{ languageCode: LanguageCode.en, value: 'Customer WhatsApp number for contact (optional).' }],
+        nullable: true,
+        public: true,
+      },
+    ],
     Product: [
       {
         name: 'keyFeatures',

@@ -12,4 +12,4 @@ npm run dev -- --port 3001
 
 Akses Vendure admin :
 
-http://localhost:3000/admin/
+http://localhost:3000/dashboard/

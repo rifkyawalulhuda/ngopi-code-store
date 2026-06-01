@@ -195,24 +195,117 @@
             <h2 class="panel-title">Pengaturan Akun</h2>
           </div>
 
-          <div class="settings-list">
-            <div class="setting-row">
-              <span class="setting-label">Nama Lengkap</span>
-              <span class="setting-value">{{ fullName || '—' }}</span>
-            </div>
-            <div class="setting-row">
-              <span class="setting-label">Email</span>
-              <span class="setting-value">{{ customer?.emailAddress || '—' }}</span>
-            </div>
-            <div class="setting-row">
-              <span class="setting-label">Status Verifikasi</span>
-              <span class="setting-value"><span class="stat-badge">Terverifikasi</span></span>
-            </div>
-          </div>
+          <!-- Profile form: name + whatsapp -->
+          <form class="settings-form" @submit.prevent="onSaveProfile">
+            <h3 class="settings-subtitle">Profil</h3>
 
-          <p class="settings-note">
-            Fitur pengubahan profil dan password akan segera tersedia.
-          </p>
+            <div class="settings-grid">
+              <div class="form-group">
+                <label for="set-first" class="form-label">Nama Depan</label>
+                <input id="set-first" v-model="profileForm.firstName" type="text" class="form-input" autocomplete="given-name" />
+              </div>
+              <div class="form-group">
+                <label for="set-last" class="form-label">Nama Belakang</label>
+                <input id="set-last" v-model="profileForm.lastName" type="text" class="form-input" autocomplete="family-name" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="set-wa" class="form-label">Nomor WhatsApp <span class="optional">(opsional)</span></label>
+              <input
+                id="set-wa"
+                v-model="profileForm.whatsappNumber"
+                type="tel"
+                class="form-input"
+                placeholder="Contoh: 6281234567890"
+                inputmode="numeric"
+                autocomplete="tel"
+              />
+              <p class="form-help">Gunakan format internasional dengan kode negara (62 untuk Indonesia).</p>
+            </div>
+
+            <div v-if="profileMsg" class="form-feedback" :class="profileOk ? 'feedback-success' : 'feedback-error'" role="status">
+              {{ profileMsg }}
+            </div>
+
+            <button type="submit" class="btn btn-primary" :disabled="profileSaving">
+              <span v-if="profileSaving" class="btn-spinner-sm" />
+              <span v-else>Simpan Profil</span>
+            </button>
+          </form>
+
+          <hr class="settings-divider" />
+
+          <!-- Email change form -->
+          <form class="settings-form" @submit.prevent="onRequestEmailChange">
+            <h3 class="settings-subtitle">Ubah Email</h3>
+            <p class="settings-desc">
+              Email kamu saat ini: <strong>{{ customer?.emailAddress }}</strong>.
+              Setelah mengirim permintaan, cek email <strong>baru</strong> kamu untuk verifikasi.
+              Email tidak akan berubah sampai kamu verifikasi.
+            </p>
+
+            <div class="form-group">
+              <label for="set-new-email" class="form-label">Email Baru</label>
+              <input id="set-new-email" v-model="emailForm.newEmail" type="email" class="form-input" placeholder="email-baru@email.com" autocomplete="email" />
+            </div>
+
+            <div class="form-group">
+              <label for="set-email-pw" class="form-label">Password Saat Ini</label>
+              <input id="set-email-pw" v-model="emailForm.password" type="password" class="form-input" placeholder="Konfirmasi dengan password" autocomplete="current-password" />
+            </div>
+
+            <div v-if="emailMsg" class="form-feedback" :class="emailOk ? 'feedback-success' : 'feedback-error'" role="status">
+              {{ emailMsg }}
+            </div>
+
+            <button type="submit" class="btn btn-primary" :disabled="emailSaving">
+              <span v-if="emailSaving" class="btn-spinner-sm" />
+              <span v-else>Kirim Verifikasi Email Baru</span>
+            </button>
+          </form>
+
+          <hr class="settings-divider" />
+
+          <!-- Password change form -->
+          <form class="settings-form" @submit.prevent="onChangePassword">
+            <h3 class="settings-subtitle">Ubah Password</h3>
+
+            <div class="form-group">
+              <label for="set-old-pw" class="form-label">Password Lama</label>
+              <input id="set-old-pw" v-model="passwordForm.current" type="password" class="form-input" placeholder="Password saat ini" autocomplete="current-password" />
+            </div>
+
+            <div class="settings-grid">
+              <div class="form-group">
+                <label for="set-new-pw" class="form-label">Password Baru</label>
+                <input id="set-new-pw" v-model="passwordForm.next" type="password" class="form-input" placeholder="Minimal 8 karakter" minlength="8" autocomplete="new-password" />
+              </div>
+              <div class="form-group">
+                <label for="set-new-pw2" class="form-label">Konfirmasi Password Baru</label>
+                <input
+                  id="set-new-pw2"
+                  v-model="passwordForm.confirm"
+                  type="password"
+                  class="form-input"
+                  :class="{ 'input-error': pwMismatch }"
+                  placeholder="Ulangi password baru"
+                  minlength="8"
+                  autocomplete="new-password"
+                />
+              </div>
+            </div>
+            <p v-if="pwMismatch" class="field-error" role="alert">Password baru tidak cocok.</p>
+
+            <div v-if="pwMsg" class="form-feedback" :class="pwOk ? 'feedback-success' : 'feedback-error'" role="status">
+              {{ pwMsg }}
+            </div>
+
+            <button type="submit" class="btn btn-primary" :disabled="pwSaving || pwMismatch">
+              <span v-if="pwSaving" class="btn-spinner-sm" />
+              <span v-else>Ganti Password</span>
+            </button>
+          </form>
         </section>
       </main>
     </div>
@@ -222,7 +315,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, reactive } from 'vue'
 import { useAuth } from '~/composables/useAuth'
 import { GET_ACTIVE_CUSTOMER_ORDERS } from '~/graphql/mutations/auth'
 import { formatPriceIDR } from '~/utils/format'
@@ -247,7 +340,7 @@ interface CustomerOrder {
   lines: OrderLine[]
 }
 
-const { customer, logout, ensureSession } = useAuth()
+const { customer, logout, ensureSession, updateProfile, changePassword, requestEmailChange, error: authError } = useAuth()
 
 type TabId = 'library' | 'orders' | 'settings'
 const activeTab = ref<TabId>('library')
@@ -340,6 +433,110 @@ function statusClass(state: string): string {
 async function onLogout() {
   await logout()
   navigateTo('/auth')
+}
+
+/* ---------- Settings forms ---------- */
+
+// Profile (name + whatsapp)
+const profileForm = reactive({ firstName: '', lastName: '', whatsappNumber: '' })
+const profileSaving = ref(false)
+const profileMsg = ref('')
+const profileOk = ref(false)
+
+// Email change
+const emailForm = reactive({ newEmail: '', password: '' })
+const emailSaving = ref(false)
+const emailMsg = ref('')
+const emailOk = ref(false)
+
+// Password change
+const passwordForm = reactive({ current: '', next: '', confirm: '' })
+const pwSaving = ref(false)
+const pwMsg = ref('')
+const pwOk = ref(false)
+const pwMismatch = computed(
+  () => passwordForm.confirm.length > 0 && passwordForm.next !== passwordForm.confirm,
+)
+
+// Prefill profile form when customer data loads
+watch(
+  customer,
+  (c) => {
+    if (c) {
+      profileForm.firstName = c.firstName || ''
+      profileForm.lastName = c.lastName || ''
+      profileForm.whatsappNumber = c.customFields?.whatsappNumber || ''
+    }
+  },
+  { immediate: true },
+)
+
+async function onSaveProfile() {
+  profileSaving.value = true
+  profileMsg.value = ''
+  try {
+    const ok = await updateProfile({
+      firstName: profileForm.firstName.trim(),
+      lastName: profileForm.lastName.trim(),
+      whatsappNumber: profileForm.whatsappNumber.trim() || null,
+    })
+    profileOk.value = ok
+    profileMsg.value = ok ? 'Profil berhasil diperbarui.' : (authError.value || 'Gagal memperbarui profil.')
+  } finally {
+    profileSaving.value = false
+  }
+}
+
+async function onRequestEmailChange() {
+  if (!emailForm.newEmail || !emailForm.password) {
+    emailOk.value = false
+    emailMsg.value = 'Isi email baru dan password.'
+    return
+  }
+  emailSaving.value = true
+  emailMsg.value = ''
+  try {
+    const ok = await requestEmailChange(emailForm.password, emailForm.newEmail.trim())
+    emailOk.value = ok
+    if (ok) {
+      emailMsg.value = `Link verifikasi telah dikirim ke ${emailForm.newEmail}. Email akan berubah setelah kamu verifikasi.`
+      emailForm.newEmail = ''
+      emailForm.password = ''
+    } else {
+      emailMsg.value = authError.value || 'Gagal meminta perubahan email.'
+    }
+  } finally {
+    emailSaving.value = false
+  }
+}
+
+async function onChangePassword() {
+  if (passwordForm.next !== passwordForm.confirm) {
+    pwOk.value = false
+    pwMsg.value = 'Password baru tidak cocok.'
+    return
+  }
+  if (!passwordForm.current || !passwordForm.next) {
+    pwOk.value = false
+    pwMsg.value = 'Isi password lama dan password baru.'
+    return
+  }
+  pwSaving.value = true
+  pwMsg.value = ''
+  try {
+    const ok = await changePassword(passwordForm.current, passwordForm.next)
+    pwOk.value = ok
+    if (ok) {
+      pwMsg.value = 'Password berhasil diganti.'
+      passwordForm.current = ''
+      passwordForm.next = ''
+      passwordForm.confirm = ''
+    } else {
+      pwMsg.value = authError.value || 'Gagal mengganti password.'
+    }
+  } finally {
+    pwSaving.value = false
+  }
 }
 
 // Lock body scroll when mobile drawer is open
@@ -852,41 +1049,130 @@ onMounted(async () => {
   color: var(--primary-text);
 }
 
-/* Settings */
-.settings-list {
+/* Settings forms */
+.settings-form {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
+  gap: 1rem;
 }
 
-.setting-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--border);
+.settings-subtitle {
+  font-size: 1.02rem;
+  font-weight: 700;
+  margin: 0;
 }
 
-.setting-row:last-child {
-  border-bottom: none;
-}
-
-.setting-label {
-  font-size: 0.9rem;
+.settings-desc {
+  font-size: 0.88rem;
   color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0;
 }
 
-.setting-value {
-  font-size: 0.92rem;
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.settings-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.75rem 0;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-label {
+  font-size: 0.86rem;
   font-weight: 600;
 }
 
-.settings-note {
-  margin: 1rem 0 0;
-  font-size: 0.85rem;
+.optional {
+  font-weight: 400;
   color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.92rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.form-input::placeholder {
+  color: var(--placeholder-icon);
+}
+
+.form-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.form-input.input-error {
+  border-color: #dc2626;
+}
+
+.form-help {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.field-error {
+  font-size: 0.82rem;
+  color: #dc2626;
+  margin: 0;
+}
+
+[data-theme='dark'] .field-error {
+  color: #fca5a5;
+}
+
+.form-feedback {
+  padding: 0.7rem 0.9rem;
+  border-radius: 9px;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.feedback-success {
+  background: var(--primary-soft);
+  color: var(--primary-text);
+}
+
+.feedback-error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+[data-theme='dark'] .feedback-error {
+  background: rgba(185, 28, 28, 0.12);
+  color: #fca5a5;
+}
+
+.btn-spinner-sm {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.settings-form .btn {
+  align-self: flex-start;
 }
 
 /* Empty state */
@@ -1071,6 +1357,9 @@ onMounted(async () => {
   .welcome {
     flex-direction: column;
     align-items: flex-start;
+  }
+  .settings-grid {
+    grid-template-columns: 1fr;
   }
 }
 

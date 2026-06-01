@@ -210,6 +210,42 @@
             </div>
 
             <div class="form-group">
+              <label for="reg-password-confirm" class="form-label">Konfirmasi Password</label>
+              <div class="input-wrapper">
+                <AppIcon name="lock" :size="18" class="input-icon" />
+                <input
+                  id="reg-password-confirm"
+                  v-model="registerForm.passwordConfirm"
+                  :type="showRegPasswordConfirm ? 'text' : 'password'"
+                  class="form-input"
+                  :class="{ 'input-error': passwordMismatch }"
+                  placeholder="Ulangi password kamu"
+                  autocomplete="new-password"
+                  minlength="8"
+                  required
+                  :aria-invalid="passwordMismatch"
+                  aria-describedby="reg-password-confirm-error"
+                />
+                <button
+                  type="button"
+                  class="toggle-password"
+                  :aria-label="showRegPasswordConfirm ? 'Sembunyikan password' : 'Tampilkan password'"
+                  @click="showRegPasswordConfirm = !showRegPasswordConfirm"
+                >
+                  <AppIcon :name="showRegPasswordConfirm ? 'close' : 'search'" :size="16" />
+                </button>
+              </div>
+              <p
+                v-if="passwordMismatch"
+                id="reg-password-confirm-error"
+                class="field-error"
+                role="alert"
+              >
+                Password tidak cocok. Pastikan kedua password sama.
+              </p>
+            </div>
+
+            <div class="form-group">
               <label class="checkbox-label">
                 <input
                   v-model="registerForm.agreeTerms"
@@ -225,7 +261,7 @@
               </label>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-full" :disabled="registerLoading">
+            <button type="submit" class="btn btn-primary btn-full" :disabled="registerLoading || passwordMismatch">
               <span v-if="registerLoading" class="btn-spinner" />
               <span v-else>Create Account</span>
             </button>
@@ -244,7 +280,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useAuth } from '~/composables/useAuth'
 
 useHead({
@@ -264,6 +300,7 @@ onMounted(async () => {
 const activeTab = ref<'login' | 'register'>('login')
 const showLoginPassword = ref(false)
 const showRegPassword = ref(false)
+const showRegPasswordConfirm = ref(false)
 const loginLoading = ref(false)
 const registerLoading = ref(false)
 const successMessage = ref('')
@@ -277,8 +314,16 @@ const registerForm = reactive({
   name: '',
   email: '',
   password: '',
+  passwordConfirm: '',
   agreeTerms: false,
 })
+
+// Only flag a mismatch once the user has started typing the confirmation
+const passwordMismatch = computed(
+  () =>
+    registerForm.passwordConfirm.length > 0 &&
+    registerForm.password !== registerForm.passwordConfirm,
+)
 
 async function onLogin() {
   loginLoading.value = true
@@ -296,6 +341,12 @@ async function onLogin() {
 }
 
 async function onRegister() {
+  // Guard: passwords must match
+  if (registerForm.password !== registerForm.passwordConfirm) {
+    authError.value = 'Password tidak cocok. Pastikan kedua password sama.'
+    return
+  }
+
   registerLoading.value = true
   successMessage.value = ''
   authError.value = null
@@ -321,6 +372,7 @@ async function onRegister() {
       registerForm.name = ''
       registerForm.email = ''
       registerForm.password = ''
+      registerForm.passwordConfirm = ''
       registerForm.agreeTerms = false
     }
   } finally {
@@ -493,6 +545,25 @@ function onSocialLogin(provider: string) {
 .form-input:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.form-input.input-error {
+  border-color: #dc2626;
+}
+
+.form-input.input-error:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
+
+.field-error {
+  margin: 0.45rem 0 0;
+  font-size: 0.82rem;
+  color: #dc2626;
+  line-height: 1.4;
+}
+
+[data-theme='dark'] .field-error {
+  color: #fca5a5;
 }
 
 .toggle-password {

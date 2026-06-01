@@ -29,10 +29,10 @@
 
       <!-- Desktop nav -->
       <nav class="nav-desktop" aria-label="Navigasi utama">
-        <NuxtLink to="/products" class="nav-link">Store</NuxtLink>
-        <NuxtLink to="/products?category=source-code" class="nav-link">Source Code</NuxtLink>
-        <NuxtLink to="/products?category=ebooks" class="nav-link">Ebooks</NuxtLink>
-        <NuxtLink to="/products?category=services" class="nav-link">Services</NuxtLink>
+        <NuxtLink to="/" class="nav-link" active-class="nav-link-noop" exact-active-class="nav-active">Home</NuxtLink>
+        <NuxtLink to="/products" class="nav-link" :class="{ 'nav-active': activeCategory === 'all' }">Katalog</NuxtLink>
+        <NuxtLink to="/products?category=ebooks" class="nav-link" :class="{ 'nav-active': activeCategory === 'ebooks' }">Ebooks</NuxtLink>
+        <NuxtLink to="/products?category=services" class="nav-link" :class="{ 'nav-active': activeCategory === 'services' }">Services</NuxtLink>
       </nav>
 
       <!-- Actions -->
@@ -76,10 +76,10 @@
     </transition>
     <transition name="drawer">
       <nav v-if="menuOpen" class="nav-mobile" aria-label="Navigasi seluler">
-        <NuxtLink to="/products" class="nav-mobile-link" @click="closeMenu">Store</NuxtLink>
-        <NuxtLink to="/products?category=source-code" class="nav-mobile-link" @click="closeMenu">Source Code</NuxtLink>
-        <NuxtLink to="/products?category=ebooks" class="nav-mobile-link" @click="closeMenu">Ebooks</NuxtLink>
-        <NuxtLink to="/products?category=services" class="nav-mobile-link" @click="closeMenu">Services</NuxtLink>
+        <NuxtLink to="/" class="nav-mobile-link" @click="closeMenu">Home</NuxtLink>
+        <NuxtLink to="/products" class="nav-mobile-link" :class="{ 'nav-active': activeCategory === 'all' }" @click="closeMenu">Katalog</NuxtLink>
+        <NuxtLink to="/products?category=ebooks" class="nav-mobile-link" :class="{ 'nav-active': activeCategory === 'ebooks' }" @click="closeMenu">Ebooks</NuxtLink>
+        <NuxtLink to="/products?category=services" class="nav-mobile-link" :class="{ 'nav-active': activeCategory === 'services' }" @click="closeMenu">Services</NuxtLink>
       </nav>
     </transition>
   </header>
@@ -106,6 +106,14 @@ const accountLink = computed(() => (isLoggedIn.value ? '/account' : '/auth'))
 // Highlight the profile button while on the account page
 const currentRoute = useRoute()
 const isAccountActive = computed(() => currentRoute.path.startsWith('/account'))
+
+// Active nav category for the catalog links (query-param aware).
+// On /products: category query value, or 'all' when no category is set.
+const activeCategory = computed(() => {
+  if (!currentRoute.path.startsWith('/products')) return ''
+  const cat = currentRoute.query.category as string | undefined
+  return cat || 'all'
+})
 
 // Check session once on mount so the user icon points to the right place
 onMounted(() => {
@@ -241,7 +249,7 @@ onBeforeUnmount(() => {
 }
 
 .nav-link:hover,
-.nav-link.router-link-active {
+.nav-link.nav-active {
   color: var(--primary-text);
 }
 
@@ -330,6 +338,11 @@ onBeforeUnmount(() => {
 
 .nav-mobile-link:last-child {
   border-bottom: none;
+}
+
+.nav-mobile-link.nav-active {
+  color: var(--primary-text);
+  font-weight: 600;
 }
 
 /* Drawer slide-down animation */

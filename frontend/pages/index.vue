@@ -24,7 +24,16 @@
                 Jelajahi Katalog
                 <AppIcon name="arrowRight" :size="18" />
               </NuxtLink>
-              <a href="#bestsellers" class="btn btn-ghost">Lihat Best-Seller</a>
+              <a
+                v-if="whatsappLink"
+                :href="whatsappLink"
+                class="btn btn-ghost"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <AppIcon name="whatsapp" :size="18" />
+                WhatsApp Support
+              </a>
             </div>
           </div>
         </div>
@@ -146,7 +155,18 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useShop } from '~/composables/useShop'
+import { useWhatsapp } from '~/composables/useWhatsapp'
 import { formatPriceIDR } from '~/utils/format'
+
+const { whatsappNumber, fetchWhatsappNumber } = useWhatsapp()
+
+// Direct WhatsApp support link to the owner
+const whatsappLink = computed(() => {
+  if (!whatsappNumber.value) return ''
+  const cleanNumber = whatsappNumber.value.replace(/\D/g, '')
+  const message = encodeURIComponent('Halo NgopiCode, saya butuh bantuan (support).')
+  return `https://wa.me/${cleanNumber}?text=${message}`
+})
 
 useHead({
   title: 'NgopiCode Digital Store - Aset Digital Premium untuk Developer',
@@ -241,6 +261,7 @@ function onSubscribe() {
 
 onMounted(() => {
   fetchProducts({ take: 4 })
+  fetchWhatsappNumber()
 })
 </script>
 

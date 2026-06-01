@@ -148,6 +148,19 @@
                 Wishlist
               </button>
             </div>
+
+            <!-- WhatsApp Contact -->
+            <a
+              v-if="whatsappUrl"
+              :href="whatsappUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="wa-btn"
+              aria-label="Tanya via WhatsApp"
+            >
+              <AppIcon name="whatsapp" :size="20" />
+              <span class="wa-btn-text">Tanya via WhatsApp</span>
+            </a>
           </div>
         </div>
 
@@ -204,12 +217,14 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useShop, type Product } from '~/composables/useShop'
+import { useWhatsapp } from '~/composables/useWhatsapp'
 import { formatPriceIDR } from '~/utils/format'
 
 const route = useRoute()
 const slug = computed(() => route.params.slug as string)
 
 const { getProductBySlug, products, fetchProducts } = useShop()
+const { whatsappNumber, fetchWhatsappNumber, buildWhatsappUrl } = useWhatsapp()
 
 const product = ref<Product | null>(null)
 const loading = ref(true)
@@ -293,6 +308,15 @@ const badgeLabel = computed(() => {
   return (product.value?.customFields?.productType || 'SOURCE CODE').toUpperCase()
 })
 
+// WhatsApp URL with pre-filled message
+const whatsappUrl = computed(() => {
+  if (!whatsappNumber.value || !product.value) return ''
+  const productUrl = typeof window !== 'undefined'
+    ? window.location.href
+    : `https://ngopicode.com/products/${slug.value}`
+  return buildWhatsappUrl(product.value.name, productUrl)
+})
+
 function onBuyNow() {
   // TODO: Add to cart and redirect to checkout
   alert('Fitur pembelian akan segera tersedia!')
@@ -320,8 +344,11 @@ onMounted(async () => {
   product.value = await getProductBySlug(slug.value)
   loading.value = false
 
-  // Fetch related products (exclude current)
-  await fetchProducts({ take: 4 })
+  // Fetch WhatsApp number and related products in parallel
+  await Promise.all([
+    fetchWhatsappNumber(),
+    fetchProducts({ take: 4 }),
+  ])
   relatedProducts.value = products.value
     .filter((p) => p.slug !== slug.value)
     .slice(0, 4)
@@ -701,6 +728,38 @@ onMounted(async () => {
   background: var(--btn-ghost-hover);
 }
 
+/* WhatsApp button */
+.wa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: #fff;
+  background: #25D366;
+  border: none;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.15s, box-shadow 0.18s;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.25);
+  width: fit-content;
+}
+
+.wa-btn:hover {
+  background: #1ebe5a;
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.35);
+}
+
+.wa-btn:active {
+  transform: translateY(1px);
+}
+
+.wa-btn .app-icon {
+  flex-shrink: 0;
+}
+
 /* Detail section */
 .detail-section {
   margin-bottom: 3.5rem;
@@ -937,6 +996,10 @@ onMounted(async () => {
     flex-direction: column;
   }
   .actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .wa-btn {
     width: 100%;
     justify-content: center;
   }

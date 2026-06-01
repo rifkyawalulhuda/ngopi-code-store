@@ -83,6 +83,16 @@ export const config: VendureConfig = {
     paymentMethodHandlers: [],
   },
   customFields: {
+    Channel: [
+      {
+        name: 'whatsappNumber',
+        type: 'string',
+        label: [{ languageCode: LanguageCode.en, value: 'WhatsApp Number' }],
+        description: [{ languageCode: LanguageCode.en, value: 'Owner WhatsApp number with country code (e.g. 6281234567890). Displayed as a contact button on product pages.' }],
+        nullable: true,
+        public: true,
+      },
+    ],
     Product: [
       {
         name: 'keyFeatures',

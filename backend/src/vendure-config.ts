@@ -9,6 +9,7 @@ import { customOrderProcess } from './config/custom-order-process';
 import { IdrMoneyStrategy } from './config/idr-money-strategy';
 import { TripayPaymentPlugin } from './plugins/tripay-payment/tripay-payment.plugin';
 import { EmailVerificationPlugin } from './plugins/email/email-verification.handler';
+import { DashboardPlugin } from '@vendure/dashboard/plugin';
 
 /**
  * Vendure configuration for NgopiCode Digital Store.
@@ -153,6 +154,10 @@ export const config: VendureConfig = {
     DefaultJobQueuePlugin.init({}),
     TripayPaymentPlugin,
     EmailVerificationPlugin,
+    DashboardPlugin.init({
+      route: 'dashboard',
+      appDir: './dist/dashboard',
+    }),
   ],
   // Requirement 12.4: Single-process deployment for 8GB hardware.
   // DefaultJobQueuePlugin provides a DB-backed (SQL) job queue. The worker that

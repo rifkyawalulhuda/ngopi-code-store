@@ -26,9 +26,13 @@
     "paths": {
       "@plugins/*": ["src/plugins/*"],
       "@config/*": ["src/config/*"],
-      "@shared/*": ["src/shared/*"]
+      "@shared/*": ["src/shared/*"],
+      "@vendure/dashboard/plugin": ["node_modules/@vendure/dashboard/dist/plugin/index.d.ts"]
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "src/plugins/**/dashboard/*", "src/gql/*", "vite.*.*ts"],
+  "references": [
+    { "path": "./tsconfig.dashboard.json" }
+  ]
 }

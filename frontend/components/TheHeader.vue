@@ -40,9 +40,9 @@
         <button type="button" class="icon-btn" aria-label="Cari produk (Ctrl+K)" @click="openSearch">
           <AppIcon name="search" :size="20" />
         </button>
-        <button class="icon-btn" aria-label="Akun" type="button">
+        <NuxtLink to="/auth" class="icon-btn" aria-label="Akun">
           <AppIcon name="user" :size="20" />
-        </button>
+        </NuxtLink>
         <NuxtLink to="/checkout" class="icon-btn cart-btn" aria-label="Keranjang belanja">
           <AppIcon name="cart" :size="20" />
           <span v-if="cartItemCount > 0" class="cart-badge">{{ cartItemCount }}</span>

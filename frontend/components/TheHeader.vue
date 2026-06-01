@@ -19,9 +19,9 @@
 
       <!-- Actions -->
       <div class="actions">
-        <NuxtLink to="/products" class="icon-btn" aria-label="Cari produk">
+        <button type="button" class="icon-btn" aria-label="Cari produk (Ctrl+K)" @click="openSearch">
           <AppIcon name="search" :size="20" />
-        </NuxtLink>
+        </button>
         <ClientOnly>
           <button
             class="icon-btn"
@@ -75,12 +75,22 @@
       </nav>
     </transition>
   </header>
+
+  <!-- Search Command Palette -->
+  <SearchCommand ref="searchRef" />
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onBeforeUnmount } from 'vue'
 import { useCart } from '~/composables/useCart'
 import { useTheme } from '~/composables/useTheme'
+import SearchCommand from '~/components/SearchCommand.vue'
+
+const searchRef = ref<InstanceType<typeof SearchCommand> | null>(null)
+
+function openSearch() {
+  searchRef.value?.open()
+}
 
 const { cartItemCount } = useCart()
 const { isDark, toggleTheme } = useTheme()

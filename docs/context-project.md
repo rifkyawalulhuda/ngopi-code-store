@@ -122,6 +122,7 @@ ngopi-code-store/
 │   │   └── useTheme.ts              # Light/dark theme state (cookie-backed, SSR-safe)
 │   ├── graphql/
 │   │   ├── queries/
+│   │   │   ├── products.ts         # GET_PRODUCTS, GET_PRODUCT_BY_SLUG (incl. assets[] + customFields), SEARCH_PRODUCTS
 │   │   │   ├── order.ts             # GET_ACTIVE_ORDER, GET_ORDER_BY_CODE
 │   │   │   ├── collections.ts       # GET_COLLECTIONS
 │   │   │   ├── checkout.ts          # GET_ELIGIBLE_PAYMENT_METHODS
@@ -132,7 +133,7 @@ ngopi-code-store/
 │   ├── pages/
 │   │   ├── index.vue                # Homepage (split hero with Lottie, categories, best-sellers, features, newsletter)
 │   │   ├── products/index.vue       # Product catalog (sidebar filters, search, price range, sort, grid)
-│   │   ├── products/[slug].vue      # Product detail (gallery, info, features, specs, related products)
+│   │   ├── products/[slug].vue      # Product detail (multi-image gallery + lightbox, custom fields, specs, related)
 │   │   ├── checkout.vue             # Guest checkout + payment methods
 │   │   ├── order/[code].vue         # Payment return confirmation
 │   │   └── downloads/[orderCode].vue # Download page
@@ -216,6 +217,8 @@ Tripay POST /payments/tripay/webhook → Verify HMAC SHA256 signature
 13. **Inline job queue worker**: `DefaultJobQueuePlugin` (SQL-backed) + `bootstrapWorker().startJobQueue()` in the same process. Without this, background jobs (search indexing, apply-collection-filters) stay PENDING forever. Critical for search and category filtering to work.
 14. **Catalog uses `search` query**: The product catalog page routes all filtering (category, text search, sort, pagination) through Vendure's `search` query (DefaultSearchPlugin). Price filtering is client-side because DefaultSearchPlugin has no server-side price range. Products must be indexed (reindex via Admin API if needed after plugin addition).
 15. **Collections must be public**: Vendure collections default to `isPrivate: true` when created in admin. They must be set to public (`isPrivate: false`) to appear in the Shop API and storefront category filters.
+16. **Product custom fields for dynamic content**: Features, delivery info, product type, file format, and license type are stored as Vendure custom fields on the Product entity. Editable from Admin UI; frontend reads them with fallback defaults if empty.
+17. **Multi-image product gallery**: Product detail page queries `assets[]` (all uploaded images), displays thumbnail strip + main image with click-to-zoom lightbox (prev/next navigation, counter, Escape to close, body scroll lock).
 
 ---
 

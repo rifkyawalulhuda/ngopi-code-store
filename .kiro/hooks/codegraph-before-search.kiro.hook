@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Use Codegraph Before File Search",
+  "description": "Reminds the agent to use MCP codegraph tools (codegraph_context, codegraph_search, codegraph_files) before using file search or grep tools, so target files can be found directly and token usage is minimized.",
+  "version": "1",
+  "when": {
+    "type": "preToolUse",
+    "toolTypes": [
+      "read"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Sebelum membaca atau mencari file, pastikan kamu sudah menggunakan MCP codegraph (codegraph_context, codegraph_search, atau codegraph_files) terlebih dahulu untuk menemukan file yang tepat. Jika belum, gunakan codegraph dulu agar file tujuan langsung ketemu dan hemat token. Jika sudah menggunakan codegraph sebelumnya untuk konteks ini, lanjutkan saja."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Update Context with Repomix",
+  "description": "Automatically uses MCP Repomix to pack the codebase and update context-project.md whenever a prompt is submitted, keeping project context fresh.",
+  "version": "1",
+  "when": {
+    "type": "promptSubmit"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Before proceeding with the user's request, use the mcp_repomix_pack_codebase tool to pack the current project directory (e:\\Github\\ngopi-code-store) with compress enabled, then save the output summary to .kiro/steering/context-project.md as a steering file. Include the project structure, key files, and tech stack information. Keep it concise but comprehensive enough to provide good context for future interactions."
+  }
+}

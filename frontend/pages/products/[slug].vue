@@ -35,10 +35,10 @@
         <div class="pdp-grid">
           <!-- Gallery -->
           <div class="gallery">
-            <div class="gallery-main">
+            <div class="gallery-main" @click="openLightbox(activeIndex)">
               <img
-                v-if="mainImage"
-                :src="mainImage"
+                v-if="galleryImages.length"
+                :src="galleryImages[activeIndex].preview"
                 :alt="product.name"
                 class="gallery-img"
               />
@@ -46,9 +46,70 @@
                 <AppIcon name="image" :size="48" />
               </div>
               <span class="gallery-badge">{{ badgeLabel }}</span>
+              <span v-if="galleryImages.length > 1" class="gallery-zoom" aria-hidden="true">
+                <AppIcon name="search" :size="18" />
+              </span>
             </div>
-            <!-- Thumbnails (if multiple assets in future) -->
+            <!-- Thumbnails -->
+            <div v-if="galleryImages.length > 1" class="gallery-thumbs">
+              <button
+                v-for="(img, idx) in galleryImages"
+                :key="img.id"
+                type="button"
+                class="thumb-btn"
+                :class="{ active: idx === activeIndex }"
+                :aria-label="`Lihat gambar ${idx + 1}`"
+                @click="activeIndex = idx"
+              >
+                <img :src="img.preview" :alt="`${product.name} - gambar ${idx + 1}`" />
+              </button>
+            </div>
           </div>
+
+          <!-- Lightbox -->
+          <Teleport to="body">
+            <transition name="lightbox">
+              <div
+                v-if="lightboxOpen"
+                class="lightbox"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Galeri gambar produk"
+                @click.self="closeLightbox"
+                @keydown.escape="closeLightbox"
+              >
+                <button class="lightbox-close" type="button" aria-label="Tutup" @click="closeLightbox">
+                  <AppIcon name="close" :size="24" />
+                </button>
+                <button
+                  v-if="galleryImages.length > 1"
+                  class="lightbox-nav lightbox-prev"
+                  type="button"
+                  aria-label="Gambar sebelumnya"
+                  @click="prevImage"
+                >
+                  ‹
+                </button>
+                <img
+                  :src="galleryImages[lightboxIndex].source || galleryImages[lightboxIndex].preview"
+                  :alt="product.name"
+                  class="lightbox-img"
+                />
+                <button
+                  v-if="galleryImages.length > 1"
+                  class="lightbox-nav lightbox-next"
+                  type="button"
+                  aria-label="Gambar berikutnya"
+                  @click="nextImage"
+                >
+                  ›
+                </button>
+                <div v-if="galleryImages.length > 1" class="lightbox-counter">
+                  {{ lightboxIndex + 1 }} / {{ galleryImages.length }}
+                </div>
+              </div>
+            </transition>
+          </Teleport>
 
           <!-- Info -->
           <div class="info">
@@ -153,8 +214,43 @@ const { getProductBySlug, products, fetchProducts } = useShop()
 const product = ref<Product | null>(null)
 const loading = ref(true)
 const relatedProducts = ref<Product[]>([])
+const activeIndex = ref(0)
+const lightboxOpen = ref(false)
+const lightboxIndex = ref(0)
+
+// All product images (assets array, fallback to featuredAsset)
+const galleryImages = computed(() => {
+  if (!product.value) return []
+  if (product.value.assets && product.value.assets.length > 0) {
+    return product.value.assets
+  }
+  if (product.value.featuredAsset) {
+    return [{ ...product.value.featuredAsset, source: product.value.featuredAsset.preview, name: product.value.name }]
+  }
+  return []
+})
 
 const mainImage = computed(() => product.value?.featuredAsset?.preview ?? null)
+
+function openLightbox(idx: number) {
+  if (!galleryImages.value.length) return
+  lightboxIndex.value = idx
+  lightboxOpen.value = true
+  if (import.meta.client) document.body.style.overflow = 'hidden'
+}
+
+function closeLightbox() {
+  lightboxOpen.value = false
+  if (import.meta.client) document.body.style.overflow = ''
+}
+
+function nextImage() {
+  lightboxIndex.value = (lightboxIndex.value + 1) % galleryImages.value.length
+}
+
+function prevImage() {
+  lightboxIndex.value = (lightboxIndex.value - 1 + galleryImages.value.length) % galleryImages.value.length
+}
 
 const priceLabel = computed(() => {
   const price = product.value?.variants?.[0]?.price
@@ -286,12 +382,18 @@ onMounted(async () => {
   overflow: hidden;
   background: var(--surface-2);
   border: 1px solid var(--border);
+  cursor: zoom-in;
 }
 
 .gallery-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.gallery-main:hover .gallery-img {
+  transform: scale(1.03);
 }
 
 .gallery-placeholder {
@@ -313,6 +415,151 @@ onMounted(async () => {
   letter-spacing: 0.06em;
   padding: 0.35rem 0.75rem;
   border-radius: 999px;
+}
+
+.gallery-zoom {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.gallery-main:hover .gallery-zoom {
+  opacity: 1;
+}
+
+/* Thumbnails */
+.gallery-thumbs {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.85rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.thumb-btn {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  background: var(--surface-2);
+  transition: border-color 0.18s, opacity 0.18s;
+}
+
+.thumb-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumb-btn:hover {
+  opacity: 0.85;
+}
+
+.thumb-btn.active {
+  border-color: var(--primary);
+}
+
+/* Lightbox */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(4px);
+}
+
+.lightbox-img {
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 8px;
+  user-select: none;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 2rem;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+
+.lightbox-nav:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.lightbox-prev {
+  left: 1.25rem;
+}
+
+.lightbox-next {
+  right: 1.25rem;
+}
+
+.lightbox-counter {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.lightbox-enter-active,
+.lightbox-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.lightbox-enter-from,
+.lightbox-leave-to {
+  opacity: 0;
 }
 
 /* Info */

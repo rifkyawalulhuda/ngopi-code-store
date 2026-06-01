@@ -35,6 +35,12 @@ export const GET_PRODUCT_BY_SLUG = gql`
         id
         preview
       }
+      assets {
+        id
+        preview
+        source
+        name
+      }
       variants {
         id
         name

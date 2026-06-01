@@ -11,6 +11,12 @@ export interface Product {
     id: string
     preview: string
   } | null
+  assets?: Array<{
+    id: string
+    preview: string
+    source: string
+    name: string
+  }>
   variants: Array<{
     id: string
     name: string

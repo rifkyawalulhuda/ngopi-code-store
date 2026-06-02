@@ -9,6 +9,7 @@ import { IdrMoneyStrategy } from './config/idr-money-strategy';
 import { TripayPaymentPlugin } from './plugins/tripay-payment/tripay-payment.plugin';
 import { EmailVerificationPlugin } from './plugins/email/email-verification.handler';
 import { GoogleAuthPlugin } from './plugins/google-auth';
+import { GitHubAuthPlugin } from './plugins/github-auth';
 import { DashboardPlugin } from '@vendure/dashboard/plugin';
 
 /**
@@ -178,6 +179,10 @@ export const config: VendureConfig = {
     EmailVerificationPlugin,
     GoogleAuthPlugin.init({
       googleClientId: process.env.GOOGLE_CLIENT_ID || '',
+    }),
+    GitHubAuthPlugin.init({
+      clientId: process.env.GITHUB_OAUTH_CLIENT_ID || '',
+      clientSecret: process.env.GITHUB_OAUTH_CLIENT_SECRET || '',
     }),
     DashboardPlugin.init({
       route: 'dashboard',

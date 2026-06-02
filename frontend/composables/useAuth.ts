@@ -10,6 +10,7 @@ import {
   REQUEST_UPDATE_EMAIL,
   UPDATE_EMAIL_ADDRESS,
   AUTHENTICATE_WITH_GOOGLE,
+  AUTHENTICATE_WITH_GITHUB,
 } from '~/graphql/mutations/auth'
 
 export interface ActiveCustomer {
@@ -352,6 +353,40 @@ export function useAuth() {
     }
   }
 
+  /**
+   * Login with GitHub OAuth.
+   * Sends the authorization code and state to Vendure's authenticate mutation.
+   */
+  async function loginWithGitHub(code: string, state: string): Promise<boolean> {
+    loading.value = true
+    error.value = null
+    try {
+      const { $apollo } = useNuxtApp()
+      const { data } = await $apollo.defaultClient.mutate({
+        mutation: AUTHENTICATE_WITH_GITHUB,
+        variables: { code, state },
+      })
+
+      const result = data?.authenticate
+      if (result?.__typename === 'CurrentUser') {
+        await fetchActiveCustomer()
+        return true
+      }
+
+      if (result?.__typename === 'InvalidCredentialsError') {
+        error.value = 'Autentikasi GitHub gagal.'
+      } else {
+        error.value = result?.message || 'Login dengan GitHub gagal'
+      }
+      return false
+    } catch (err: any) {
+      error.value = err.message || 'Terjadi kesalahan saat login dengan GitHub'
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     customer,
     isLoggedIn,
@@ -361,6 +396,7 @@ export function useAuth() {
     register,
     login,
     loginWithGoogle,
+    loginWithGitHub,
     logout,
     verifyEmail,
     fetchActiveCustomer,

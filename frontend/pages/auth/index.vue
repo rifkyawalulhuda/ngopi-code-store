@@ -289,7 +289,7 @@ useHead({
   title: 'Login / Register - NgopiCode',
 })
 
-const { login, register, loginWithGoogle, ensureSession, isLoggedIn, error: authError, loading: authLoading } = useAuth()
+const { login, register, loginWithGoogle, loginWithGitHub, ensureSession, isLoggedIn, error: authError, loading: authLoading } = useAuth()
 
 // If already logged in, skip the auth page and go to the account dashboard
 onMounted(async () => {
@@ -385,8 +385,8 @@ async function onRegister() {
 function onSocialLogin(provider: string) {
   if (provider === 'google') {
     initiateGoogleLogin()
-  } else {
-    alert(`Login dengan ${provider} akan segera tersedia!`)
+  } else if (provider === 'github') {
+    initiateGitHubLogin()
   }
 }
 
@@ -414,9 +414,6 @@ function initiateGoogleLogin() {
   ;(window as any).google.accounts.id.prompt((notification: any) => {
     // If One Tap is dismissed/skipped, fallback to popup
     if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-      // Use the button-based flow as fallback
-      ;(window as any).google.accounts.oauth2.initCodeClient // not needed
-      // Try renderButton approach or just prompt again
       ;(window as any).google.accounts.id.prompt()
     }
   })
@@ -439,6 +436,25 @@ async function handleGoogleCredentialResponse(response: any) {
     socialLoading.value = false
     loginLoading.value = false
   }
+}
+
+function initiateGitHubLogin() {
+  const config = useRuntimeConfig()
+  const clientId = config.public.githubClientId as string
+
+  if (!clientId) {
+    authError.value = 'GitHub Client ID belum dikonfigurasi.'
+    return
+  }
+
+  // Generate state for CSRF protection
+  const state = Math.random().toString(36).substring(2) + Date.now().toString(36)
+  sessionStorage.setItem('github_oauth_state', state)
+
+  // Redirect to GitHub authorization
+  const redirectUri = encodeURIComponent(`${window.location.origin}/auth/github/callback`)
+  const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=read:user%20user:email&state=${state}`
+  window.location.href = url
 }
 </script>
 

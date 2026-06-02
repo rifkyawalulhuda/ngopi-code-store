@@ -214,3 +214,21 @@ export const AUTHENTICATE_WITH_GOOGLE = gql`
     }
   }
 `
+
+export const AUTHENTICATE_WITH_GITHUB = gql`
+  mutation AuthenticateWithGitHub($code: String!, $state: String!) {
+    authenticate(input: { github: { code: $code, state: $state } }) {
+      ... on CurrentUser {
+        id
+        identifier
+      }
+      ... on InvalidCredentialsError {
+        message
+        authenticationError
+      }
+      ... on NotVerifiedError {
+        message
+      }
+    }
+  }
+`

@@ -366,6 +366,44 @@
     </div>
 
     <TheFooter />
+
+    <!-- Logout Confirmation Modal -->
+    <Teleport to="body">
+      <transition name="modal">
+        <div
+          v-if="showLogoutConfirm"
+          class="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="logout-dialog-title"
+          aria-describedby="logout-dialog-desc"
+          @click.self="cancelLogout"
+          @keydown.escape="cancelLogout"
+        >
+          <div class="modal-box" tabindex="-1" ref="logoutModalRef">
+            <div class="modal-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </div>
+            <h3 id="logout-dialog-title" class="modal-title">Keluar dari akun?</h3>
+            <p id="logout-dialog-desc" class="modal-desc">
+              Untuk mengakses akun kembali, kamu perlu login ulang.
+            </p>
+            <div class="modal-actions">
+              <button type="button" class="btn-modal btn-cancel" @click="cancelLogout">
+                Batal
+              </button>
+              <button type="button" class="btn-modal btn-danger" @click="confirmLogout">
+                Ya, Keluar
+              </button>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </Teleport>
   </div>
 </template>
 
@@ -486,8 +524,19 @@ function statusClass(state: string): string {
 }
 
 async function onLogout() {
+  showLogoutConfirm.value = true
+}
+
+const showLogoutConfirm = ref(false)
+
+async function confirmLogout() {
+  showLogoutConfirm.value = false
   await logout()
   navigateTo('/auth')
+}
+
+function cancelLogout() {
+  showLogoutConfirm.value = false
 }
 
 /* ---------- Settings forms ---------- */
@@ -1529,6 +1578,164 @@ onMounted(async () => {
   .library-card,
   .backdrop-enter-active,
   .backdrop-leave-active {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* Logout Confirmation Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+[data-theme='dark'] .modal-overlay {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 24px rgba(0, 0, 0, 0.1);
+  outline: none;
+}
+
+[data-theme='dark'] .modal-box {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.modal-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #fef2f2;
+  color: #dc2626;
+  margin-bottom: 1rem;
+}
+
+[data-theme='dark'] .modal-icon {
+  background: rgba(220, 38, 38, 0.12);
+  color: #fca5a5;
+}
+
+.modal-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  color: var(--text);
+}
+
+.modal-desc {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0 0 1.5rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btn-modal {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  transition: background 0.18s, transform 0.15s;
+}
+
+.btn-modal:active {
+  transform: translateY(1px);
+}
+
+.btn-cancel {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+}
+
+.btn-cancel:hover {
+  background: var(--btn-ghost-hover, var(--surface-2));
+  border-color: var(--primary);
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background: #b91c1c;
+}
+
+/* Modal transition */
+.modal-enter-active {
+  transition: opacity 0.2s ease;
+}
+
+.modal-leave-active {
+  transition: opacity 0.15s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-active .modal-box {
+  animation: modal-in 0.25s ease forwards;
+}
+
+.modal-leave-active .modal-box {
+  animation: modal-out 0.15s ease forwards;
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modal-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-enter-active,
+  .modal-leave-active,
+  .modal-enter-active .modal-box,
+  .modal-leave-active .modal-box {
     transition: none;
     animation: none;
   }

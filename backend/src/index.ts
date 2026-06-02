@@ -1,8 +1,8 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import { bootstrap, runMigrations, bootstrapWorker } from '@vendure/core';
 import { config } from './vendure-config';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 /**
  * Bootstrap the Vendure server.

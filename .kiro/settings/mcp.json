@@ -1,12 +1,12 @@
 {
   "mcpServers": {
     "codegraph": {
-      "command": "codegraph",
+      "command": "npx",
       "args": [
+        "-y",
+        "codegraph-ai@latest",
         "serve",
-        "--mcp",
-        "--path",
-        "e:\\Github\\ngopi-code-store"
+        "d:\\Github\\ngopi-code-store"
       ],
       "env": {},
       "disabled": false,

@@ -8,6 +8,7 @@ import { customOrderProcess } from './config/custom-order-process';
 import { IdrMoneyStrategy } from './config/idr-money-strategy';
 import { TripayPaymentPlugin } from './plugins/tripay-payment/tripay-payment.plugin';
 import { EmailVerificationPlugin } from './plugins/email/email-verification.handler';
+import { GoogleAuthPlugin } from './plugins/google-auth';
 import { DashboardPlugin } from '@vendure/dashboard/plugin';
 
 /**
@@ -175,6 +176,9 @@ export const config: VendureConfig = {
     DefaultJobQueuePlugin.init({}),
     TripayPaymentPlugin,
     EmailVerificationPlugin,
+    GoogleAuthPlugin.init({
+      googleClientId: process.env.GOOGLE_CLIENT_ID || '',
+    }),
     DashboardPlugin.init({
       route: 'dashboard',
       appDir: './dist/dashboard',

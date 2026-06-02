@@ -196,3 +196,21 @@ export const GET_ACTIVE_CUSTOMER_ORDERS = gql`
     }
   }
 `
+
+export const AUTHENTICATE_WITH_GOOGLE = gql`
+  mutation AuthenticateWithGoogle($token: String!) {
+    authenticate(input: { google: { token: $token } }) {
+      ... on CurrentUser {
+        id
+        identifier
+      }
+      ... on InvalidCredentialsError {
+        message
+        authenticationError
+      }
+      ... on NotVerifiedError {
+        message
+      }
+    }
+  }
+`

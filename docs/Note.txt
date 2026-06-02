@@ -13,3 +13,7 @@ npm run dev -- --port 3001
 Akses Vendure admin :
 
 http://localhost:3000/dashboard/
+
+akses minio storage s3
+http://localhost:9001/browser/products
+minioadmin / minioadmin

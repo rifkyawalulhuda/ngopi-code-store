@@ -22,6 +22,13 @@ export default defineNuxtConfig({
           href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
         },
       ],
+      script: [
+        {
+          src: 'https://accounts.google.com/gsi/client',
+          async: true,
+          defer: true,
+        },
+      ],
     },
   },
 
@@ -51,6 +58,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       shopApiUrl: process.env.NUXT_PUBLIC_SHOP_API_URL || 'http://localhost:3000/shop-api',
+      googleClientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID || '',
     },
   },
 

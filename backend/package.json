@@ -21,6 +21,7 @@
     "@vendure/dashboard": "^3.6.3",
     "class-validator": "^0.14.1",
     "dotenv": "^16.4.7",
+    "google-auth-library": "^10.6.2",
     "pg": "^8.13.1",
     "resend": "^6.12.4"
   },

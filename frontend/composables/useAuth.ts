@@ -9,6 +9,7 @@ import {
   UPDATE_CUSTOMER_PASSWORD,
   REQUEST_UPDATE_EMAIL,
   UPDATE_EMAIL_ADDRESS,
+  AUTHENTICATE_WITH_GOOGLE,
 } from '~/graphql/mutations/auth'
 
 export interface ActiveCustomer {
@@ -315,6 +316,42 @@ export function useAuth() {
     }
   }
 
+  /**
+   * Login with Google OAuth.
+   * Sends the Google ID token to Vendure's authenticate mutation.
+   */
+  async function loginWithGoogle(token: string): Promise<boolean> {
+    loading.value = true
+    error.value = null
+    try {
+      const { $apollo } = useNuxtApp()
+      const { data } = await $apollo.defaultClient.mutate({
+        mutation: AUTHENTICATE_WITH_GOOGLE,
+        variables: { token },
+      })
+
+      const result = data?.authenticate
+      if (result?.__typename === 'CurrentUser') {
+        await fetchActiveCustomer()
+        return true
+      }
+
+      if (result?.__typename === 'NotVerifiedError') {
+        error.value = 'Akun belum diverifikasi.'
+      } else if (result?.__typename === 'InvalidCredentialsError') {
+        error.value = 'Autentikasi Google gagal.'
+      } else {
+        error.value = result?.message || 'Login dengan Google gagal'
+      }
+      return false
+    } catch (err: any) {
+      error.value = err.message || 'Terjadi kesalahan saat login dengan Google'
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     customer,
     isLoggedIn,
@@ -323,6 +360,7 @@ export function useAuth() {
     initialized,
     register,
     login,
+    loginWithGoogle,
     logout,
     verifyEmail,
     fetchActiveCustomer,

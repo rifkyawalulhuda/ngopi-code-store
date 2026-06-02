@@ -287,7 +287,7 @@ useHead({
   title: 'Login / Register - NgopiCode',
 })
 
-const { login, register, ensureSession, isLoggedIn, error: authError, loading: authLoading } = useAuth()
+const { login, register, loginWithGoogle, ensureSession, isLoggedIn, error: authError, loading: authLoading } = useAuth()
 
 // If already logged in, skip the auth page and go to the account dashboard
 onMounted(async () => {
@@ -381,7 +381,62 @@ async function onRegister() {
 }
 
 function onSocialLogin(provider: string) {
-  alert(`Login dengan ${provider} akan segera tersedia!`)
+  if (provider === 'google') {
+    initiateGoogleLogin()
+  } else {
+    alert(`Login dengan ${provider} akan segera tersedia!`)
+  }
+}
+
+const socialLoading = ref(false)
+
+function initiateGoogleLogin() {
+  const config = useRuntimeConfig()
+  const clientId = config.public.googleClientId as string
+
+  if (!clientId) {
+    authError.value = 'Google Client ID belum dikonfigurasi.'
+    return
+  }
+
+  if (!(window as any).google) {
+    authError.value = 'Google SDK belum dimuat. Silakan refresh halaman.'
+    return
+  }
+
+  // Initialize and prompt Google One Tap / Sign-In
+  ;(window as any).google.accounts.id.initialize({
+    client_id: clientId,
+    callback: handleGoogleCredentialResponse,
+  })
+  ;(window as any).google.accounts.id.prompt((notification: any) => {
+    // If One Tap is dismissed/skipped, fallback to popup
+    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+      // Use the button-based flow as fallback
+      ;(window as any).google.accounts.oauth2.initCodeClient // not needed
+      // Try renderButton approach or just prompt again
+      ;(window as any).google.accounts.id.prompt()
+    }
+  })
+}
+
+async function handleGoogleCredentialResponse(response: any) {
+  if (!response.credential) {
+    authError.value = 'Gagal mendapatkan credential dari Google.'
+    return
+  }
+
+  socialLoading.value = true
+  loginLoading.value = true
+  try {
+    const success = await loginWithGoogle(response.credential)
+    if (success) {
+      navigateTo('/account')
+    }
+  } finally {
+    socialLoading.value = false
+    loginLoading.value = false
+  }
 }
 </script>
 

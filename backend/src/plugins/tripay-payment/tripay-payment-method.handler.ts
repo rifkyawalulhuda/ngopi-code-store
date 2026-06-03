@@ -137,9 +137,14 @@ export const tripayPaymentMethodHandler = new PaymentMethodHandler({
         transactionId: result.data.reference,
         metadata: {
           public: {
-            paymentUrl: result.data.payment_url,
+            paymentUrl: result.data.payment_url || result.data.checkout_url || '',
+            payCode: result.data.pay_code || '',
+            paymentName: result.data.payment_name || channelCode,
             reference: result.data.reference,
             channelCode,
+            amount: result.data.amount,
+            expiredTime: result.data.expired_time,
+            instructions: result.data.instructions || [],
           },
         },
       };

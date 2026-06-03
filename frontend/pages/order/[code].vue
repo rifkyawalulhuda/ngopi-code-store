@@ -1,139 +1,168 @@
 <template>
-  <div class="order-confirmation-page">
-    <!-- Loading State -->
-    <div v-if="loading" class="loading-state">
-      <p>Loading order details...</p>
-    </div>
+  <div class="order-page">
+    <TheHeader />
 
-    <!-- Error State -->
-    <div v-else-if="error" class="error-state">
-      <h1>Order Not Found</h1>
-      <p>{{ error }}</p>
-      <NuxtLink to="/products" class="btn-primary">Browse Products</NuxtLink>
-    </div>
-
-    <!-- Success State -->
-    <div v-else-if="isSuccess && order" class="success-state">
-      <div class="success-header">
-        <span class="success-icon" aria-hidden="true">✓</span>
-        <h1>Payment Successful!</h1>
-        <p class="success-subtitle">
-          Thank you for your purchase. Your order <strong>{{ order.code }}</strong> has been confirmed.
-        </p>
-      </div>
-
-      <section class="order-details">
-        <h2>Order Summary</h2>
-        <ul class="order-items">
-          <li v-for="item in order.lines" :key="item.id" class="order-item">
-            <span class="item-name">{{ item.productName }}</span>
-            <span class="item-qty">x{{ item.quantity }}</span>
-            <span class="item-price">{{ formatPriceIDR(item.linePrice) }}</span>
-          </li>
-        </ul>
-        <div class="order-total">
-          <strong>Total:</strong>
-          <span>{{ formatPriceIDR(order.total) }}</span>
+    <main class="order-main">
+      <div class="order-container">
+        <!-- Loading -->
+        <div v-if="loading" class="order-loading">
+          <div class="spinner" />
+          <p>Memuat detail pesanan...</p>
         </div>
-      </section>
 
-      <section class="download-section">
-        <h2>Download Your Products</h2>
-        <p>Your digital products are ready for download.</p>
-        <NuxtLink :to="`/downloads/${order.code}`" class="btn-primary btn-download">
-          Go to Download Page
-        </NuxtLink>
-        <p class="download-note">
-          A confirmation email has been sent to <strong>{{ order.customerEmail }}</strong> with download instructions.
-        </p>
-      </section>
-    </div>
-
-    <!-- Failed/Expired State -->
-    <div v-else-if="isFailed && order" class="failed-state">
-      <div class="failed-header">
-        <span class="failed-icon" aria-hidden="true">✗</span>
-        <h1>Payment Not Completed</h1>
-        <p class="failed-subtitle">
-          Your payment for order <strong>{{ order.code }}</strong>
-          {{ paymentStatus === 'expired' ? 'has expired' : 'could not be processed' }}.
-        </p>
-      </div>
-
-      <section class="order-details">
-        <h2>Order Summary</h2>
-        <ul class="order-items">
-          <li v-for="item in order.lines" :key="item.id" class="order-item">
-            <span class="item-name">{{ item.productName }}</span>
-            <span class="item-qty">x{{ item.quantity }}</span>
-            <span class="item-price">{{ formatPriceIDR(item.linePrice) }}</span>
-          </li>
-        </ul>
-        <div class="order-total">
-          <strong>Total:</strong>
-          <span>{{ formatPriceIDR(order.total) }}</span>
+        <!-- Error -->
+        <div v-else-if="error" class="order-error">
+          <AppIcon name="close" :size="32" />
+          <h1>Pesanan Tidak Ditemukan</h1>
+          <p>{{ error }}</p>
+          <NuxtLink to="/products" class="btn btn-primary">Kembali ke Katalog</NuxtLink>
         </div>
-      </section>
 
-      <section class="retry-section">
-        <p>You can retry the payment or choose a different payment method.</p>
-        <NuxtLink to="/checkout" class="btn-primary btn-retry">
-          Retry Checkout
-        </NuxtLink>
-        <NuxtLink to="/products" class="btn-secondary">
-          Continue Shopping
-        </NuxtLink>
-      </section>
-    </div>
+        <!-- Success State (Paid/Fulfilled) -->
+        <div v-else-if="isSuccess && order" class="order-state">
+          <div class="state-badge state-success">
+            <AppIcon name="check" :size="28" />
+          </div>
+          <h1 class="state-title">Pembayaran Berhasil!</h1>
+          <p class="state-desc">
+            Terima kasih atas pembelian Anda. Pesanan <strong>{{ order.code }}</strong> telah dikonfirmasi.
+          </p>
 
-    <!-- Pending State -->
-    <div v-else-if="isPending && order" class="pending-state">
-      <div class="pending-header">
-        <span class="pending-icon" aria-hidden="true">⏳</span>
-        <h1>Payment Pending</h1>
-        <p class="pending-subtitle">
-          Your payment for order <strong>{{ order.code }}</strong> is being processed.
-          Please complete the payment to receive your download links.
-        </p>
-      </div>
+          <!-- Order Summary -->
+          <div class="summary-card">
+            <OrderSummaryItems :order="order" />
+          </div>
 
-      <section class="order-details">
-        <h2>Order Summary</h2>
-        <ul class="order-items">
-          <li v-for="item in order.lines" :key="item.id" class="order-item">
-            <span class="item-name">{{ item.productName }}</span>
-            <span class="item-qty">x{{ item.quantity }}</span>
-            <span class="item-price">{{ formatPriceIDR(item.linePrice) }}</span>
-          </li>
-        </ul>
-        <div class="order-total">
-          <strong>Total:</strong>
-          <span>{{ formatPriceIDR(order.total) }}</span>
+          <!-- Download CTA -->
+          <div class="action-card">
+            <AppIcon name="download" :size="22" />
+            <div>
+              <h3>Produk Digital Siap Diunduh</h3>
+              <p>Akses produk digital Anda di halaman unduhan.</p>
+            </div>
+            <NuxtLink :to="`/downloads/${order.code}`" class="btn btn-primary">
+              Unduh Sekarang
+            </NuxtLink>
+          </div>
         </div>
-      </section>
 
-      <section class="pending-actions">
-        <p>If you have already completed the payment, please wait a moment and refresh this page.</p>
-        <button class="btn-primary" @click="refreshOrder">
-          Refresh Status
-        </button>
-      </section>
-    </div>
+        <!-- Pending State (Waiting Payment) -->
+        <div v-else-if="isPending && order" class="order-state">
+          <!-- Back button -->
+          <NuxtLink to="/account" class="back-link">
+            <AppIcon name="arrowRight" :size="16" class="back-arrow" />
+            Kembali ke Riwayat Pesanan
+          </NuxtLink>
 
-    <!-- Unknown State (no order loaded yet or unrecognized status) -->
-    <div v-else class="unknown-state">
-      <h1>Order Status</h1>
-      <p>Unable to determine the payment status. Please check your email for order confirmation.</p>
-      <NuxtLink to="/products" class="btn-primary">Browse Products</NuxtLink>
-    </div>
+          <div class="state-badge state-pending">
+            <AppIcon name="shoppingBag" :size="28" />
+          </div>
+          <h1 class="state-title">Menunggu Pembayaran</h1>
+          <p class="state-desc">
+            Selesaikan pembayaran untuk pesanan <strong>{{ order.code }}</strong> agar produk digital bisa diakses.
+          </p>
+
+          <!-- Payment Instructions -->
+          <div v-if="paymentMeta" class="payment-detail-card">
+            <div class="pd-header">
+              <span class="pd-method">{{ paymentMeta.paymentName || paymentMeta.channelCode }}</span>
+              <span v-if="expiryFormatted" class="pd-expiry">
+                Batas waktu: <strong>{{ expiryFormatted }}</strong>
+              </span>
+            </div>
+
+            <!-- Pay Code (VA Number / Account Number) -->
+            <div v-if="paymentMeta.payCode" class="pd-paycode">
+              <span class="pd-paycode-label">Nomor Pembayaran</span>
+              <div class="pd-paycode-row">
+                <span class="pd-paycode-value">{{ paymentMeta.payCode }}</span>
+                <button type="button" class="btn-copy" @click="copyPayCode" :aria-label="'Salin nomor pembayaran'">
+                  {{ copied ? '✓ Disalin' : 'Salin' }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Amount -->
+            <div class="pd-amount">
+              <span class="pd-amount-label">Total Pembayaran</span>
+              <span class="pd-amount-value">{{ formatPriceIDR(order.total) }}</span>
+            </div>
+
+            <!-- Instructions -->
+            <div v-if="paymentMeta.instructions?.length" class="pd-instructions">
+              <div v-for="(group, idx) in paymentMeta.instructions" :key="idx" class="pd-instruction-group">
+                <h4 class="pd-instruction-title">{{ group.title }}</h4>
+                <ol class="pd-steps">
+                  <li v-for="(step, sIdx) in group.steps" :key="sIdx" v-html="step"></li>
+                </ol>
+              </div>
+            </div>
+
+            <!-- Payment URL (if available, e.g. QRIS) -->
+            <a
+              v-if="paymentMeta.paymentUrl"
+              :href="paymentMeta.paymentUrl"
+              target="_blank"
+              rel="noopener"
+              class="btn btn-primary btn-full pd-pay-link"
+            >
+              Bayar Sekarang
+              <AppIcon name="arrowRight" :size="16" />
+            </a>
+          </div>
+
+          <!-- Order Summary -->
+          <div class="summary-card">
+            <OrderSummaryItems :order="order" />
+          </div>
+
+          <!-- Refresh -->
+          <button type="button" class="btn btn-secondary btn-full" @click="refreshOrder">
+            <AppIcon name="check" :size="16" />
+            Refresh Status
+          </button>
+          <p class="refresh-note">Sudah bayar? Klik refresh untuk cek status terbaru.</p>
+        </div>
+
+        <!-- Failed/Expired -->
+        <div v-else-if="isFailed && order" class="order-state">
+          <div class="state-badge state-failed">
+            <AppIcon name="close" :size="28" />
+          </div>
+          <h1 class="state-title">Pembayaran Gagal</h1>
+          <p class="state-desc">
+            Pembayaran untuk pesanan <strong>{{ order.code }}</strong>
+            {{ paymentStatus === 'expired' ? 'telah kedaluwarsa' : 'tidak dapat diproses' }}.
+          </p>
+
+          <div class="summary-card">
+            <OrderSummaryItems :order="order" />
+          </div>
+
+          <NuxtLink to="/products" class="btn btn-primary btn-full">
+            Kembali ke Katalog
+          </NuxtLink>
+        </div>
+
+        <!-- Unknown -->
+        <div v-else class="order-state">
+          <h1 class="state-title">Status Pesanan</h1>
+          <p class="state-desc">Tidak dapat menentukan status pembayaran. Silakan cek email untuk konfirmasi.</p>
+          <NuxtLink to="/products" class="btn btn-primary">Kembali ke Katalog</NuxtLink>
+        </div>
+      </div>
+    </main>
+
+    <TheFooter />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useAuth } from '~/composables/useAuth'
 import { useOrderConfirmation } from '~/composables/useOrderConfirmation'
 import { formatPriceIDR } from '~/utils/format'
+import OrderSummaryItems from '~/components/OrderSummaryItems.vue'
 
 const route = useRoute()
 
@@ -142,6 +171,7 @@ const {
   loading,
   error,
   paymentStatus,
+  paymentMeta,
   isSuccess,
   isFailed,
   isPending,
@@ -149,8 +179,28 @@ const {
 } = useOrderConfirmation()
 
 useHead({
-  title: 'Order Confirmation - NgopiCode Digital Store',
+  title: computed(() =>
+    order.value ? `Pesanan ${order.value.code} - NgopiCode` : 'Pesanan - NgopiCode'
+  ),
 })
+
+const copied = ref(false)
+
+const expiryFormatted = computed(() => {
+  if (!paymentMeta.value?.expiredTime) return ''
+  const date = new Date(paymentMeta.value.expiredTime * 1000)
+  return date.toLocaleString('id-ID', {
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  })
+})
+
+function copyPayCode() {
+  if (!paymentMeta.value?.payCode) return
+  navigator.clipboard.writeText(paymentMeta.value.payCode)
+  copied.value = true
+  setTimeout(() => { copied.value = false }, 2000)
+}
 
 async function refreshOrder() {
   const code = route.params.code as string
@@ -159,6 +209,16 @@ async function refreshOrder() {
 }
 
 onMounted(async () => {
+  // Ensure user session is active (might be lost after cross-site redirect from Tripay)
+  const { ensureSession, isLoggedIn } = useAuth()
+  await ensureSession()
+
+  // If not logged in after redirect, send to login with return URL
+  if (!isLoggedIn.value) {
+    navigateTo(`/auth?redirect=/order/${route.params.code}`)
+    return
+  }
+
   const code = route.params.code as string
   const status = route.query.status as string | undefined
   await fetchOrderByCode(code, status)
@@ -166,212 +226,351 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.order-confirmation-page {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+.order-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
 }
 
-.loading-state {
+.order-main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 2.5rem 1.25rem 4rem;
+}
+
+.order-container {
+  max-width: 600px;
+  width: 100%;
+}
+
+/* Loading */
+.order-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem 0;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Error */
+.order-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem 0;
   text-align: center;
-  padding: 3rem 0;
+  color: var(--text-muted);
 }
 
-/* Success State */
-.success-header {
+.order-error h1 { color: var(--text); font-size: 1.3rem; margin: 0; }
+
+/* State layout */
+.order-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  margin-bottom: 2rem;
+  gap: 1rem;
 }
 
-.success-icon {
+/* Back link */
+.back-link {
+  align-self: flex-start;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 0.4rem 0;
+  margin-bottom: 0.5rem;
+  transition: color 0.18s;
+}
+
+.back-link:hover {
+  color: var(--primary-text);
+}
+
+.back-arrow {
+  transform: rotate(180deg);
+}
+
+.state-badge {
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background-color: #d4edda;
-  color: #155724;
-  font-size: 2rem;
-  margin-bottom: 1rem;
+  display: grid;
+  place-items: center;
 }
 
-.success-subtitle {
-  color: #555;
+.state-success { background: var(--primary-soft); color: var(--primary-text); }
+.state-pending { background: #fef3c7; color: #92400e; }
+.state-failed { background: #fef2f2; color: #dc2626; }
+
+[data-theme='dark'] .state-pending { background: rgba(146, 64, 14, 0.15); color: #fbbf24; }
+[data-theme='dark'] .state-failed { background: rgba(220, 38, 38, 0.12); color: #fca5a5; }
+
+.state-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.state-desc {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 440px;
+}
+
+/* Summary card */
+.summary-card {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.25rem;
+  text-align: left;
   margin-top: 0.5rem;
 }
 
-/* Failed State */
-.failed-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.failed-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background-color: #f8d7da;
-  color: #721c24;
-  font-size: 2rem;
-  margin-bottom: 1rem;
-}
-
-.failed-subtitle {
-  color: #555;
-  margin-top: 0.5rem;
-}
-
-/* Pending State */
-.pending-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.pending-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background-color: #fff3cd;
-  color: #856404;
-  font-size: 2rem;
-  margin-bottom: 1rem;
-}
-
-.pending-subtitle {
-  color: #555;
-  margin-top: 0.5rem;
-}
-
-/* Error State */
-.error-state {
-  text-align: center;
-  padding: 3rem 0;
-}
-
-/* Order Details */
-.order-details {
-  background: #f8f9fa;
-  border-radius: 8px;
+/* Payment detail card */
+.payment-detail-card {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
   padding: 1.5rem;
-  margin-bottom: 2rem;
+  text-align: left;
+  margin-top: 0.5rem;
 }
 
-.order-items {
-  list-style: none;
-  padding: 0;
-  margin: 1rem 0;
-}
-
-.order-item {
+.pd-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #e9ecef;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-.order-item:last-child {
-  border-bottom: none;
+.pd-method {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
 }
 
-.item-name {
-  flex: 1;
+.pd-expiry {
+  font-size: 0.8rem;
+  color: #92400e;
+  background: #fef3c7;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
 }
 
-.item-qty {
-  margin: 0 1rem;
-  color: #666;
+[data-theme='dark'] .pd-expiry {
+  background: rgba(146, 64, 14, 0.15);
+  color: #fbbf24;
 }
 
-.item-price {
+/* Pay code */
+.pd-paycode {
+  margin-bottom: 1rem;
+}
+
+.pd-paycode-label {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
   font-weight: 500;
 }
 
-.order-total {
+.pd-paycode-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+}
+
+.pd-paycode-value {
+  flex: 1;
+  font-size: 1.2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+  color: var(--text);
+}
+
+.btn-copy {
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.18s;
+  white-space: nowrap;
+}
+
+.btn-copy:hover {
+  background: var(--primary);
+  color: var(--primary-contrast);
+}
+
+/* Amount */
+.pd-amount {
   display: flex;
   justify-content: space-between;
-  padding-top: 1rem;
-  border-top: 2px solid #dee2e6;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+
+.pd-amount-label {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.pd-amount-value {
   font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--primary-text);
+  font-variant-numeric: tabular-nums;
 }
 
-/* Download Section */
-.download-section {
-  text-align: center;
-  margin-bottom: 2rem;
+/* Instructions */
+.pd-instructions {
+  margin-bottom: 1rem;
 }
 
-.btn-download {
-  display: inline-block;
-  margin: 1rem 0;
+.pd-instruction-group {
+  margin-bottom: 1rem;
 }
 
-.download-note {
-  font-size: 0.9rem;
-  color: #666;
-  margin-top: 1rem;
+.pd-instruction-group:last-child {
+  margin-bottom: 0;
 }
 
-/* Retry Section */
-.retry-section {
-  text-align: center;
+.pd-instruction-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  color: var(--text);
 }
 
-.btn-retry {
-  display: inline-block;
-  margin: 1rem 0.5rem;
+.pd-steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.7;
 }
 
-/* Pending Actions */
-.pending-actions {
-  text-align: center;
+.pd-pay-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
 }
+
+/* Action card (download) */
+.action-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--primary-soft);
+  border: 1px solid var(--primary);
+  border-radius: 14px;
+  padding: 1.25rem;
+  text-align: left;
+  margin-top: 0.5rem;
+}
+
+.action-card h3 { font-size: 0.95rem; font-weight: 700; margin: 0; color: var(--primary-text); }
+.action-card p { font-size: 0.82rem; color: var(--text-muted); margin: 0.2rem 0 0; }
+.action-card .btn { margin-left: auto; white-space: nowrap; flex-shrink: 0; }
 
 /* Buttons */
-.btn-primary {
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  font-family: inherit;
   text-decoration: none;
-  transition: background-color 0.2s;
+  cursor: pointer;
+  border: none;
+  transition: background 0.18s;
 }
 
-.btn-primary:hover {
-  background-color: #1d4ed8;
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-contrast);
 }
+
+.btn-primary:hover { background: var(--primary-hover); }
 
 .btn-secondary {
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
-  background-color: #6b7280;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background-color 0.2s;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
 }
 
-.btn-secondary:hover {
-  background-color: #4b5563;
+.btn-secondary:hover { background: var(--btn-ghost-hover, var(--surface-2)); }
+
+.btn-full { width: 100%; }
+
+.refresh-note {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0.5rem 0 0;
 }
 
-/* Unknown State */
-.unknown-state {
-  text-align: center;
-  padding: 3rem 0;
+/* Responsive */
+@media (max-width: 560px) {
+  .action-card {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .action-card .btn { margin-left: 0; width: 100%; }
+  .pd-paycode-value { font-size: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation: none; }
 }
 </style>

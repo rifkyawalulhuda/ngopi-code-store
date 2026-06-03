@@ -51,9 +51,18 @@ export interface TripayCreateTransactionResponse {
     reference: string;
     merchant_ref: string;
     payment_url: string;
+    payment_name: string;
+    pay_code: string;
+    pay_url: string;
+    checkout_url: string;
     amount: number;
+    amount_received: number;
     status: 'UNPAID' | 'PAID' | 'EXPIRED' | 'FAILED';
     expired_time: number;
+    instructions: Array<{
+      title: string;
+      steps: string[];
+    }>;
   };
 }
 

@@ -51,7 +51,14 @@
             :title="collapsed ? tab.label : undefined"
             @click="selectTab(tab.id)"
           >
-            <AppIcon :name="tab.icon" :size="20" />
+            <span class="nav-icon-wrap">
+              <AppIcon :name="tab.icon" :size="20" />
+              <span
+                v-if="tab.id === 'orders' && pendingOrdersCount > 0"
+                class="nav-badge"
+                :aria-label="`${pendingOrdersCount} pesanan menunggu pembayaran`"
+              />
+            </span>
             <span v-if="!collapsed" class="side-nav-label">{{ tab.label }}</span>
           </button>
         </nav>
@@ -492,6 +499,11 @@ const tabs = [
   { id: 'settings' as const, label: 'Pengaturan', icon: 'user' },
 ]
 
+// Pending orders count (ArrangingPayment = waiting for payment)
+const pendingOrdersCount = computed(() =>
+  orders.value.filter((o) => o.state === 'ArrangingPayment').length,
+)
+
 const currentTabLabel = computed(() => tabs.find((t) => t.id === activeTab.value)?.label || 'Akun')
 
 function toggleCollapse() {
@@ -901,6 +913,31 @@ onMounted(async () => {
   font-weight: 600;
 }
 
+/* Nav icon wrapper for badge positioning */
+.nav-icon-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.nav-badge {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 2px solid var(--surface);
+  box-sizing: content-box;
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
 .side-nav-item.logout {
   color: #b91c1c;
 }
@@ -1113,9 +1150,10 @@ onMounted(async () => {
 }
 
 .order-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
   padding: 1rem 0;
   border-bottom: 1px solid var(--border);
 }
@@ -1128,7 +1166,6 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  flex: 1;
   min-width: 0;
 }
 
@@ -1136,6 +1173,9 @@ onMounted(async () => {
   font-weight: 700;
   font-size: 0.92rem;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .order-date {
@@ -1155,6 +1195,31 @@ onMounted(async () => {
   font-weight: 600;
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
+  white-space: nowrap;
+}
+
+.order-total {
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.order-link {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.order-link:hover {
+  background: var(--surface-2);
+  color: var(--primary-text);
 }
 
 .status-success {
@@ -1167,9 +1232,51 @@ onMounted(async () => {
   color: #92400e;
 }
 
+[data-theme='dark'] .status-pending {
+  background: rgba(146, 64, 14, 0.15);
+  color: #fbbf24;
+}
+
 .status-danger {
   background: #fef2f2;
   color: #b91c1c;
+}
+
+[data-theme='dark'] .status-danger {
+  background: rgba(220, 38, 38, 0.12);
+  color: #fca5a5;
+}
+
+/* Mobile: stack order row vertically */
+@media (max-width: 480px) {
+  .order-row {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 0.5rem 0.75rem;
+  }
+
+  .order-main {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .order-meta {
+    grid-column: 1;
+    grid-row: 2;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .order-link {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: center;
+  }
+
+  .order-code {
+    font-size: 0.85rem;
+  }
 }
 
 [data-theme='dark'] .status-pending {
@@ -1620,7 +1727,8 @@ onMounted(async () => {
   .content-spinner,
   .library-card,
   .backdrop-enter-active,
-  .backdrop-leave-active {
+  .backdrop-leave-active,
+  .nav-badge {
     transition: none;
     animation: none;
   }

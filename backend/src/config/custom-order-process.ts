@@ -96,6 +96,12 @@ export const customOrderProcess: CustomOrderProcess<string> = {
         return undefined;
       }
 
+      // Allow admin-initiated transitions to bypass payment verification
+      // (e.g., manual fulfillment from Dashboard after verifying payment externally)
+      if (data.ctx?.apiType === 'admin') {
+        return undefined;
+      }
+
       // Require a PAID TripayTransaction with matching amount
       if (!connection) {
         return `Payment verification failed: unable to access database connection.`;

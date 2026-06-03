@@ -24,43 +24,67 @@ export interface OrderConfirmation {
   paymentState: string | null
 }
 
+export interface PaymentMeta {
+  paymentUrl: string
+  payCode: string
+  paymentName: string
+  reference: string
+  channelCode: string
+  amount: number
+  expiredTime: number
+  instructions: Array<{ title: string; steps: string[] }>
+}
+
 /**
  * Determines the payment status from URL query params and order state.
- * Tripay redirects back with query params indicating payment result.
  */
 export function determinePaymentStatus(
   queryStatus: string | undefined | null,
   orderState: string | undefined | null
 ): PaymentStatus {
-  // Check query param status first (from Tripay return URL)
   if (queryStatus) {
     const normalized = queryStatus.toUpperCase()
-    if (normalized === 'PAID' || normalized === 'SUCCESS') {
-      return 'success'
-    }
-    if (normalized === 'EXPIRED') {
-      return 'expired'
-    }
-    if (normalized === 'FAILED' || normalized === 'ERROR') {
-      return 'failed'
-    }
-    if (normalized === 'UNPAID' || normalized === 'PENDING') {
-      return 'pending'
-    }
+    if (normalized === 'PAID' || normalized === 'SUCCESS') return 'success'
+    if (normalized === 'EXPIRED') return 'expired'
+    if (normalized === 'FAILED' || normalized === 'ERROR') return 'failed'
+    if (normalized === 'UNPAID' || normalized === 'PENDING') return 'pending'
   }
 
-  // Fallback: determine from order state
   if (orderState) {
     const normalizedState = orderState.toLowerCase()
-    if (normalizedState === 'fulfilled' || normalizedState === 'paymentsettled') {
-      return 'success'
-    }
-    if (normalizedState === 'arranging payment' || normalizedState === 'arrangingpayment') {
-      return 'pending'
-    }
+    if (normalizedState === 'fulfilled' || normalizedState === 'paymentsettled') return 'success'
+    if (normalizedState === 'arranging payment' || normalizedState === 'arrangingpayment') return 'pending'
   }
 
   return 'unknown'
+}
+
+/**
+ * Extracts payment metadata from Vendure payment object.
+ * Handles both string (JSON) and object formats.
+ */
+function extractPaymentMeta(payment: any): PaymentMeta | null {
+  if (!payment?.metadata) return null
+
+  let meta = payment.metadata
+  if (typeof meta === 'string') {
+    try { meta = JSON.parse(meta) } catch { return null }
+  }
+
+  // Vendure stores public metadata under `public` key
+  const pub = meta?.public || meta
+  if (!pub) return null
+
+  return {
+    paymentUrl: pub.paymentUrl || pub.payment_url || '',
+    payCode: pub.payCode || pub.pay_code || '',
+    paymentName: pub.paymentName || pub.payment_name || '',
+    reference: pub.reference || '',
+    channelCode: pub.channelCode || '',
+    amount: pub.amount || 0,
+    expiredTime: pub.expiredTime || pub.expired_time || 0,
+    instructions: pub.instructions || [],
+  }
 }
 
 export function useOrderConfirmation() {
@@ -68,6 +92,7 @@ export function useOrderConfirmation() {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const paymentStatus = ref<PaymentStatus>('unknown')
+  const paymentMeta = ref<PaymentMeta | null>(null)
 
   async function fetchOrderByCode(code: string, queryStatus?: string | null): Promise<void> {
     const { $apollo } = useNuxtApp()
@@ -82,7 +107,7 @@ export function useOrderConfirmation() {
       })
 
       if (!data.orderByCode) {
-        error.value = 'Order not found. Please check your order code.'
+        error.value = 'Pesanan tidak ditemukan. Periksa kode pesanan Anda.'
         paymentStatus.value = 'unknown'
         return
       }
@@ -108,9 +133,13 @@ export function useOrderConfirmation() {
         paymentState: orderData.payments?.[0]?.state || null,
       }
 
+      // Extract payment metadata (VA number, instructions, etc.)
+      const latestPayment = orderData.payments?.[orderData.payments.length - 1]
+      paymentMeta.value = extractPaymentMeta(latestPayment)
+
       paymentStatus.value = determinePaymentStatus(queryStatus, orderData.state)
     } catch (err: any) {
-      error.value = err.message || 'Failed to fetch order details'
+      error.value = err.message || 'Gagal memuat detail pesanan'
       paymentStatus.value = 'unknown'
     } finally {
       loading.value = false
@@ -126,6 +155,7 @@ export function useOrderConfirmation() {
     loading,
     error,
     paymentStatus,
+    paymentMeta,
     isSuccess,
     isFailed,
     isPending,

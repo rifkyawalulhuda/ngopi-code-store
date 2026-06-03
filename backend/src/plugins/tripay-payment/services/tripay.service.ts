@@ -89,7 +89,7 @@ export class TripayService {
         quantity: item.quantity,
       })),
       callback_url: this.options.callbackUrl,
-      return_url: this.options.returnUrl,
+      return_url: `${this.options.returnUrl}/${input.merchant_ref}`,
       expired_time: this.calculateExpiredTime(),
       signature,
     };

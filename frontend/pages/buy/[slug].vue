@@ -58,23 +58,83 @@
               </div>
             </div>
 
-            <!-- Payment Method (placeholder) -->
+            <!-- Payment Method -->
             <div class="section-card">
               <div class="section-header">
                 <AppIcon name="lock" :size="20" />
                 <h2 class="section-title">Metode Pembayaran</h2>
               </div>
 
-              <div class="payment-placeholder">
-                <div class="payment-coming">
-                  <AppIcon name="shoppingBag" :size="24" />
-                  <p>Metode pembayaran akan segera tersedia.</p>
-                  <span class="payment-sub">Transfer Bank, E-Wallet, dan QRIS via Tripay.</span>
+              <div class="payment-channels">
+                <!-- Channel groups -->
+                <div class="channel-group">
+                  <span class="channel-group-label">Virtual Account</span>
+                  <div class="channel-options">
+                    <label
+                      v-for="ch in vaChannels"
+                      :key="ch.code"
+                      class="channel-option"
+                      :class="{ selected: selectedChannel === ch.code }"
+                    >
+                      <input
+                        type="radio"
+                        name="payment-channel"
+                        :value="ch.code"
+                        v-model="selectedChannel"
+                        class="channel-radio"
+                      />
+                      <span class="channel-name">{{ ch.name }}</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="channel-group">
+                  <span class="channel-group-label">E-Wallet</span>
+                  <div class="channel-options">
+                    <label
+                      v-for="ch in ewalletChannels"
+                      :key="ch.code"
+                      class="channel-option"
+                      :class="{ selected: selectedChannel === ch.code }"
+                    >
+                      <input
+                        type="radio"
+                        name="payment-channel"
+                        :value="ch.code"
+                        v-model="selectedChannel"
+                        class="channel-radio"
+                      />
+                      <span class="channel-name">{{ ch.name }}</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="channel-group">
+                  <span class="channel-group-label">QRIS</span>
+                  <div class="channel-options">
+                    <label
+                      class="channel-option"
+                      :class="{ selected: selectedChannel === 'QRIS' }"
+                    >
+                      <input
+                        type="radio"
+                        name="payment-channel"
+                        value="QRIS"
+                        v-model="selectedChannel"
+                        class="channel-radio"
+                      />
+                      <span class="channel-name">QRIS (Semua Aplikasi)</span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
 
             <!-- Security badge -->
+            <div v-if="paymentError" class="payment-error" role="alert">
+              {{ paymentError }}
+            </div>
+
             <div class="security-row">
               <div class="security-badge">
                 <AppIcon name="lock" :size="16" />
@@ -133,11 +193,12 @@
               <button
                 type="button"
                 class="btn btn-primary btn-full checkout-cta"
-                disabled
-                aria-disabled="true"
+                :disabled="!selectedChannel || processing"
+                @click="onProceedPayment"
               >
-                <span>Lanjutkan Pembayaran</span>
-                <AppIcon name="arrowRight" :size="18" />
+                <span v-if="processing" class="btn-spinner-sm" />
+                <span v-else>Lanjutkan Pembayaran</span>
+                <AppIcon v-if="!processing" name="arrowRight" :size="18" />
               </button>
 
               <!-- Trust signals -->
@@ -174,6 +235,150 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuth } from '~/composables/useAuth'
 import { GET_PRODUCT_BY_SLUG } from '~/graphql/queries/products'
 import { formatPriceIDR } from '~/utils/format'
+import gql from 'graphql-tag'
+
+const ADD_ITEM_TO_ORDER = gql`
+  mutation AddItemToOrder($productVariantId: ID!, $quantity: Int!) {
+    addItemToOrder(productVariantId: $productVariantId, quantity: $quantity) {
+      ... on Order {
+        id
+        code
+        totalWithTax
+      }
+      ... on OrderModificationError {
+        message
+      }
+      ... on OrderLimitError {
+        message
+      }
+      ... on NegativeQuantityError {
+        message
+      }
+      ... on InsufficientStockError {
+        message
+      }
+    }
+  }
+`
+
+const TRANSITION_ORDER_STATE = gql`
+  mutation TransitionOrderState($state: String!) {
+    transitionOrderToState(state: $state) {
+      ... on Order {
+        id
+        state
+      }
+      ... on OrderStateTransitionError {
+        message
+        transitionError
+      }
+    }
+  }
+`
+
+const SET_ORDER_CUSTOMER = gql`
+  mutation SetOrderCustomer($input: CreateCustomerInput!) {
+    setCustomerForOrder(input: $input) {
+      ... on Order {
+        id
+      }
+      ... on AlreadyLoggedInError {
+        message
+      }
+      ... on EmailAddressConflictError {
+        message
+      }
+      ... on GuestCheckoutError {
+        message
+      }
+      ... on NoActiveOrderError {
+        message
+      }
+    }
+  }
+`
+
+const SET_SHIPPING_ADDRESS = gql`
+  mutation SetShippingAddress($input: CreateAddressInput!) {
+    setOrderShippingAddress(input: $input) {
+      ... on Order {
+        id
+      }
+      ... on NoActiveOrderError {
+        message
+      }
+    }
+  }
+`
+
+const GET_ELIGIBLE_SHIPPING = gql`
+  query GetEligibleShipping {
+    eligibleShippingMethods {
+      id
+      name
+      price
+    }
+  }
+`
+
+const SET_SHIPPING_METHOD = gql`
+  mutation SetShippingMethod($ids: [ID!]!) {
+    setOrderShippingMethod(shippingMethodId: $ids) {
+      ... on Order {
+        id
+        state
+      }
+      ... on OrderModificationError {
+        message
+      }
+      ... on IneligibleShippingMethodError {
+        message
+      }
+      ... on NoActiveOrderError {
+        message
+      }
+    }
+  }
+`
+
+const ADD_PAYMENT_TO_ORDER = gql`
+  mutation AddPaymentToOrder($input: PaymentInput!) {
+    addPaymentToOrder(input: $input) {
+      ... on Order {
+        id
+        code
+        state
+        payments {
+          id
+          method
+          state
+          metadata
+        }
+      }
+      ... on OrderPaymentStateError {
+        message
+      }
+      ... on IneligiblePaymentMethodError {
+        message
+        eligibilityCheckerMessage
+      }
+      ... on PaymentFailedError {
+        message
+        paymentErrorMessage
+      }
+      ... on PaymentDeclinedError {
+        message
+        paymentErrorMessage
+      }
+      ... on OrderStateTransitionError {
+        message
+      }
+      ... on NoActiveOrderError {
+        message
+      }
+    }
+  }
+`
 
 useHead({
   title: 'Checkout - NgopiCode',
@@ -185,6 +390,23 @@ const slug = route.params.slug as string
 const { customer, ensureSession, isLoggedIn } = useAuth()
 const loading = ref(true)
 const product = ref<any>(null)
+const selectedChannel = ref('')
+const processing = ref(false)
+const paymentError = ref('')
+
+// Tripay payment channels (sandbox-compatible)
+const vaChannels = [
+  { code: 'BRIVA', name: 'BRI Virtual Account' },
+  { code: 'BNIVA', name: 'BNI Virtual Account' },
+  { code: 'MANDIRIVA', name: 'Mandiri Virtual Account' },
+  { code: 'BCAVA', name: 'BCA Virtual Account' },
+]
+
+const ewalletChannels = [
+  { code: 'OVO', name: 'OVO' },
+  { code: 'DANA', name: 'DANA' },
+  { code: 'SHOPEEPAY', name: 'ShopeePay' },
+]
 
 const fullName = computed(() => {
   if (!customer.value) return ''
@@ -220,6 +442,137 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+/**
+ * Process payment: create order in Vendure and initiate Tripay payment.
+ * Flow: addItemToOrder → addPaymentToOrder(tripay, channelCode) → redirect to paymentUrl
+ */
+async function onProceedPayment() {
+  if (!selectedChannel.value || !product.value) return
+
+  processing.value = true
+  paymentError.value = ''
+
+  try {
+    const { $apollo } = useNuxtApp()
+    const variantId = product.value.variants?.[0]?.id
+    if (!variantId) {
+      paymentError.value = 'Produk tidak memiliki varian yang valid.'
+      return
+    }
+
+    // Step 1: Add item to order (creates a new order or adds to existing active order)
+    const { data: addData } = await $apollo.defaultClient.mutate({
+      mutation: ADD_ITEM_TO_ORDER,
+      variables: { productVariantId: variantId, quantity: 1 },
+    })
+
+    const addResult = addData?.addItemToOrder
+    if (addResult?.__typename !== 'Order') {
+      if (addResult?.__typename !== 'OrderModificationError') {
+        paymentError.value = addResult?.message || 'Gagal menambahkan produk ke pesanan.'
+        return
+      }
+    }
+
+    // Step 2: Set shipping address (required by Vendure before ArrangingPayment)
+    const { data: addrData } = await $apollo.defaultClient.mutate({
+      mutation: SET_SHIPPING_ADDRESS,
+      variables: {
+        input: {
+          fullName: fullName.value,
+          streetLine1: 'Digital Delivery',
+          city: 'Jakarta',
+          countryCode: 'ID',
+        },
+      },
+    })
+    console.log('[Checkout] Step 2 - setShippingAddress:', JSON.stringify(addrData))
+
+    // Step 3: Get and set eligible shipping method
+    const { data: eligibleData } = await $apollo.defaultClient.query({
+      query: GET_ELIGIBLE_SHIPPING,
+      fetchPolicy: 'network-only',
+    })
+    const shippingMethods = eligibleData?.eligibleShippingMethods || []
+    console.log('[Checkout] Step 3a - eligibleShippingMethods:', JSON.stringify(shippingMethods))
+
+    if (shippingMethods.length > 0) {
+      const { data: shipData } = await $apollo.defaultClient.mutate({
+        mutation: SET_SHIPPING_METHOD,
+        variables: { ids: [shippingMethods[0].id] },
+      })
+      console.log('[Checkout] Step 3b - setShippingMethod:', JSON.stringify(shipData))
+    } else {
+      paymentError.value = 'Tidak ada metode pengiriman yang tersedia. Pastikan Shipping Method sudah diatur di Dashboard.'
+      return
+    }
+
+    // Step 4: Transition order to ArrangingPayment state
+    const { data: transData } = await $apollo.defaultClient.mutate({
+      mutation: TRANSITION_ORDER_STATE,
+      variables: { state: 'ArrangingPayment' },
+    })
+    console.log('[Checkout] Step 4 - transitionOrderToState:', JSON.stringify(transData))
+
+    const transResult = transData?.transitionOrderToState
+    if (transResult?.__typename === 'OrderStateTransitionError') {
+      paymentError.value = transResult.message || transResult.transitionError || 'Gagal transition ke ArrangingPayment.'
+      return
+    } else if (transResult?.__typename !== 'Order' || transResult?.state !== 'ArrangingPayment') {
+      paymentError.value = `Order state unexpected: ${transResult?.state || 'unknown'}. Coba refresh.`
+      return
+    }
+
+    // Step 4: Add payment with Tripay method
+    const { data: payData } = await $apollo.defaultClient.mutate({
+      mutation: ADD_PAYMENT_TO_ORDER,
+      variables: {
+        input: {
+          method: 'tripay',
+          metadata: { channelCode: selectedChannel.value },
+        },
+      },
+    })
+
+    const payResult = payData?.addPaymentToOrder
+    if (payResult?.__typename === 'Order') {
+      // Get payment URL from order payments metadata
+      const payment = payResult.payments?.[payResult.payments.length - 1]
+      console.log('[Checkout] Payment response:', JSON.stringify(payment, null, 2))
+      let paymentUrl = ''
+
+      // metadata bisa string JSON atau object tergantung Vendure version
+      const meta = payment?.metadata
+      if (meta) {
+        if (typeof meta === 'string') {
+          try {
+            const parsed = JSON.parse(meta)
+            paymentUrl = parsed?.public?.paymentUrl || parsed?.paymentUrl || ''
+          } catch { /* not JSON */ }
+        } else if (typeof meta === 'object') {
+          paymentUrl = meta?.public?.paymentUrl || meta?.paymentUrl || ''
+        }
+      }
+
+      console.log('[Checkout] Extracted paymentUrl:', paymentUrl)
+
+      if (paymentUrl) {
+        window.location.href = paymentUrl
+      } else {
+        // Fallback: redirect ke order confirmation page
+        const orderCode = payResult.code
+        navigateTo(`/order/${orderCode}`)
+      }
+    } else {
+      paymentError.value = payResult?.message || payResult?.paymentErrorMessage || 'Gagal membuat pembayaran.'
+    }
+  } catch (err: any) {
+    paymentError.value = err.message || 'Terjadi kesalahan saat memproses pembayaran.'
+  } finally {
+    processing.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -580,6 +933,104 @@ onMounted(async () => {
 .checkout-error p {
   margin: 0;
   font-size: 0.92rem;
+}
+
+/* Payment channels */
+.payment-channels {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.channel-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.channel-group-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.channel-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.5rem;
+}
+
+.channel-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s;
+}
+
+.channel-option:hover {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.channel-option.selected {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.channel-radio {
+  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.channel-name {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* Payment error */
+.payment-error {
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+[data-theme='dark'] .payment-error {
+  background: rgba(185, 28, 28, 0.12);
+  color: #fca5a5;
+  border-color: rgba(185, 28, 28, 0.3);
+}
+
+/* CTA active state */
+.checkout-cta:not(:disabled) {
+  opacity: 1;
+  cursor: pointer;
+}
+
+.checkout-cta:not(:disabled):hover {
+  background: var(--primary-hover);
+}
+
+.btn-spinner-sm {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
 }
 
 /* Responsive */

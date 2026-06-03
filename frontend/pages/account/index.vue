@@ -189,8 +189,44 @@
           </div>
         </section>
 
+        <!-- Wishlist tab -->
+        <section v-else-if="activeTab === 'wishlist'" class="panel">
+          <div class="panel-head">
+            <h2 class="panel-title">Wishlist</h2>
+            <span v-if="wishlistCount > 0" class="panel-count">{{ wishlistCount }} produk</span>
+          </div>
+
+          <div v-if="wishlistItems.length" class="wishlist-grid">
+            <article v-for="item in wishlistItems" :key="item.productId" class="wishlist-card">
+              <NuxtLink :to="`/products/${item.slug}`" class="wishlist-thumb">
+                <img v-if="item.image" :src="item.image" :alt="item.name" loading="lazy" />
+                <AppIcon v-else name="code" :size="28" />
+              </NuxtLink>
+              <div class="wishlist-body">
+                <NuxtLink :to="`/products/${item.slug}`" class="wishlist-name">{{ item.name }}</NuxtLink>
+                <span class="wishlist-price">{{ formatPriceIDR(item.price) }}</span>
+              </div>
+              <button
+                type="button"
+                class="wishlist-remove"
+                :aria-label="`Hapus ${item.name} dari wishlist`"
+                @click="removeFromWishlist(item.productId)"
+              >
+                <AppIcon name="close" :size="16" />
+              </button>
+            </article>
+          </div>
+
+          <div v-else class="empty-state">
+            <div class="empty-icon"><AppIcon name="heart" :size="28" /></div>
+            <h3>Wishlist kosong</h3>
+            <p>Simpan produk yang kamu sukai di sini. Klik ikon ♡ di halaman produk untuk menambahkannya.</p>
+            <NuxtLink to="/products" class="btn btn-primary">Jelajahi Produk</NuxtLink>
+          </div>
+        </section>
+
         <!-- Settings tab -->
-        <section v-else class="panel">
+        <section v-else-if="activeTab === 'settings'" class="panel">
           <div class="panel-head">
             <h2 class="panel-title">Pengaturan Akun</h2>
           </div>
@@ -434,8 +470,9 @@ interface CustomerOrder {
 }
 
 const { customer, logout, ensureSession, updateProfile, changePassword, requestEmailChange, error: authError } = useAuth()
+const { items: wishlistItems, count: wishlistCount, init: initWishlist, removeFromWishlist } = useWishlist()
 
-type TabId = 'library' | 'orders' | 'settings'
+type TabId = 'library' | 'orders' | 'wishlist' | 'settings'
 const activeTab = ref<TabId>('library')
 const loading = ref(true)
 const orders = ref<CustomerOrder[]>([])
@@ -447,6 +484,7 @@ const mobileOpen = ref(false)
 const tabs = [
   { id: 'library' as const, label: 'Pustaka Saya', icon: 'package' },
   { id: 'orders' as const, label: 'Riwayat Pesanan', icon: 'cart' },
+  { id: 'wishlist' as const, label: 'Wishlist', icon: 'heart' },
   { id: 'settings' as const, label: 'Pengaturan', icon: 'user' },
 ]
 
@@ -660,6 +698,7 @@ watch(mobileOpen, (open) => {
 
 onMounted(async () => {
   loading.value = true
+  initWishlist()
   try {
     const activeCustomer = await ensureSession()
     if (!activeCustomer) {
@@ -1581,6 +1620,108 @@ onMounted(async () => {
     transition: none;
     animation: none;
   }
+}
+
+/* Wishlist grid */
+.wishlist-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.wishlist-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.wishlist-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px var(--shadow-card);
+}
+
+.wishlist-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface-2);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.wishlist-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wishlist-thumb .app-icon {
+  color: var(--text-muted);
+}
+
+.wishlist-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.wishlist-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wishlist-name:hover {
+  color: var(--primary-text);
+}
+
+.wishlist-price {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.wishlist-remove {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.wishlist-remove:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+[data-theme='dark'] .wishlist-remove:hover {
+  background: rgba(220, 38, 38, 0.12);
+  color: #fca5a5;
+}
+
+.panel-count {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
 /* Logout Confirmation Modal */

@@ -145,8 +145,9 @@
               </button>
               <button
                 class="btn-icon-only"
+                :class="{ 'wishlisted': productInWishlist }"
                 type="button"
-                :aria-label="'Tambah ke wishlist'"
+                :aria-label="productInWishlist ? 'Hapus dari wishlist' : 'Tambah ke wishlist'"
                 @click="onWishlist"
               >
                 <AppIcon name="heart" :size="20" />
@@ -312,6 +313,11 @@ const badgeLabel = computed(() => {
   return (product.value?.customFields?.productType || 'SOURCE CODE').toUpperCase()
 })
 
+// Wishlist state
+const { init: initWishlist, isInWishlist } = useWishlist()
+if (import.meta.client) { initWishlist() }
+const productInWishlist = computed(() => product.value ? isInWishlist(product.value.id) : false)
+
 // WhatsApp URL with pre-filled message
 const whatsappUrl = computed(() => {
   if (!whatsappNumber.value || !product.value) return ''
@@ -327,7 +333,29 @@ function onBuyNow() {
 }
 
 function onWishlist() {
-  alert('Ditambahkan ke wishlist!')
+  if (!product.value) return
+
+  const { isLoggedIn } = useAuth()
+  const { init, toggleWishlist, isInWishlist } = useWishlist()
+  init()
+
+  // Guest user → redirect to login
+  if (!isLoggedIn.value) {
+    navigateTo('/auth')
+    return
+  }
+
+  // Toggle wishlist
+  const variant = product.value.variants?.[0]
+  toggleWishlist({
+    productId: product.value.id,
+    variantId: variant?.id,
+    name: product.value.name,
+    slug: product.value.slug,
+    price: variant?.price ?? 0,
+    currencyCode: variant?.currencyCode ?? 'IDR',
+    image: product.value.featuredAsset?.preview || null,
+  })
 }
 
 function formatRelatedPrice(p: Product): string {
@@ -714,6 +742,20 @@ onMounted(async () => {
 
 .btn-icon-only:active {
   transform: scale(0.95);
+}
+
+.btn-icon-only.wishlisted {
+  background: #fef2f2;
+  color: #e74c6f;
+  border-color: #e74c6f;
+}
+
+.btn-icon-only.wishlisted svg {
+  fill: #e74c6f;
+}
+
+[data-theme='dark'] .btn-icon-only.wishlisted {
+  background: rgba(231, 76, 111, 0.12);
 }
 
 /* WhatsApp link (subtle, not competing with CTA) */

@@ -128,6 +128,15 @@ export const config: VendureConfig = {
         nullable: true,
         public: true,
       },
+      {
+        name: 'wishlistProductIds',
+        type: 'text',
+        label: [{ languageCode: LanguageCode.en, value: 'Wishlist Product IDs' }],
+        description: [{ languageCode: LanguageCode.en, value: 'JSON array of product IDs in customer wishlist. Managed by storefront.' }],
+        nullable: true,
+        public: true,
+        ui: { component: 'textarea-form-input' },
+      },
     ],
     Product: [
       {

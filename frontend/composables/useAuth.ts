@@ -20,6 +20,7 @@ export interface ActiveCustomer {
   emailAddress: string
   customFields?: {
     whatsappNumber?: string | null
+    wishlistProductIds?: string | null
   } | null
 }
 
@@ -179,6 +180,13 @@ export function useAuth() {
         fetchPolicy: 'network-only',
       })
       customer.value = data?.activeCustomer || null
+
+      // Sync wishlist from server after fetching customer
+      if (customer.value?.customFields?.wishlistProductIds) {
+        const { init, loadFromServer } = useWishlist()
+        init()
+        loadFromServer(customer.value.customFields.wishlistProductIds)
+      }
     } catch {
       customer.value = null
     } finally {

@@ -84,6 +84,7 @@ export const GET_ACTIVE_CUSTOMER = gql`
       emailAddress
       customFields {
         whatsappNumber
+        wishlistProductIds
       }
     }
   }

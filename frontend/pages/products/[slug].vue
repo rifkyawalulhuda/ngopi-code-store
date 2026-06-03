@@ -328,8 +328,16 @@ const whatsappUrl = computed(() => {
 })
 
 function onBuyNow() {
-  // TODO: Add to cart and redirect to checkout
-  alert('Fitur pembelian akan segera tersedia!')
+  const { isLoggedIn } = useAuth()
+
+  if (!isLoggedIn.value) {
+    navigateTo('/auth')
+    return
+  }
+
+  if (product.value) {
+    navigateTo(`/buy/${product.value.slug}`)
+  }
 }
 
 function onWishlist() {

@@ -1,4 +1,5 @@
 import { UPDATE_CUSTOMER } from '~/graphql/mutations/auth'
+import { GET_PRODUCTS } from '~/graphql/queries/products'
 
 /**
  * Composable for managing product wishlist.
@@ -7,7 +8,7 @@ import { UPDATE_CUSTOMER } from '~/graphql/mutations/auth'
  * - Guest: localStorage only
  * - Logged-in: localStorage + synced to server (Customer custom field `wishlistProductIds`)
  *
- * On login: merges localStorage items with server data.
+ * On login: fetches product data from server using stored IDs, rebuilds full wishlist.
  * On toggle: persists to both localStorage and server (if logged in).
  */
 export interface WishlistItem {
@@ -81,41 +82,57 @@ export function useWishlist() {
   }
 
   /**
-   * Load wishlist from server and merge with localStorage.
-   * Call after login to sync across devices.
+   * Load wishlist from server: fetch full product data for stored IDs.
+   * Call after login to rebuild wishlist with complete product info.
    */
-  function loadFromServer(serverData: string | null | undefined) {
+  async function loadFromServer(serverData: string | null | undefined) {
     if (!serverData) return
 
     try {
       const serverIds: string[] = JSON.parse(serverData)
-      if (!Array.isArray(serverIds)) return
+      if (!Array.isArray(serverIds) || serverIds.length === 0) return
 
-      // Merge: keep local items, add any server-only IDs as minimal items
-      const localIds = new Set(items.value.map((i) => i.productId))
-      const serverOnlyIds = serverIds.filter((id) => !localIds.has(id))
+      // Fetch full product data from Vendure
+      const { $apollo } = useNuxtApp()
+      const { data } = await $apollo.defaultClient.query({
+        query: GET_PRODUCTS,
+        variables: {
+          options: {
+            filter: { id: { in: serverIds } },
+            take: serverIds.length,
+          },
+        },
+        fetchPolicy: 'network-only',
+      })
 
-      // Server-only items get added as minimal placeholders
-      // (they'll get full data when user visits the product page)
-      for (const id of serverOnlyIds) {
-        items.value.push({
-          productId: id,
-          name: 'Produk tersimpan',
-          slug: '',
-          price: 0,
-          currencyCode: 'IDR',
-          image: null,
-          addedAt: Date.now(),
-        })
-      }
+      const products = data?.products?.items || []
 
-      // Also persist any local items that weren't on server
-      if (serverOnlyIds.length > 0 || items.value.length > serverIds.length) {
-        persistLocal()
+      // Build full wishlist items from fetched product data
+      const fetchedItems: WishlistItem[] = products.map((p: any) => ({
+        productId: p.id,
+        variantId: p.variants?.[0]?.id,
+        name: p.name,
+        slug: p.slug,
+        price: p.variants?.[0]?.price ?? 0,
+        currencyCode: p.variants?.[0]?.currencyCode ?? 'IDR',
+        image: p.featuredAsset?.preview || null,
+        addedAt: Date.now(),
+      }))
+
+      // Merge: server items take priority (they have fresh data)
+      // Keep any local-only items that aren't on server
+      const serverIdSet = new Set(serverIds)
+      const localOnlyItems = items.value.filter((i) => !serverIdSet.has(i.productId))
+
+      items.value = [...fetchedItems, ...localOnlyItems]
+      persistLocal()
+
+      // If there were local-only items, sync them back to server
+      if (localOnlyItems.length > 0) {
         syncToServer()
       }
     } catch {
-      // Invalid JSON, ignore
+      // If fetch fails, leave current state as-is
     }
   }
 
@@ -172,16 +189,11 @@ export function useWishlist() {
   }
 
   /**
-   * Clear entire wishlist.
+   * Clear entire wishlist (used on logout).
    */
   function clearWishlist() {
     items.value = []
     persistLocal()
-
-    const { isLoggedIn } = useAuth()
-    if (isLoggedIn.value) {
-      syncToServer()
-    }
   }
 
   const count = computed(() => items.value.length)

@@ -112,6 +112,10 @@
             <span class="stat-value">{{ totalProducts }}</span>
           </div>
           <div class="stat-card">
+            <span class="stat-label">Wishlist</span>
+            <span class="stat-value">{{ wishlistCount }}</span>
+          </div>
+          <div class="stat-card">
             <span class="stat-label">Status Akun</span>
             <span class="stat-badge">Terverifikasi</span>
           </div>
@@ -976,7 +980,7 @@ onMounted(async () => {
 /* Stats */
 .stats-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
 }
 
@@ -1592,7 +1596,7 @@ onMounted(async () => {
 
 @media (max-width: 560px) {
   .stats-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
   .welcome {
     flex-direction: column;

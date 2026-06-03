@@ -195,21 +195,22 @@
           </div>
 
           <div v-if="orders.length" class="orders-list">
-            <article v-for="order in orders" :key="order.id" class="order-row">
-              <div class="order-main">
-                <span class="order-code">{{ order.code }}</span>
-                <span class="order-products">{{ getOrderProductNames(order) }}</span>
-                <span class="order-date">
-                  {{ formatDate(order.orderPlacedAt) }}
-                  <span v-if="getPaymentMethod(order)" class="order-payment-method">· {{ getPaymentMethod(order) }}</span>
-                </span>
-              </div>
-              <div class="order-meta">
-                <span class="order-status" :class="statusClass(order.state)">{{ statusLabel(order.state) }}</span>
-                <span class="order-total">{{ formatPriceIDR(order.totalWithTax) }}</span>
-              </div>
-              <NuxtLink :to="`/order/${order.code}`" class="order-link" aria-label="Lihat detail pesanan">
-                <AppIcon name="arrowRight" :size="18" />
+            <article v-for="order in orders" :key="order.id" class="order-card">
+              <NuxtLink :to="`/order/${order.code}`" class="order-card-link" :aria-label="`Lihat pesanan ${order.code}`">
+                <div class="oc-top">
+                  <div class="oc-product">
+                    <span class="oc-product-name">{{ getOrderProductNames(order) }}</span>
+                    <span class="oc-code">#{{ order.code }}</span>
+                  </div>
+                  <span class="order-status" :class="statusClass(order.state)">{{ statusLabel(order.state) }}</span>
+                </div>
+                <div class="oc-bottom">
+                  <div class="oc-meta">
+                    <span v-if="formatDate(order.orderPlacedAt) !== '—'" class="oc-date">{{ formatDate(order.orderPlacedAt) }}</span>
+                    <span v-if="getPaymentMethod(order)" class="oc-method">{{ getPaymentMethod(order) }}</span>
+                  </div>
+                  <span class="oc-price">{{ formatPriceIDR(order.totalWithTax) }}</span>
+                </div>
               </NuxtLink>
             </article>
           </div>
@@ -1196,61 +1197,92 @@ onMounted(async () => {
 .orders-list {
   display: flex;
   flex-direction: column;
-}
-
-.order-row {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  align-items: center;
   gap: 0.75rem;
-  padding: 1rem 0;
-  border-bottom: 1px solid var(--border);
 }
 
-.order-row:last-child {
-  border-bottom: none;
+.order-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: border-color 0.18s, box-shadow 0.18s;
 }
 
-.order-main {
+.order-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px var(--shadow-card);
+}
+
+.order-card-link {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.6rem;
+  padding: 1rem 1.15rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.oc-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.oc-product {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
   min-width: 0;
 }
 
-.order-code {
-  font-weight: 700;
+.oc-product-name {
   font-size: 0.92rem;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.order-date {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
-.order-products {
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.order-payment-method {
+.oc-code {
+  font-size: 0.78rem;
   color: var(--text-muted);
-  font-weight: 400;
+  font-variant-numeric: tabular-nums;
 }
 
-.order-meta {
+.oc-bottom {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.3rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.oc-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.oc-date {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.oc-method {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.oc-price {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .order-status {
@@ -1259,30 +1291,7 @@ onMounted(async () => {
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
   white-space: nowrap;
-}
-
-.order-total {
-  font-size: 0.88rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.order-link {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  color: var(--text-muted);
-  text-decoration: none;
-  transition: background 0.15s, color 0.15s;
   flex-shrink: 0;
-}
-
-.order-link:hover {
-  background: var(--surface-2);
-  color: var(--primary-text);
 }
 
 .status-success {
@@ -1310,52 +1319,16 @@ onMounted(async () => {
   color: #fca5a5;
 }
 
-/* Mobile: stack order row vertically */
 @media (max-width: 480px) {
-  .order-row {
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto auto;
-    gap: 0.5rem 0.75rem;
+  .order-card-link {
+    padding: 0.85rem 1rem;
   }
-
-  .order-main {
-    grid-column: 1;
-    grid-row: 1;
+  .oc-product-name {
+    font-size: 0.88rem;
   }
-
-  .order-meta {
-    grid-column: 1;
-    grid-row: 2;
-    flex-direction: row;
-    align-items: center;
-    gap: 0.5rem;
+  .oc-price {
+    font-size: 0.9rem;
   }
-
-  .order-link {
-    grid-column: 2;
-    grid-row: 1 / 3;
-    align-self: center;
-  }
-
-  .order-code {
-    font-size: 0.85rem;
-  }
-}
-
-[data-theme='dark'] .status-pending {
-  background: rgba(146, 64, 14, 0.2);
-  color: #fcd34d;
-}
-
-[data-theme='dark'] .status-danger {
-  background: rgba(185, 28, 28, 0.15);
-  color: #fca5a5;
-}
-
-.order-total {
-  font-weight: 700;
-  font-size: 0.9rem;
-  font-variant-numeric: tabular-nums;
 }
 
 .order-link {

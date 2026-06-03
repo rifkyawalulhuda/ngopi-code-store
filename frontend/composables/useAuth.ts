@@ -121,6 +121,9 @@ export function useAuth() {
       // Silent fail on logout
     } finally {
       customer.value = null
+      // Clear wishlist state on logout
+      const { clearWishlist } = useWishlist()
+      clearWishlist()
     }
   }
 

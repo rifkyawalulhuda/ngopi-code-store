@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Checkout | ngopicode</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;family=Manrope:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-fixed-variant": "#484740",
+                    "outline": "#727973",
+                    "on-surface-variant": "#424844",
+                    "on-secondary-container": "#5a6745",
+                    "on-primary-fixed-variant": "#324c3e",
+                    "on-secondary-fixed": "#141f05",
+                    "surface-container-low": "#f3f4f5",
+                    "surface-container": "#edeeef",
+                    "error-container": "#ffdad6",
+                    "surface-bright": "#f8f9fa",
+                    "primary-container": "#2d4739",
+                    "primary": "#173124",
+                    "surface-container-high": "#e7e8e9",
+                    "on-primary": "#ffffff",
+                    "background": "#f8f9fa",
+                    "secondary-container": "#d7e5bb",
+                    "primary-fixed": "#ccead6",
+                    "on-surface": "#191c1d",
+                    "on-primary-fixed": "#062014",
+                    "tertiary-fixed-dim": "#c9c6bd",
+                    "primary-fixed-dim": "#b0cdbb",
+                    "inverse-on-surface": "#f0f1f2",
+                    "on-tertiary-fixed": "#1c1c16",
+                    "secondary-fixed": "#dae8be",
+                    "secondary-fixed-dim": "#becca3",
+                    "on-tertiary-container": "#b1aea5",
+                    "tertiary-container": "#43423b",
+                    "on-primary-container": "#98b5a3",
+                    "on-error": "#ffffff",
+                    "surface-variant": "#e1e3e4",
+                    "surface-dim": "#d9dadb",
+                    "surface": "#f8f9fa",
+                    "outline-variant": "#c2c8c2",
+                    "on-secondary-fixed-variant": "#3f4b2c",
+                    "error": "#ba1a1a",
+                    "on-secondary": "#ffffff",
+                    "secondary": "#566342",
+                    "on-tertiary": "#ffffff",
+                    "surface-tint": "#496455",
+                    "on-error-container": "#93000a",
+                    "surface-container-highest": "#e1e3e4",
+                    "tertiary-fixed": "#e6e2d8",
+                    "surface-container-lowest": "#ffffff",
+                    "on-background": "#191c1d",
+                    "inverse-surface": "#2e3132",
+                    "inverse-primary": "#b0cdbb",
+                    "tertiary": "#2c2c25"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-desktop": "64px",
+                    "md": "24px",
+                    "xs": "4px",
+                    "margin-mobile": "16px",
+                    "gutter": "24px",
+                    "xl": "80px",
+                    "sm": "12px",
+                    "lg": "48px",
+                    "base": "8px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Manrope"],
+                    "body-md": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-xl": ["Manrope"],
+                    "label-sm": ["Inter"],
+                    "headline-md": ["Manrope"],
+                    "headline-xl-mobile": ["Manrope"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "0", "fontWeight": "600"}],
+                    "headline-xl-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        body {
+            background-color: #f8f9fa;
+            color: #191c1d;
+        }
+        .form-input {
+            border: 1px solid #c2c8c2;
+            transition: border-color 0.2s ease;
+        }
+        .form-input:focus {
+            border-color: #173124;
+            outline: none;
+            ring: 0;
+        }
+        .payment-card {
+            transition: all 0.3s ease;
+            border: 1px solid #c2c8c2;
+        }
+        .payment-card.active {
+            border-color: #173124;
+            background-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(45, 71, 57, 0.06);
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md">
+<!-- TopNavBar -->
+<nav class="bg-surface docked full-width top-0 z-50 sticky">
+<div class="flex justify-between items-center px-margin-desktop py-md w-full max-w-[1280px] mx-auto">
+<div class="font-headline-md text-headline-md text-primary tracking-tight">ngopicode</div>
+<div class="hidden md:flex gap-lg">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors duration-200 cursor-pointer active:opacity-80" href="#">Shop</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors duration-200 cursor-pointer active:opacity-80" href="#">Sustainability</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors duration-200 cursor-pointer active:opacity-80" href="#">Journal</a>
+</div>
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary cursor-pointer active:opacity-80">shopping_bag</span>
+<span class="material-symbols-outlined text-primary cursor-pointer active:opacity-80">person</span>
+</div>
+</div>
+</nav>
+<main class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-lg md:py-xl">
+<header class="mb-lg">
+<h1 class="font-headline-xl-mobile md:font-headline-xl text-headline-xl-mobile md:text-headline-xl text-primary mb-xs">Checkout</h1>
+<p class="text-on-surface-variant font-body-md">Secure your digital assets with our encrypted payment gateway.</p>
+</header>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-xl items-start">
+<!-- Left Column: Billing & Payment -->
+<div class="lg:col-span-7 space-y-lg">
+<!-- Billing Details -->
+<section class="bg-surface-container-lowest p-md md:p-lg rounded-xl shadow-sm border border-outline-variant">
+<h2 class="font-headline-md text-headline-md text-primary mb-md flex items-center gap-sm">
+<span class="material-symbols-outlined">person</span> Billing Details
+                    </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface-variant">Full Name</label>
+<input class="form-input rounded-lg p-sm font-body-md bg-transparent" placeholder="Alex Rivera" type="text"/>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface-variant">Email Address</label>
+<input class="form-input rounded-lg p-sm font-body-md bg-transparent" placeholder="alex@example.com" type="email"/>
+</div>
+</div>
+</section>
+<!-- Payment Method -->
+<section class="bg-surface-container-lowest p-md md:p-lg rounded-xl shadow-sm border border-outline-variant">
+<h2 class="font-headline-md text-headline-md text-primary mb-md flex items-center gap-sm">
+<span class="material-symbols-outlined">payments</span> Payment Method
+                    </h2>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-sm mb-lg">
+<button class="payment-card active p-md rounded-lg flex flex-col items-center gap-xs cursor-pointer" id="btn-card" onclick="switchPayment('card')">
+<span class="material-symbols-outlined text-primary">credit_card</span>
+<span class="font-label-md">Credit Card</span>
+</button>
+<button class="payment-card p-md rounded-lg flex flex-col items-center gap-xs cursor-pointer" id="btn-paypal" onclick="switchPayment('paypal')">
+<span class="material-symbols-outlined text-on-surface-variant">account_balance_wallet</span>
+<span class="font-label-md">PayPal</span>
+</button>
+<button class="payment-card p-md rounded-lg flex flex-col items-center gap-xs cursor-pointer" id="btn-bank" onclick="switchPayment('bank')">
+<span class="material-symbols-outlined text-on-surface-variant">account_balance</span>
+<span class="font-label-md">Bank Transfer</span>
+</button>
+</div>
+<!-- Card Details Form -->
+<div class="space-y-md" id="payment-form-card">
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface-variant">Card Number</label>
+<div class="relative">
+<input class="form-input rounded-lg p-sm font-body-md bg-transparent w-full pr-12" placeholder="0000 0000 0000 0000" type="text"/>
+<span class="material-symbols-outlined absolute right-sm top-1/2 -translate-y-1/2 text-outline-variant">credit_card</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-md">
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface-variant">Expiry Date</label>
+<input class="form-input rounded-lg p-sm font-body-md bg-transparent" placeholder="MM/YY" type="text"/>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface-variant">CVV</label>
+<input class="form-input rounded-lg p-sm font-body-md bg-transparent" placeholder="123" type="password"/>
+</div>
+</div>
+</div>
+<div class="hidden py-lg text-center" id="payment-form-paypal">
+<p class="text-on-surface-variant mb-md">You will be redirected to PayPal to complete your purchase securely.</p>
+<div class="bg-surface-container p-lg rounded-xl inline-block">
+<span class="material-symbols-outlined text-[48px] text-primary">login</span>
+</div>
+</div>
+<div class="hidden py-lg text-center" id="payment-form-bank">
+<p class="text-on-surface-variant mb-md">Transfer details will be sent to your email after confirming the order.</p>
+<div class="bg-surface-container p-lg rounded-xl inline-block">
+<span class="material-symbols-outlined text-[48px] text-primary">receipt_long</span>
+</div>
+</div>
+</section>
+<!-- Trust Badges Mobile -->
+<div class="lg:hidden flex justify-center gap-lg items-center py-md">
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<span class="font-label-sm">Secure Checkout</span>
+</div>
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">encrypted</span>
+<span class="font-label-sm">256-bit SSL</span>
+</div>
+</div>
+</div>
+<!-- Right Column: Order Summary (Sticky) -->
+<aside class="lg:col-span-5 lg:sticky lg:top-md">
+<div class="bg-surface-container-highest rounded-xl p-md md:p-lg border border-outline-variant">
+<h2 class="font-headline-md text-headline-md text-primary mb-lg">Order Summary</h2>
+<!-- Product Item -->
+<div class="flex gap-md mb-lg">
+<div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
+<img alt="Product Thumbnail" class="w-full h-full object-cover" data-alt="A clean and professional product thumbnail for a SaaS dashboard template. The image displays a high-resolution code editor screen showing structured, elegant React components in a minimalist forest green and soft white theme. A subtle blurred file explorer sidebar is visible on the left, suggesting a well-organized codebase. The lighting is bright and modern, conveying a premium software development environment." src="https://lh3.googleusercontent.com/aida/AP1WRLtUE9MmJnpNXdrlaK1cIvpj2RMuPXWHaLHw5JUGhJhWpUrbBd8rOlHMhhY-RWkk6C1Ghg3HWHKBvZcvQhJGGluk5qEeit-QU6AD2Dl3dl2DsKGRJER97chPBlTuF1Xm9zxPrw9ww8WTpu_wiXXKOuxR3Qux6OTdWbkJ2-xI_3PScn5jXORxGCc3M9CYtgHBONW0Pa8xzVIDJpy8fpev-palFBOsQ6Pq5PwOf9dhyMqkAf_c4AXT70IS18Q"/>
+</div>
+<div class="flex flex-col justify-center">
+<h3 class="font-label-md text-primary font-bold">SaaS Dashboard Template</h3>
+<p class="text-label-sm text-on-surface-variant">Personal License</p>
+<p class="font-label-md text-primary mt-base">$89.00</p>
+</div>
+</div>
+<!-- Calculations -->
+<div class="space-y-sm border-t border-outline-variant pt-lg mb-lg">
+<div class="flex justify-between font-body-md text-on-surface-variant">
+<span>Subtotal</span>
+<span>$89.00</span>
+</div>
+<div class="flex justify-between font-body-md text-on-surface-variant">
+<span>Tax</span>
+<span>$0.00</span>
+</div>
+<div class="flex justify-between font-headline-md text-headline-md text-primary pt-md">
+<span>Total</span>
+<span>$89.00</span>
+</div>
+</div>
+<!-- CTA -->
+<button class="w-full bg-primary text-on-primary py-md rounded-lg font-label-md hover:bg-primary-container transition-all active:scale-[0.98] flex items-center justify-center gap-sm">
+                        Complete Purchase
+                        <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<!-- Trust Badges Desktop -->
+<div class="hidden lg:flex flex-col gap-sm mt-lg pt-lg border-t border-outline-variant">
+<div class="flex items-center gap-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<span class="font-label-sm">Payment secured with industry-standard encryption</span>
+</div>
+<div class="flex items-center gap-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">history</span>
+<span class="font-label-sm">Instant digital delivery after verification</span>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low full-width border-t border-tertiary">
+<div class="flex flex-col md:flex-row justify-between items-center px-margin-desktop py-lg w-full max-w-[1280px] mx-auto gap-md">
+<div class="font-headline-sm text-headline-sm text-primary">ngopicode</div>
+<div class="flex flex-wrap justify-center gap-md">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:underline transition-all" href="#">Privacy Policy</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:underline transition-all" href="#">Terms of Service</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:underline transition-all" href="#">Shipping &amp; Returns</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:underline transition-all" href="#">Contact</a>
+</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant text-center md:text-right">
+                © 2024 ngopicode Minimalist. All rights reserved.
+            </div>
+</div>
+</footer>
+<script>
+        function switchPayment(type) {
+            // IDs
+            const sections = ['card', 'paypal', 'bank'];
+            const btns = ['btn-card', 'btn-paypal', 'btn-bank'];
+            const forms = ['payment-form-card', 'payment-form-paypal', 'payment-form-bank'];
+
+            // Reset
+            btns.forEach(id => {
+                const btn = document.getElementById(id);
+                btn.classList.remove('active');
+                btn.querySelector('span').classList.remove('text-primary');
+                btn.querySelector('span').classList.add('text-on-surface-variant');
+            });
+            forms.forEach(id => document.getElementById(id).classList.add('hidden'));
+
+            // Set Active
+            const activeBtn = document.getElementById('btn-' + type);
+            activeBtn.classList.add('active');
+            activeBtn.querySelector('span').classList.remove('text-on-surface-variant');
+            activeBtn.querySelector('span').classList.add('text-primary');
+            
+            document.getElementById('payment-form-' + type).classList.remove('hidden');
+        }
+    </script>
+</body></html>

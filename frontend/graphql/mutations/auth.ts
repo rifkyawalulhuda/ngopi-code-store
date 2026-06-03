@@ -192,6 +192,11 @@ export const GET_ACTIVE_CUSTOMER_ORDERS = gql`
               preview
             }
           }
+          payments {
+            id
+            method
+            metadata
+          }
         }
       }
     }

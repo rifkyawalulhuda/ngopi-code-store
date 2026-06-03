@@ -198,7 +198,11 @@
             <article v-for="order in orders" :key="order.id" class="order-row">
               <div class="order-main">
                 <span class="order-code">{{ order.code }}</span>
-                <span class="order-date">{{ formatDate(order.orderPlacedAt) }}</span>
+                <span class="order-products">{{ getOrderProductNames(order) }}</span>
+                <span class="order-date">
+                  {{ formatDate(order.orderPlacedAt) }}
+                  <span v-if="getPaymentMethod(order)" class="order-payment-method">· {{ getPaymentMethod(order) }}</span>
+                </span>
               </div>
               <div class="order-meta">
                 <span class="order-status" :class="statusClass(order.state)">{{ statusLabel(order.state) }}</span>
@@ -496,6 +500,7 @@ interface CustomerOrder {
   totalWithTax: number
   currencyCode: string
   lines: OrderLine[]
+  payments: Array<{ id: string; method: string; metadata: any }>
 }
 
 const { customer, logout, ensureSession, updateProfile, changePassword, requestEmailChange, error: authError } = useAuth()
@@ -597,6 +602,28 @@ function statusClass(state: string): string {
   if (['ArrangingPayment', 'AddingItems'].includes(state)) return 'status-pending'
   if (state === 'Cancelled') return 'status-danger'
   return ''
+}
+
+function getOrderProductNames(order: CustomerOrder): string {
+  const names = order.lines.map((l) => l.productVariant.name)
+  if (names.length === 0) return ''
+  if (names.length <= 2) return names.join(', ')
+  return `${names[0]} +${names.length - 1} lainnya`
+}
+
+function getPaymentMethod(order: CustomerOrder): string {
+  const payment = order.payments?.[0]
+  if (!payment) return ''
+  // Try to get channel name from metadata
+  const meta = payment.metadata
+  if (meta) {
+    const pub = typeof meta === 'string' ? (() => { try { return JSON.parse(meta) } catch { return null } })() : meta
+    const name = pub?.public?.paymentName || pub?.paymentName || ''
+    if (name) return name
+    const code = pub?.public?.channelCode || pub?.channelCode || ''
+    if (code) return code
+  }
+  return payment.method === 'tripay' ? 'Tripay' : payment.method
 }
 
 async function onLogout() {
@@ -1203,6 +1230,20 @@ onMounted(async () => {
 .order-date {
   font-size: 0.8rem;
   color: var(--text-muted);
+}
+
+.order-products {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.order-payment-method {
+  color: var(--text-muted);
+  font-weight: 400;
 }
 
 .order-meta {

@@ -20,6 +20,12 @@
 
         <!-- Success State (Paid/Fulfilled) -->
         <div v-else-if="isSuccess && order" class="order-state">
+          <!-- Back button -->
+          <NuxtLink to="/account" class="back-link">
+            <AppIcon name="arrowRight" :size="16" class="back-arrow" />
+            Kembali ke Riwayat Pesanan
+          </NuxtLink>
+
           <div class="state-badge state-success">
             <AppIcon name="check" :size="28" />
           </div>

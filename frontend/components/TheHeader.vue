@@ -42,7 +42,7 @@
         </button>
         <NuxtLink
           :to="accountLink"
-          class="icon-btn"
+          class="icon-btn hide-mobile"
           :class="{ active: isAccountActive }"
           :aria-label="isLoggedIn ? 'Akun saya' : 'Masuk'"
           :aria-current="isAccountActive ? 'page' : undefined"
@@ -50,7 +50,7 @@
           <AppIcon name="user" :size="20" />
           <span v-if="hasPendingOrders && isLoggedIn" class="user-badge" :aria-label="`${pendingOrderCount} pesanan menunggu pembayaran`">{{ pendingOrderCount }}</span>
         </NuxtLink>
-        <NuxtLink to="/checkout" class="icon-btn cart-btn" aria-label="Keranjang belanja">
+        <NuxtLink to="/checkout" class="icon-btn cart-btn hide-mobile" aria-label="Keranjang belanja">
           <AppIcon name="cart" :size="20" />
           <span v-if="cartItemCount > 0" class="cart-badge">{{ cartItemCount }}</span>
         </NuxtLink>
@@ -77,6 +77,22 @@
     </transition>
     <transition name="drawer">
       <nav v-if="menuOpen" class="nav-mobile" aria-label="Navigasi seluler">
+        <!-- User actions (profile + cart) at top in mobile menu -->
+        <div class="nav-mobile-user-actions">
+          <NuxtLink :to="accountLink" class="nav-mobile-action" @click="closeMenu">
+            <AppIcon name="user" :size="20" />
+            <span>{{ isLoggedIn ? 'Akun Saya' : 'Masuk' }}</span>
+            <span v-if="hasPendingOrders && isLoggedIn" class="nav-mobile-badge">{{ pendingOrderCount }}</span>
+          </NuxtLink>
+          <NuxtLink to="/checkout" class="nav-mobile-action" @click="closeMenu">
+            <AppIcon name="cart" :size="20" />
+            <span>Keranjang</span>
+            <span v-if="cartItemCount > 0" class="nav-mobile-badge">{{ cartItemCount }}</span>
+          </NuxtLink>
+        </div>
+
+        <div class="nav-mobile-divider" />
+
         <NuxtLink to="/" class="nav-mobile-link" @click="closeMenu">Home</NuxtLink>
         <NuxtLink to="/products" class="nav-mobile-link" :class="{ 'nav-active': activeCategory === 'all' }" @click="closeMenu">Katalog</NuxtLink>
         <NuxtLink to="/products?category=ebooks" class="nav-mobile-link" :class="{ 'nav-active': activeCategory === 'ebooks' }" @click="closeMenu">Ebooks</NuxtLink>
@@ -405,5 +421,58 @@ onBeforeUnmount(() => {
   .menu-toggle {
     display: grid;
   }
+  /* Hide profile & cart in header on mobile — moved into drawer */
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+/* Mobile menu user actions */
+.nav-mobile-user-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0 0 0.25rem;
+}
+
+.nav-mobile-action {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  position: relative;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.nav-mobile-action:hover {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+
+.nav-mobile-badge {
+  margin-left: auto;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+
+.nav-mobile-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0.5rem 0;
 }
 </style>

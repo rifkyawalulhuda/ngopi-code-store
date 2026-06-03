@@ -150,13 +150,22 @@ NUXT_PUBLIC_GOOGLE_CLIENT_ID
 NUXT_PUBLIC_GITHUB_CLIENT_ID
 ```
 
+## Responsive / Mobile
+
+- **Header (≤860px)**: Profile + Cart buttons hidden → moved into mobile drawer menu
+- **Mobile menu**: User actions (Akun + Keranjang with badges) at top, divider, then nav links
+- **Account page**: Sidebar collapses to off-canvas drawer; stats hide except Library tab
+- **Order cards**: Stack vertically, compact padding
+- **Checkout**: Single column on mobile
+- **Order confirmation**: Full width, compact spacing
+
 ## Design System
 
 - **Primary**: `#1f7a4d` (green) · **Accent**: `#5cc98c`
 - **Font**: Inter (400–800) · **Border radius**: 10–16px
 - **Icons**: Custom SVG via AppIcon (Lucide-style stroke 1.8)
 - **Dark mode**: Full support via CSS variables + `[data-theme='dark']`
-- **Badges**: Numbered (green circle, same as cart) for pending notifications
+- **Badges**: Numbered green pills for pending notifications (header + sidebar)
 
 ## Commands
 

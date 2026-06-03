@@ -509,6 +509,12 @@ const { items: wishlistItems, count: wishlistCount, init: initWishlist, removeFr
 
 type TabId = 'library' | 'orders' | 'wishlist' | 'settings'
 const activeTab = ref<TabId>('library')
+
+// Read tab from query param (e.g. /account?tab=settings)
+const route = useRoute()
+if (route.query.tab && ['library', 'orders', 'wishlist', 'settings'].includes(route.query.tab as string)) {
+  activeTab.value = route.query.tab as TabId
+}
 const loading = ref(true)
 const orders = ref<CustomerOrder[]>([])
 

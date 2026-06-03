@@ -189,11 +189,21 @@
                 <span class="summary-val">{{ formattedPrice }}</span>
               </div>
 
+              <!-- Phone number required warning for e-wallet -->
+              <div v-if="needsPhone" class="phone-warning" role="alert">
+                <AppIcon name="user" :size="18" />
+                <div class="phone-warning-content">
+                  <p class="phone-warning-text">Metode E-Wallet memerlukan nomor telepon.</p>
+                  <p class="phone-warning-sub">Tambahkan nomor WhatsApp di Pengaturan Profil terlebih dahulu.</p>
+                </div>
+                <NuxtLink to="/account?tab=settings" class="phone-warning-link">Atur Profil</NuxtLink>
+              </div>
+
               <!-- CTA Button -->
               <button
                 type="button"
                 class="btn btn-primary btn-full checkout-cta"
-                :disabled="!selectedChannel || processing"
+                :disabled="!selectedChannel || processing || needsPhone"
                 @click="onProceedPayment"
               >
                 <span v-if="processing" class="btn-spinner-sm" />
@@ -407,6 +417,12 @@ const ewalletChannels = [
   { code: 'DANA', name: 'DANA' },
   { code: 'SHOPEEPAY', name: 'ShopeePay' },
 ]
+
+// E-wallet channels require phone number
+const ewalletCodes = new Set(['OVO', 'DANA', 'SHOPEEPAY'])
+const isEwalletSelected = computed(() => ewalletCodes.has(selectedChannel.value))
+const customerPhone = computed(() => customer.value?.customFields?.whatsappNumber || '')
+const needsPhone = computed(() => isEwalletSelected.value && !customerPhone.value)
 
 const fullName = computed(() => {
   if (!customer.value) return ''
@@ -1012,6 +1028,79 @@ async function onProceedPayment() {
   background: rgba(185, 28, 28, 0.12);
   color: #fca5a5;
   border-color: rgba(185, 28, 28, 0.3);
+}
+
+/* Phone number warning for e-wallet */
+.phone-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 10px;
+  margin-bottom: 0.75rem;
+  color: #92400e;
+}
+
+[data-theme='dark'] .phone-warning {
+  background: rgba(146, 64, 14, 0.12);
+  border-color: rgba(252, 211, 77, 0.25);
+  color: #fbbf24;
+}
+
+.phone-warning-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.phone-warning-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.phone-warning-sub {
+  font-size: 0.78rem;
+  margin: 0.1rem 0 0;
+  opacity: 0.85;
+}
+
+.phone-warning-link {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #92400e;
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  background: rgba(146, 64, 14, 0.1);
+  transition: background 0.15s;
+}
+
+.phone-warning-link:hover {
+  background: rgba(146, 64, 14, 0.2);
+}
+
+[data-theme='dark'] .phone-warning-link {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+}
+
+[data-theme='dark'] .phone-warning-link:hover {
+  background: rgba(251, 191, 36, 0.2);
+}
+
+@media (max-width: 560px) {
+  .phone-warning {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .phone-warning-link {
+    width: 100%;
+    text-align: center;
+  }
 }
 
 /* CTA active state */

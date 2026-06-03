@@ -82,6 +82,7 @@ export class TripayService {
       amount: input.amount,
       customer_name: input.customer_name,
       customer_email: input.customer_email,
+      customer_phone: input.customer_phone || '081200000000',
       // Requirement 1.5: Include all order line items with name, price, quantity
       order_items: input.order_items.map((item: TripayOrderItem) => ({
         name: item.name,

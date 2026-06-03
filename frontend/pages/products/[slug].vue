@@ -138,7 +138,20 @@
             </div>
 
             <!-- Actions -->
-            <div class="actions">
+            <div v-if="alreadyOwned" class="owned-banner">
+              <div class="owned-icon">
+                <AppIcon name="check" :size="20" />
+              </div>
+              <div class="owned-content">
+                <span class="owned-title">Kamu sudah memiliki produk ini</span>
+                <span class="owned-desc">Akses produk di Pustaka Digital kamu.</span>
+              </div>
+              <NuxtLink to="/account" class="btn btn-primary btn-sm owned-link">
+                Lihat di Pustaka
+              </NuxtLink>
+            </div>
+
+            <div v-else class="actions">
               <button class="btn btn-primary btn-lg actions-buy" type="button" @click="onBuyNow">
                 <AppIcon name="shoppingBag" :size="20" />
                 Beli Sekarang
@@ -317,6 +330,17 @@ const badgeLabel = computed(() => {
 const { init: initWishlist, isInWishlist } = useWishlist()
 if (import.meta.client) { initWishlist() }
 const productInWishlist = computed(() => product.value ? isInWishlist(product.value.id) : false)
+
+// Owned products state (check if user already purchased this product)
+const { isLoggedIn: authLoggedIn } = useAuth()
+const { fetchOwnedProducts, isOwned } = useOwnedProducts()
+const alreadyOwned = computed(() => product.value ? isOwned(product.value.id) : false)
+
+onMounted(async () => {
+  if (authLoggedIn.value) {
+    await fetchOwnedProducts()
+  }
+})
 
 // WhatsApp URL with pre-filled message
 const whatsappUrl = computed(() => {
@@ -764,6 +788,68 @@ onMounted(async () => {
 
 [data-theme='dark'] .btn-icon-only.wishlisted {
   background: rgba(231, 76, 111, 0.12);
+}
+
+/* Owned product banner */
+.owned-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem 1.15rem;
+  background: var(--primary-soft);
+  border: 1px solid var(--primary);
+  border-radius: 12px;
+}
+
+.owned-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--primary-contrast);
+  flex-shrink: 0;
+}
+
+.owned-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.owned-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--primary-text);
+}
+
+.owned-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.owned-link {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 560px) {
+  .owned-banner {
+    flex-wrap: wrap;
+  }
+  .owned-link {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
 }
 
 /* WhatsApp link (subtle, not competing with CTA) */

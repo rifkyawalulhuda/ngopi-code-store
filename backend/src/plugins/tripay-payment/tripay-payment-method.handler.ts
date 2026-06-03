@@ -121,6 +121,9 @@ export const tripayPaymentMethodHandler = new PaymentMethodHandler({
           : (metadata?.customerName as string) || 'Customer',
         customer_email:
           order.customer?.emailAddress || (metadata?.customerEmail as string) || '',
+        customer_phone:
+          (order.customer?.customFields as any)?.whatsappNumber ||
+          (metadata?.customerPhone as string) || '',
         order_items: order.lines.map((line) => ({
           name: line.productVariant?.name ?? `Item ${line.id}`,
           price: line.proratedUnitPriceWithTax ?? line.listPrice,

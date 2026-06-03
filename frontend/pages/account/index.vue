@@ -128,6 +128,24 @@
           </div>
         </div>
 
+        <!-- Pending payment warning (global, shows on all tabs) -->
+        <div v-if="pendingOrders.length > 0" class="pending-warning" role="alert">
+          <div class="pw-icon">
+            <AppIcon name="shoppingBag" :size="20" />
+          </div>
+          <div class="pw-content">
+            <p class="pw-title">{{ pendingOrders.length }} pesanan menunggu pembayaran</p>
+            <p class="pw-desc">Selesaikan pembayaran sebelum batas waktu agar pesanan tidak dibatalkan.</p>
+          </div>
+          <NuxtLink
+            :to="`/order/${pendingOrders[0].code}`"
+            class="pw-action"
+          >
+            Bayar Sekarang
+            <AppIcon name="arrowRight" :size="14" />
+          </NuxtLink>
+        </div>
+
         <!-- Loading -->
         <div v-if="loading" class="content-state">
           <div class="content-spinner" />
@@ -502,6 +520,10 @@ const tabs = [
 // Pending orders count (ArrangingPayment = waiting for payment)
 const pendingOrdersCount = computed(() =>
   orders.value.filter((o) => o.state === 'ArrangingPayment').length,
+)
+
+const pendingOrders = computed(() =>
+  orders.value.filter((o) => o.state === 'ArrangingPayment'),
 )
 
 const currentTabLabel = computed(() => tabs.find((t) => t.id === activeTab.value)?.label || 'Akun')
@@ -1731,6 +1753,109 @@ onMounted(async () => {
   .nav-badge {
     transition: none;
     animation: none;
+  }
+}
+
+/* Pending payment warning card */
+.pending-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem 1.25rem;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 12px;
+  margin-bottom: 1.25rem;
+}
+
+[data-theme='dark'] .pending-warning {
+  background: rgba(146, 64, 14, 0.12);
+  border-color: rgba(252, 211, 77, 0.25);
+}
+
+.pw-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #fbbf24;
+  color: #78350f;
+  flex-shrink: 0;
+}
+
+[data-theme='dark'] .pw-icon {
+  background: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+}
+
+.pw-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.pw-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #92400e;
+  margin: 0;
+  line-height: 1.4;
+}
+
+[data-theme='dark'] .pw-title {
+  color: #fbbf24;
+}
+
+.pw-desc {
+  font-size: 0.8rem;
+  color: #a16207;
+  margin: 0.15rem 0 0;
+  line-height: 1.4;
+}
+
+[data-theme='dark'] .pw-desc {
+  color: #d97706;
+}
+
+.pw-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.85rem;
+  background: #92400e;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.18s;
+}
+
+.pw-action:hover {
+  background: #78350f;
+}
+
+[data-theme='dark'] .pw-action {
+  background: #d97706;
+  color: #1c1917;
+}
+
+[data-theme='dark'] .pw-action:hover {
+  background: #f59e0b;
+}
+
+@media (max-width: 560px) {
+  .pending-warning {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .pw-action {
+    width: 100%;
+    justify-content: center;
+    padding: 0.6rem;
   }
 }
 

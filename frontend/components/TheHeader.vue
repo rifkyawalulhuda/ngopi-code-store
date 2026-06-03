@@ -48,6 +48,7 @@
           :aria-current="isAccountActive ? 'page' : undefined"
         >
           <AppIcon name="user" :size="20" />
+          <span v-if="hasPendingOrders && isLoggedIn" class="user-badge" :aria-label="`${pendingOrderCount} pesanan menunggu pembayaran`">{{ pendingOrderCount }}</span>
         </NuxtLink>
         <NuxtLink to="/checkout" class="icon-btn cart-btn" aria-label="Keranjang belanja">
           <AppIcon name="cart" :size="20" />
@@ -102,6 +103,7 @@ function openSearch() {
 }
 
 const { isLoggedIn, ensureSession } = useAuth()
+const { hasPending: hasPendingOrders, count: pendingOrderCount } = usePendingOrders()
 const accountLink = computed(() => (isLoggedIn.value ? '/account' : '/auth'))
 // Highlight the profile button while on the account page
 const currentRoute = useRoute()
@@ -116,8 +118,13 @@ const activeCategory = computed(() => {
 })
 
 // Check session once on mount so the user icon points to the right place
-onMounted(() => {
-  ensureSession()
+onMounted(async () => {
+  await ensureSession()
+  // Check for pending orders to show notification badge
+  if (isLoggedIn.value) {
+    const { checkPendingOrders } = usePendingOrders()
+    checkPendingOrders()
+  }
 })
 
 const { cartItemCount } = useCart()
@@ -298,6 +305,31 @@ onBeforeUnmount(() => {
   font-weight: 700;
   display: grid;
   place-items: center;
+}
+
+.user-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+
+@keyframes user-badge-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .user-badge { animation: none; }
 }
 
 .menu-toggle {

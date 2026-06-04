@@ -124,4 +124,22 @@ export const customOrderProcess: CustomOrderProcess<string> = {
 
     return undefined;
   },
+
+  /**
+   * Runs after a successful state transition.
+   * Sets orderPlacedAt when entering PaymentSettled (needed for Dashboard Insights metrics).
+   */
+  async onTransitionEnd(fromState, toState, data): Promise<void> {
+    if (toState === 'PaymentSettled' && connection) {
+      const order = data.order;
+      if (!order.orderPlacedAt) {
+        await connection.rawConnection
+          .createQueryBuilder()
+          .update('order')
+          .set({ orderPlacedAt: new Date() })
+          .where('id = :id', { id: order.id })
+          .execute();
+      }
+    }
+  },
 };

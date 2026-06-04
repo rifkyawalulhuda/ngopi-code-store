@@ -159,8 +159,42 @@
             <NuxtLink to="/products" class="panel-link">Lihat Katalog</NuxtLink>
           </div>
 
-          <div v-if="ownedProducts.length" class="library-grid">
-            <article v-for="item in ownedProducts" :key="item.key" class="library-card">
+          <!-- Search & Filter -->
+          <div v-if="ownedProducts.length > 0" class="library-toolbar">
+            <div class="library-search">
+              <AppIcon name="search" :size="16" class="library-search-icon" />
+              <input
+                v-model="librarySearch"
+                type="text"
+                class="library-search-input"
+                placeholder="Cari produk..."
+                aria-label="Cari produk di pustaka"
+              />
+            </div>
+            <div v-if="libraryCollections.length > 0" class="library-filters">
+              <button
+                type="button"
+                class="filter-chip"
+                :class="{ active: libraryCategory === 'all' }"
+                @click="libraryCategory = 'all'"
+              >
+                Semua
+              </button>
+              <button
+                v-for="col in libraryCollections"
+                :key="col.id"
+                type="button"
+                class="filter-chip"
+                :class="{ active: libraryCategory === col.slug }"
+                @click="libraryCategory = col.slug"
+              >
+                {{ col.name }}
+              </button>
+            </div>
+          </div>
+
+          <div v-if="filteredLibrary.length" class="library-grid">
+            <article v-for="item in filteredLibrary" :key="item.key" class="library-card">
               <div class="library-thumb">
                 <img v-if="item.image" :src="item.image" :alt="item.name" loading="lazy" />
                 <AppIcon v-else name="code" :size="28" />
@@ -179,6 +213,15 @@
                 Unduh
               </button>
             </article>
+          </div>
+
+          <div v-else-if="ownedProducts.length > 0" class="empty-state empty-state-sm">
+            <div class="empty-icon"><AppIcon name="search" :size="24" /></div>
+            <h3>Tidak ditemukan</h3>
+            <p>Tidak ada produk yang cocok dengan filter atau pencarian kamu.</p>
+            <button type="button" class="btn btn-soft" @click="librarySearch = ''; libraryCategory = 'all'">
+              Reset Filter
+            </button>
           </div>
 
           <div v-else class="empty-state">
@@ -482,6 +525,7 @@
 import { ref, computed, onMounted, watch, reactive } from 'vue'
 import { useAuth } from '~/composables/useAuth'
 import { GET_ACTIVE_CUSTOMER_ORDERS } from '~/graphql/mutations/auth'
+import { GET_COLLECTIONS } from '~/graphql/queries/collections'
 import { formatPriceIDR } from '~/utils/format'
 
 useHead({
@@ -507,6 +551,48 @@ interface CustomerOrder {
 
 const { customer, logout, ensureSession, updateProfile, changePassword, requestEmailChange, error: authError } = useAuth()
 const { items: wishlistItems, count: wishlistCount, init: initWishlist, removeFromWishlist } = useWishlist()
+
+// Library search + category filter
+const librarySearch = ref('')
+const libraryCategory = ref<string>('all')
+
+interface LibraryCollection {
+  id: string
+  name: string
+  slug: string
+}
+const libraryCollections = ref<LibraryCollection[]>([])
+
+async function loadLibraryCollections() {
+  try {
+    const { $apollo } = useNuxtApp()
+    const { data } = await $apollo.defaultClient.query({ query: GET_COLLECTIONS })
+    libraryCollections.value = (data.collections?.items || []).map((c: any) => ({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+    }))
+  } catch {
+    libraryCollections.value = []
+  }
+}
+
+const filteredLibrary = computed(() => {
+  let items = ownedProducts.value
+
+  // Filter by category (match collection slug against product's facet codes)
+  if (libraryCategory.value !== 'all') {
+    items = items.filter((item) => item.categorySlugs.includes(libraryCategory.value))
+  }
+
+  // Filter by search query
+  if (librarySearch.value.trim()) {
+    const q = librarySearch.value.toLowerCase()
+    items = items.filter((item) => item.name.toLowerCase().includes(q))
+  }
+
+  return items
+})
 
 type TabId = 'library' | 'orders' | 'wishlist' | 'settings'
 const activeTab = ref<TabId>('library')
@@ -578,7 +664,7 @@ const totalProducts = computed(() => {
 })
 
 const ownedProducts = computed(() => {
-  const items: Array<{ key: string; name: string; image: string | null; orderCode: string; variantId: string }> = []
+  const items: Array<{ key: string; name: string; image: string | null; orderCode: string; variantId: string; categorySlugs: string[] }> = []
   for (const order of paidOrders.value) {
     for (const line of order.lines) {
       // Skip repeatable products (services) — they don't belong in the digital library
@@ -586,12 +672,17 @@ const ownedProducts = computed(() => {
       const isRepeatable = facetValues.some((fv: any) => fv.code === 'repeatable')
       if (isRepeatable) continue
 
+      // Use product collections for category matching (same as Katalog page)
+      const collections = (line.productVariant as any)?.product?.collections || []
+      const categorySlugs = collections.map((c: any) => c.slug).filter(Boolean)
+
       items.push({
         key: `${order.id}-${line.id}`,
         name: line.productVariant.name,
         image: line.featuredAsset?.preview || null,
         orderCode: order.code,
         variantId: line.productVariant.id,
+        categorySlugs,
       })
     }
   }
@@ -809,6 +900,7 @@ watch(mobileOpen, (open) => {
 onMounted(async () => {
   loading.value = true
   initWishlist()
+  loadLibraryCollections()
   try {
     const activeCustomer = await ensureSession()
     if (!activeCustomer) {
@@ -1176,6 +1268,92 @@ onMounted(async () => {
 
 .panel-link:hover {
   text-decoration: underline;
+}
+
+/* Library toolbar (search + filters) */
+.library-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.library-search {
+  position: relative;
+  flex: 1;
+  min-width: 180px;
+}
+
+.library-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.library-search-input {
+  width: 100%;
+  padding: 0.6rem 0.75rem 0.6rem 2.25rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.88rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.18s;
+}
+
+.library-search-input:focus {
+  border-color: var(--primary);
+}
+
+.library-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Category filter chips */
+.library-filters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.15s;
+}
+
+.filter-chip:hover {
+  background: var(--btn-ghost-hover);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.filter-chip:active {
+  transform: scale(0.96);
+}
+
+.filter-chip.active {
+  background: var(--primary-soft);
+  color: var(--primary-text);
+  border-color: var(--primary);
+  font-weight: 600;
 }
 
 /* Library grid */
@@ -1632,6 +1810,25 @@ onMounted(async () => {
   color: var(--text-muted);
   margin: 0 0 1.25rem;
   font-size: 0.92rem;
+}
+
+.empty-state-sm {
+  padding: 1.75rem 1rem;
+}
+
+.empty-state-sm .empty-icon {
+  width: 52px;
+  height: 52px;
+  margin-bottom: 0.75rem;
+}
+
+.empty-state-sm h3 {
+  font-size: 1rem;
+}
+
+.empty-state-sm p {
+  margin-bottom: 1rem;
+  font-size: 0.88rem;
 }
 
 /* Content loading */

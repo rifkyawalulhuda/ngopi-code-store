@@ -189,11 +189,18 @@ export const GET_ACTIVE_CUSTOMER_ORDERS = gql`
               name
               product {
                 id
+                collections {
+                  id
+                  slug
+                  name
+                }
                 facetValues {
                   id
                   code
+                  name
                   facet {
                     code
+                    name
                   }
                 }
               }

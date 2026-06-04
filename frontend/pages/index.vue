@@ -762,6 +762,7 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 0.5rem;
   }
   .hero-content {
     text-align: center;
@@ -769,18 +770,20 @@ main {
   }
   .hero-eyebrow {
     order: 1;
+    margin-bottom: 0.25rem;
   }
   .hero-title {
     order: 2;
+    margin: 0 0 0.5rem;
   }
   .hero-sub {
     order: 3;
-    margin-bottom: 1rem;
+    margin: 0 0 1rem;
   }
   .hero-lottie {
     max-width: 280px;
     order: 4;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
   }
   .hero-cta {
     order: 5;

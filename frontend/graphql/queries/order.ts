@@ -31,14 +31,20 @@ export const GET_ORDER_BY_CODE = gql`
       state
       totalQuantity
       subTotal
+      subTotalWithTax
       total
+      totalWithTax
+      shippingWithTax
+      orderPlacedAt
       createdAt
       updatedAt
+      currencyCode
       lines {
         id
         productVariant {
           id
           name
+          sku
           product {
             id
             facetValues {
@@ -52,14 +58,18 @@ export const GET_ORDER_BY_CODE = gql`
         }
         quantity
         unitPrice
+        unitPriceWithTax
         linePrice
+        linePriceWithTax
       }
       payments {
         id
         method
         state
         amount
+        transactionId
         metadata
+        createdAt
       }
       customer {
         id

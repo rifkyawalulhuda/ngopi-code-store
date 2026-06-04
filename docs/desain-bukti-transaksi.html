@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Transaction Receipt - LUXE</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#c9c6bd",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#324c3e",
+                        "on-surface": "#191c1d",
+                        "background": "#f8f9fa",
+                        "surface-container-highest": "#e1e3e4",
+                        "primary": "#173124",
+                        "inverse-primary": "#b0cdbb",
+                        "tertiary": "#2c2c25",
+                        "surface-container-high": "#e7e8e9",
+                        "outline": "#727973",
+                        "inverse-surface": "#2e3132",
+                        "primary-container": "#2d4739",
+                        "on-secondary-fixed": "#141f05",
+                        "surface-variant": "#e1e3e4",
+                        "surface-container-low": "#f3f4f5",
+                        "secondary": "#566342",
+                        "primary-fixed": "#ccead6",
+                        "on-primary-container": "#98b5a3",
+                        "on-secondary-container": "#5a6745",
+                        "secondary-fixed-dim": "#becca3",
+                        "on-surface-variant": "#424844",
+                        "surface-dim": "#d9dadb",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#484740",
+                        "on-tertiary-fixed": "#1c1c16",
+                        "surface-container": "#edeeef",
+                        "surface": "#f8f9fa",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#c2c8c2",
+                        "tertiary-container": "#43423b",
+                        "secondary-container": "#d7e5bb",
+                        "on-primary-fixed": "#062014",
+                        "on-tertiary-container": "#b1aea5",
+                        "on-secondary-fixed-variant": "#3f4b2c",
+                        "error": "#ba1a1a",
+                        "surface-tint": "#496455",
+                        "on-error-container": "#93000a",
+                        "on-background": "#191c1d",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#dae8be",
+                        "primary-fixed-dim": "#b0cdbb",
+                        "error-container": "#ffdad6",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed": "#e6e2d8",
+                        "inverse-on-surface": "#f0f1f2",
+                        "surface-bright": "#f8f9fa"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "lg": "48px",
+                        "md": "24px",
+                        "gutter": "24px",
+                        "base": "8px",
+                        "margin-mobile": "16px",
+                        "xs": "4px",
+                        "xl": "80px",
+                        "sm": "12px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Manrope"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Manrope"],
+                        "label-md": ["Inter"],
+                        "headline-xl-mobile": ["Manrope"],
+                        "headline-xl": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "0", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-xl-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col items-center py-xl px-margin-mobile md:px-margin-desktop">
+<!-- Top Navigation Placeholder (Suppressed as this is a transactional screen) -->
+<header class="w-full max-w-[1280px] flex justify-between items-center mb-xl hidden">
+<div class="font-headline-lg text-headline-lg tracking-tighter text-primary">LUXE</div>
+</header>
+<!-- Main Receipt Canvas -->
+<main class="w-full max-w-[800px] bg-surface-container-lowest rounded-xl p-lg md:p-xl shadow-[0_4px_24px_rgba(45,71,57,0.06)] relative overflow-hidden">
+<!-- Decorative Header Bar -->
+<div class="absolute top-0 left-0 w-full h-2 bg-primary"></div>
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-xl pb-md border-b border-outline-variant">
+<div class="font-headline-xl text-headline-xl text-primary tracking-tighter mb-sm md:mb-0">
+                LUXE
+            </div>
+<div class="text-right flex flex-col items-start md:items-end w-full md:w-auto">
+<h1 class="font-headline-md text-headline-md text-on-surface mb-xs uppercase tracking-widest text-sm opacity-80">Transaction Receipt</h1>
+<div class="flex gap-md mt-sm w-full md:w-auto justify-start md:justify-end">
+<button class="flex items-center gap-base px-md py-sm rounded-DEFAULT border border-primary text-primary font-label-md text-label-md hover:bg-surface-variant transition-colors w-full md:w-auto justify-center">
+<span class="material-symbols-outlined text-[20px]">download</span>
+                        Download PDF
+                    </button>
+<button class="flex items-center gap-base px-md py-sm rounded-DEFAULT border border-tertiary text-tertiary font-label-md text-label-md hover:bg-surface-variant transition-colors w-full md:w-auto justify-center">
+<span class="material-symbols-outlined text-[20px]">print</span>
+                        Print
+                    </button>
+</div>
+</div>
+</div>
+<!-- Receipt Metadata Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg mb-xl bg-surface-container-low p-md rounded-lg">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-xs uppercase">Receipt Number</p>
+<p class="font-body-md text-body-md font-semibold text-on-surface">REC-2024-001</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-xs uppercase">Date</p>
+<p class="font-body-md text-body-md font-semibold text-on-surface">October 24, 2024</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-xs uppercase">Status</p>
+<div class="inline-flex items-center gap-xs px-sm py-[2px] rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm mt-xs">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+                    Success
+                </div>
+</div>
+</div>
+<!-- Customer Details -->
+<div class="mb-xl">
+<h2 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-sm">Billed To</h2>
+<div class="font-body-md text-body-md text-on-surface">
+<p class="font-semibold text-lg mb-xs">Eleanor Vance</p>
+<p class="mb-xs opacity-80">eleanor.vance@example.com</p>
+<p class="opacity-80">123 Horizon Lane<br/>Apt 4B<br/>San Francisco, CA 94107</p>
+</div>
+</div>
+<!-- Product Table -->
+<div class="mb-xl">
+<h2 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-sm">Purchased Items</h2>
+<div class="w-full overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant font-label-sm text-label-sm text-on-surface-variant">
+<th class="py-sm font-semibold uppercase">Description</th>
+<th class="py-sm font-semibold uppercase text-center w-24">Qty</th>
+<th class="py-sm font-semibold uppercase text-right w-32">Price</th>
+<th class="py-sm font-semibold uppercase text-right w-32">Total</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface">
+<tr class="border-b border-surface-container-highest">
+<td class="py-md">
+<div class="font-semibold">SaaS Dashboard Template</div>
+<div class="text-sm opacity-70 mt-xs">Pro License</div>
+</td>
+<td class="py-md text-center">1</td>
+<td class="py-md text-right">$249.00</td>
+<td class="py-md text-right font-semibold">$249.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Totals Section -->
+<div class="flex justify-end mt-md">
+<div class="w-full md:w-64 space-y-sm">
+<div class="flex justify-between font-body-md text-body-md text-on-surface-variant">
+<span>Subtotal</span>
+<span>$249.00</span>
+</div>
+<div class="flex justify-between font-body-md text-body-md text-on-surface-variant pb-sm border-b border-outline-variant">
+<span>Tax (0%)</span>
+<span>$0.00</span>
+</div>
+<div class="flex justify-between font-headline-md text-headline-md text-primary pt-sm">
+<span>Total</span>
+<span>$249.00</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Payment Details -->
+<div class="bg-surface-container-low p-md rounded-lg mb-xl border border-outline-variant/30">
+<h2 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-sm">Payment Details</h2>
+<div class="flex flex-col md:flex-row gap-lg font-body-md text-body-md text-on-surface">
+<div>
+<span class="block opacity-70 mb-xs text-sm">Method</span>
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-[24px]">credit_card</span>
+<span class="font-semibold">Credit Card (ending in **** 4242)</span>
+</div>
+</div>
+<div>
+<span class="block opacity-70 mb-xs text-sm">Transaction ID</span>
+<span class="font-mono bg-surface-container-highest px-xs py-[2px] rounded text-sm">txn_3M9Z4X8...</span>
+</div>
+</div>
+</div>
+<!-- Footer Note -->
+<div class="text-center pt-lg border-t border-outline-variant">
+<p class="font-body-md text-body-md text-on-surface mb-xs font-medium">Thank you for your business!</p>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">If you have any questions, please contact us at <a class="text-primary hover:underline underline-offset-4" href="mailto:support@ngopicode.digital">support@ngopicode.digital</a></p>
+</div>
+</main>
+<!-- Suppressed Global Footer for Transactional Screen Focus -->
+</body></html>

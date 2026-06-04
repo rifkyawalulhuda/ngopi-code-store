@@ -12,12 +12,11 @@
           <div class="hero-content">
             <span class="hero-eyebrow">Premium Digital Assets</span>
             <h1 class="hero-title">
-              Solusi Web Modern untuk
+              Bangun Aplikasimu secara cepat, untuk
               <span class="hl">Developer</span>
             </h1>
             <p class="hero-sub">
-              Tingkatkan alur kerja pengembangan Anda dengan koleksi kurasi source code,
-              ebook teknis, dan layanan web khusus.
+              Dapatkan source code siap pakai, bersih, dan mudah dikembangkan untuk proyek Aplikasi Anda.
             </p>
             <div class="hero-cta">
               <NuxtLink to="/products" class="btn btn-primary">

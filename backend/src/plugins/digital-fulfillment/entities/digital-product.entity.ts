@@ -20,7 +20,7 @@ export class DigitalProduct extends VendureEntity {
   @JoinColumn()
   productVariant: ProductVariant;
 
-  @Column()
+  @Column({ type: 'int' })
   productVariantId: ID;
 
   /**

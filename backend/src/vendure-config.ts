@@ -10,6 +10,7 @@ import { TripayPaymentPlugin } from './plugins/tripay-payment/tripay-payment.plu
 import { EmailVerificationPlugin } from './plugins/email/email-verification.handler';
 import { GoogleAuthPlugin } from './plugins/google-auth';
 import { GitHubAuthPlugin } from './plugins/github-auth';
+import { DigitalFulfillmentPlugin } from './plugins/digital-fulfillment/digital-fulfillment.plugin';
 import { DashboardPlugin } from '@vendure/dashboard/plugin';
 
 /**
@@ -186,6 +187,7 @@ export const config: VendureConfig = {
     DefaultJobQueuePlugin.init({}),
     TripayPaymentPlugin,
     EmailVerificationPlugin,
+    DigitalFulfillmentPlugin,
     GoogleAuthPlugin.init({
       googleClientId: process.env.GOOGLE_CLIENT_ID || '',
     }),

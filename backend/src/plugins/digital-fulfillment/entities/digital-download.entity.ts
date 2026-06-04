@@ -17,14 +17,14 @@ export class DigitalDownload extends VendureEntity {
     super(input);
   }
 
-  @Column()
+  @Column({ type: 'int' })
   @Index()
   orderId: ID;
 
-  @Column()
+  @Column({ type: 'int' })
   customerId: ID;
 
-  @Column()
+  @Column({ type: 'int' })
   productVariantId: ID;
 
   @Column({ unique: true })

@@ -169,14 +169,15 @@
                 <h3 class="library-name">{{ item.name }}</h3>
                 <span class="library-meta">Pesanan {{ item.orderCode }}</span>
               </div>
-              <NuxtLink
-                :to="`/downloads/${item.orderCode}`"
+              <button
+                type="button"
                 class="btn btn-soft btn-block"
                 :aria-label="`Unduh ${item.name}`"
+                @click="onDownload(item)"
               >
                 <AppIcon name="download" :size="16" />
                 Unduh
-              </NuxtLink>
+              </button>
             </article>
           </div>
 
@@ -577,7 +578,7 @@ const totalProducts = computed(() => {
 })
 
 const ownedProducts = computed(() => {
-  const items: Array<{ key: string; name: string; image: string | null; orderCode: string }> = []
+  const items: Array<{ key: string; name: string; image: string | null; orderCode: string; variantId: string }> = []
   for (const order of paidOrders.value) {
     for (const line of order.lines) {
       // Skip repeatable products (services) — they don't belong in the digital library
@@ -590,6 +591,7 @@ const ownedProducts = computed(() => {
         name: line.productVariant.name,
         image: line.featuredAsset?.preview || null,
         orderCode: order.code,
+        variantId: line.productVariant.id,
       })
     }
   }
@@ -644,6 +646,29 @@ function getPaymentMethod(order: CustomerOrder): string {
     if (code) return code
   }
   return payment.method === 'tripay' ? 'Tripay' : payment.method
+}
+
+// Download digital product
+import { GENERATE_DOWNLOAD_URL } from '~/graphql/mutations/download'
+
+async function onDownload(item: { variantId: string; name: string }) {
+  try {
+    const { $apollo } = useNuxtApp()
+    const { data } = await $apollo.defaultClient.mutate({
+      mutation: GENERATE_DOWNLOAD_URL,
+      variables: { productVariantId: item.variantId },
+    })
+
+    const result = data?.generateDownloadUrl
+    if (result?.url) {
+      // Open download URL in new window (pre-signed, expires in 5 min)
+      window.open(result.url, '_blank')
+    } else {
+      alert('File belum tersedia untuk produk ini. Silakan hubungi admin.')
+    }
+  } catch (err: any) {
+    alert(err.message || 'Gagal mengunduh file.')
+  }
 }
 
 async function onLogout() {

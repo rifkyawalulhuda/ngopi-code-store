@@ -564,14 +564,27 @@ const paidOrders = computed(() =>
   orders.value.filter((o) => ['PaymentSettled', 'Fulfilled', 'Delivered'].includes(o.state)),
 )
 
-const totalProducts = computed(() =>
-  paidOrders.value.reduce((sum, o) => sum + o.lines.reduce((s, l) => s + l.quantity, 0), 0),
-)
+const totalProducts = computed(() => {
+  let count = 0
+  for (const order of paidOrders.value) {
+    for (const line of order.lines) {
+      const facetValues = (line.productVariant as any)?.product?.facetValues || []
+      const isRepeatable = facetValues.some((fv: any) => fv.code === 'repeatable')
+      if (!isRepeatable) count += line.quantity
+    }
+  }
+  return count
+})
 
 const ownedProducts = computed(() => {
   const items: Array<{ key: string; name: string; image: string | null; orderCode: string }> = []
   for (const order of paidOrders.value) {
     for (const line of order.lines) {
+      // Skip repeatable products (services) — they don't belong in the digital library
+      const facetValues = (line.productVariant as any)?.product?.facetValues || []
+      const isRepeatable = facetValues.some((fv: any) => fv.code === 'repeatable')
+      if (isRepeatable) continue
+
       items.push({
         key: `${order.id}-${line.id}`,
         name: line.productVariant.name,

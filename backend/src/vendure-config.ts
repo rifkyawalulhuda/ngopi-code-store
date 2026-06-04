@@ -158,7 +158,7 @@ export const config: VendureConfig = {
         name: 'productType',
         type: 'string',
         label: [{ languageCode: LanguageCode.en, value: 'Product Type' }],
-        description: [{ languageCode: LanguageCode.en, value: 'Type label shown as badge and in specs (e.g. Source Code, Ebook, Template).' }],
+        description: [{ languageCode: LanguageCode.en, value: 'Type label shown as badge and in specs (e.g. Source Code, Ebook, Template). Use Facets for filtering/categorization.' }],
         nullable: true,
       },
       {

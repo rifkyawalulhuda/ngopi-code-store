@@ -20,8 +20,11 @@ export interface OrderConfirmation {
   total: number
   lines: OrderLineItem[]
   customerEmail: string | null
+  customerName: string | null
+  customerPhone: string | null
   paymentMethod: string | null
   paymentState: string | null
+  isRepeatable: boolean
 }
 
 export interface PaymentMeta {
@@ -129,8 +132,15 @@ export function useOrderConfirmation() {
           linePrice: line.linePrice,
         })),
         customerEmail: orderData.customer?.emailAddress || null,
+        customerName: orderData.customer
+          ? `${orderData.customer.firstName || ''} ${orderData.customer.lastName || ''}`.trim()
+          : null,
+        customerPhone: orderData.customer?.customFields?.whatsappNumber || null,
         paymentMethod: orderData.payments?.[0]?.method || null,
         paymentState: orderData.payments?.[0]?.state || null,
+        isRepeatable: orderData.lines.some((line: any) =>
+          line.productVariant?.product?.facetValues?.some((fv: any) => fv.code === 'repeatable')
+        ),
       }
 
       // Extract payment metadata (VA number, instructions, etc.)

@@ -187,6 +187,16 @@ export const GET_ACTIVE_CUSTOMER_ORDERS = gql`
             productVariant {
               id
               name
+              product {
+                id
+                facetValues {
+                  id
+                  code
+                  facet {
+                    code
+                  }
+                }
+              }
             }
             featuredAsset {
               preview

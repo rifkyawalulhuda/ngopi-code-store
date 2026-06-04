@@ -39,6 +39,16 @@ export const GET_ORDER_BY_CODE = gql`
         productVariant {
           id
           name
+          product {
+            id
+            facetValues {
+              id
+              code
+              facet {
+                code
+              }
+            }
+          }
         }
         quantity
         unitPrice
@@ -56,6 +66,9 @@ export const GET_ORDER_BY_CODE = gql`
         emailAddress
         firstName
         lastName
+        customFields {
+          whatsappNumber
+        }
       }
     }
   }

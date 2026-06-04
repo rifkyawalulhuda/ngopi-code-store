@@ -39,8 +39,8 @@
             <OrderSummaryItems :order="order" />
           </div>
 
-          <!-- Download CTA -->
-          <div class="action-card">
+          <!-- Download CTA (digital products) -->
+          <div v-if="!order.isRepeatable" class="action-card">
             <AppIcon name="download" :size="22" />
             <div>
               <h3>Produk Digital Siap Diunduh</h3>
@@ -50,6 +50,27 @@
               Unduh Sekarang
             </NuxtLink>
           </div>
+
+          <!-- Service/Repeatable product CTA -->
+          <div v-else class="action-card service-card">
+            <AppIcon name="check" :size="22" />
+            <div>
+              <h3>Pesanan Sedang Diproses</h3>
+              <p>Tim kami akan menghubungi Anda via WhatsApp/Email dalam 1x24 jam untuk koordinasi.</p>
+            </div>
+          </div>
+
+          <!-- WhatsApp contact for service orders -->
+          <a
+            v-if="order.isRepeatable && serviceWhatsappUrl"
+            :href="serviceWhatsappUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn btn-whatsapp btn-full"
+          >
+            <AppIcon name="whatsapp" :size="18" />
+            Hubungi via WhatsApp
+          </a>
         </div>
 
         <!-- Pending State (Waiting Payment) -->
@@ -167,6 +188,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuth } from '~/composables/useAuth'
 import { useOrderConfirmation } from '~/composables/useOrderConfirmation'
+import { useWhatsapp } from '~/composables/useWhatsapp'
 import { formatPriceIDR } from '~/utils/format'
 import OrderSummaryItems from '~/components/OrderSummaryItems.vue'
 
@@ -208,6 +230,25 @@ function copyPayCode() {
   setTimeout(() => { copied.value = false }, 2000)
 }
 
+// WhatsApp URL for service/repeatable orders — pre-filled with order details
+const { whatsappNumber, fetchWhatsappNumber } = useWhatsapp()
+
+const serviceWhatsappUrl = computed(() => {
+  if (!whatsappNumber.value || !order.value) return ''
+  const productNames = order.value.lines.map(l => l.productName).join(', ')
+  const message = encodeURIComponent(
+    `Halo, saya ingin konfirmasi pesanan:\n\n` +
+    `📋 Order: #${order.value.code}\n` +
+    `📦 Produk: ${productNames}\n` +
+    `💰 Total: ${formatPriceIDR(order.value.total)}\n\n` +
+    `👤 Nama: ${order.value.customerName || '-'}\n` +
+    `📧 Email: ${order.value.customerEmail || '-'}\n` +
+    `📱 WhatsApp: ${order.value.customerPhone || '-'}\n\n` +
+    `Mohon informasi selanjutnya. Terima kasih!`
+  )
+  return `https://wa.me/${whatsappNumber.value}?text=${message}`
+})
+
 async function refreshOrder() {
   const code = route.params.code as string
   const status = route.query.status as string | undefined
@@ -228,6 +269,9 @@ onMounted(async () => {
   const code = route.params.code as string
   const status = route.query.status as string | undefined
   await fetchOrderByCode(code, status)
+
+  // Fetch owner WhatsApp number for service order contact
+  fetchWhatsappNumber()
 })
 </script>
 
@@ -524,6 +568,26 @@ onMounted(async () => {
 .action-card h3 { font-size: 0.95rem; font-weight: 700; margin: 0; color: var(--primary-text); }
 .action-card p { font-size: 0.82rem; color: var(--text-muted); margin: 0.2rem 0 0; }
 .action-card .btn { margin-left: auto; white-space: nowrap; flex-shrink: 0; }
+
+.service-card {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+.btn-whatsapp {
+  background: #25D366;
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 0.8rem 1.25rem;
+  text-decoration: none;
+  transition: background 0.18s;
+}
+
+.btn-whatsapp:hover {
+  background: #1da851;
+}
 
 /* Buttons */
 .btn {

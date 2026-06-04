@@ -52,6 +52,16 @@ export const GET_PRODUCT_BY_SLUG = gql`
         name
         slug
       }
+      facetValues {
+        id
+        code
+        name
+        facet {
+          id
+          code
+          name
+        }
+      }
       customFields {
         keyFeatures
         deliveryInfo

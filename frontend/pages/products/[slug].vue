@@ -334,7 +334,20 @@ const productInWishlist = computed(() => product.value ? isInWishlist(product.va
 // Owned products state (check if user already purchased this product)
 const { isLoggedIn: authLoggedIn } = useAuth()
 const { fetchOwnedProducts, isOwned } = useOwnedProducts()
-const alreadyOwned = computed(() => product.value ? isOwned(product.value.id) : false)
+
+// Check if product is repeatable (service/jasa) based on Facet "purchase-rule"
+const isRepeatable = computed(() => {
+  if (!product.value?.facetValues) return false
+  return product.value.facetValues.some(
+    (fv: any) => fv.code === 'repeatable' || fv.facet?.code === 'purchase-rule' && fv.code === 'repeatable'
+  )
+})
+
+// Only show "already owned" banner for non-repeatable products
+const alreadyOwned = computed(() => {
+  if (isRepeatable.value) return false
+  return product.value ? isOwned(product.value.id) : false
+})
 
 onMounted(async () => {
   if (authLoggedIn.value) {

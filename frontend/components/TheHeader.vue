@@ -62,6 +62,7 @@
           @click="toggleMenu"
         >
           <AppIcon :name="menuOpen ? 'close' : 'menu'" :size="22" />
+          <span v-if="hasPendingOrders && isLoggedIn" class="user-badge" :aria-label="`${pendingOrderCount} pesanan menunggu pembayaran`">{{ pendingOrderCount }}</span>
         </button>
       </div>
     </div>

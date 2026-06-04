@@ -37,13 +37,10 @@
       <!-- Header -->
       <div class="receipt-header">
         <div class="receipt-brand">
-          <span class="brand-logo">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-              <rect width="32" height="32" rx="8" fill="var(--primary)"/>
-              <path d="M10 22V10l6 4.5L22 10v12" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+          <span class="brand-mark">
+            <AppIcon name="terminal" :size="20" />
           </span>
-          <span class="brand-name">NgopiCode</span>
+          <span class="brand-name">Ngopi<span class="brand-accent">Code</span></span>
         </div>
         <div class="receipt-title-block">
           <h1 class="receipt-title">Bukti Transaksi</h1>
@@ -151,8 +148,8 @@
       <footer class="receipt-footer">
         <p class="footer-thanks">Terima kasih atas pembelian Anda!</p>
         <p class="footer-contact">
-          Jika ada pertanyaan, hubungi kami di
-          <a href="mailto:support@ngopicode.digital">support@ngopicode.digital</a>
+          Jika ada pertanyaan, hubungi saya di
+          <a :href="`mailto:${ownerEmail}`">{{ ownerEmail }}</a>
         </p>
       </footer>
     </article>
@@ -162,10 +159,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { formatPriceIDR } from '~/utils/format'
+import { useWhatsapp } from '~/composables/useWhatsapp'
 
 useHead({
   title: 'Bukti Transaksi - NgopiCode',
 })
+
+const { ownerEmail, fetchWhatsappNumber } = useWhatsapp()
 
 interface OrderLine {
   id: string
@@ -281,6 +281,7 @@ async function onDownloadPdf() {
 }
 
 onMounted(async () => {
+  fetchWhatsappNumber()
   const code = route.params.code as string
   if (!code) {
     error.value = 'Kode pesanan tidak tersedia.'
@@ -410,11 +411,25 @@ onMounted(async () => {
   gap: 0.6rem;
 }
 
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--primary);
+  color: #fff;
+}
+
 .brand-name {
   font-size: 1.2rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text);
+}
+
+.brand-accent {
+  color: var(--primary-text);
 }
 
 .receipt-title-block {
@@ -789,6 +804,15 @@ onMounted(async () => {
   .brand-name,
   .receipt-title {
     color: #000 !important;
+  }
+
+  .brand-accent {
+    color: #1f7a4d !important;
+  }
+
+  .brand-mark {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 
   .total-amount {

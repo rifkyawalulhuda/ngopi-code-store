@@ -60,6 +60,18 @@
             </div>
           </div>
 
+          <!-- Receipt CTA -->
+          <div class="action-card action-card-secondary">
+            <AppIcon name="printer" :size="22" />
+            <div>
+              <h3>Bukti Transaksi</h3>
+              <p>Lihat, cetak, atau simpan bukti pembayaran Anda sebagai PDF.</p>
+            </div>
+            <NuxtLink :to="`/receipt/${order.code}`" class="btn btn-outline">
+              Lihat Bukti
+            </NuxtLink>
+          </div>
+
           <!-- WhatsApp contact for service orders -->
           <a
             v-if="order.isRepeatable && serviceWhatsappUrl"
@@ -602,6 +614,35 @@ onMounted(async () => {
 .service-card {
   border-color: var(--border);
   background: var(--surface);
+}
+
+.action-card-secondary {
+  border-color: var(--border-strong);
+  background: var(--surface);
+}
+
+.action-card-secondary h3 {
+  color: var(--text);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--primary-text);
+  border: 1.5px solid var(--primary);
+  border-radius: 10px;
+  padding: 0.6rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.18s, color 0.18s;
+}
+
+.btn-outline:hover {
+  background: var(--primary-soft);
+}
+
+.btn-outline:active {
+  transform: scale(0.97);
 }
 
 .btn-whatsapp {

@@ -11,10 +11,6 @@
           <AppIcon name="download" :size="18" />
           <span class="action-label">Download PDF</span>
         </button>
-        <button type="button" class="action-btn" aria-label="Print" @click="onPrint">
-          <AppIcon name="printer" :size="18" />
-          <span class="action-label">Print</span>
-        </button>
       </div>
     </header>
 
@@ -271,12 +267,7 @@ function formatDate(date: string | null): string {
   })
 }
 
-function onPrint() {
-  window.print()
-}
-
 async function onDownloadPdf() {
-  // Use browser print dialog with "Save as PDF" option
   window.print()
 }
 

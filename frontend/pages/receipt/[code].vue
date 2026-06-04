@@ -125,7 +125,8 @@
           <div class="payment-row">
             <span class="payment-label">Metode</span>
             <span class="payment-value">
-              <AppIcon name="creditCard" :size="16" />
+              <img v-if="paymentLogoUrl" :src="paymentLogoUrl" :alt="paymentMethodLabel" class="payment-logo" />
+              <AppIcon v-else name="creditCard" :size="16" />
               {{ paymentMethodLabel }}
             </span>
           </div>
@@ -237,6 +238,28 @@ const paymentMethodLabel = computed(() => {
     if (code) return code
   }
   return payment.method === 'tripay' ? 'Tripay' : payment.method || '—'
+})
+
+// Payment channel logo mapping (same as order page)
+const channelLogoMap: Record<string, string> = {
+  BRIVA: '/img/payment/bri.svg',
+  BNIVA: '/img/payment/bni.svg',
+  MANDIRIVA: '/img/payment/mandiri.svg',
+  BCAVA: '/img/payment/bca.svg',
+  OVO: '/img/payment/ovo.svg',
+  DANA: '/img/payment/dana.svg',
+  SHOPEEPAY: '/img/payment/shopeepay.svg',
+  QRIS: '/img/payment/qris.svg',
+}
+
+const paymentLogoUrl = computed(() => {
+  if (!order.value?.payments?.length) return ''
+  const payment = order.value.payments[0]
+  const meta = payment.metadata
+  if (!meta) return ''
+  const pub = typeof meta === 'string' ? (() => { try { return JSON.parse(meta) } catch { return null } })() : meta
+  const code = pub?.public?.channelCode || pub?.channelCode || ''
+  return channelLogoMap[code] || ''
 })
 
 const transactionId = computed(() => {
@@ -675,6 +698,13 @@ onMounted(async () => {
   gap: 0.4rem;
   font-size: 0.9rem;
   font-weight: 500;
+}
+
+.payment-logo {
+  width: auto;
+  height: 22px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 /* Footer */

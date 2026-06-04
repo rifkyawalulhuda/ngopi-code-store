@@ -51,6 +51,18 @@
                   />
                 </div>
 
+                <div class="form-group">
+                  <label class="form-label" for="ck-phone">No. Telepon / WhatsApp</label>
+                  <input
+                    id="ck-phone"
+                    type="tel"
+                    class="form-input"
+                    :value="customer?.customFields?.whatsappNumber || '—'"
+                    readonly
+                    aria-readonly="true"
+                  />
+                </div>
+
                 <p class="billing-note">
                   Data di atas diambil dari akun Anda.
                   <NuxtLink to="/account" class="billing-link">Ubah di Pengaturan</NuxtLink>

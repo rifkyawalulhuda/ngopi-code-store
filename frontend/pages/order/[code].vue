@@ -92,7 +92,10 @@
           <!-- Payment Instructions -->
           <div v-if="paymentMeta" class="payment-detail-card">
             <div class="pd-header">
-              <span class="pd-method">{{ paymentMeta.paymentName || paymentMeta.channelCode }}</span>
+              <span class="pd-method">
+                <img v-if="paymentLogoUrl" :src="paymentLogoUrl" :alt="paymentMeta.channelCode" class="pd-method-logo" />
+                {{ paymentMeta.paymentName || paymentMeta.channelCode }}
+              </span>
               <span v-if="expiryFormatted" class="pd-expiry">
                 Batas waktu: <strong>{{ expiryFormatted }}</strong>
               </span>
@@ -213,6 +216,23 @@ useHead({
 })
 
 const copied = ref(false)
+
+// Payment channel logo mapping
+const channelLogoMap: Record<string, string> = {
+  BRIVA: '/img/payment/bri.svg',
+  BNIVA: '/img/payment/bni.svg',
+  MANDIRIVA: '/img/payment/mandiri.svg',
+  BCAVA: '/img/payment/bca.svg',
+  OVO: '/img/payment/ovo.svg',
+  DANA: '/img/payment/dana.svg',
+  SHOPEEPAY: '/img/payment/shopeepay.svg',
+  QRIS: '/img/payment/qris.svg',
+}
+
+const paymentLogoUrl = computed(() => {
+  if (!paymentMeta.value?.channelCode) return ''
+  return channelLogoMap[paymentMeta.value.channelCode] || ''
+})
 
 const expiryFormatted = computed(() => {
   if (!paymentMeta.value?.expiredTime) return ''
@@ -426,6 +446,16 @@ onMounted(async () => {
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pd-method-logo {
+  height: 22px;
+  width: auto;
+  max-width: 60px;
+  object-fit: contain;
 }
 
 .pd-expiry {

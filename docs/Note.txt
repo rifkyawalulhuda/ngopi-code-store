@@ -17,3 +17,7 @@ http://localhost:3000/dashboard/
 akses minio storage s3
 http://localhost:9001/browser/products
 minioadmin / minioadmin
+
+
+http://localhost:3001/admin/upload
+superadmin / superadmin

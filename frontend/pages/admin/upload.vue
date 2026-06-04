@@ -6,10 +6,20 @@
         <h1>🔐 Admin Login</h1>
         <p class="login-desc">Masuk untuk mengakses panel upload produk digital.</p>
         <div v-if="loginError" class="alert alert-error">{{ loginError }}</div>
-        <button class="btn-primary" :disabled="loggingIn" @click="handleLogin">
-          <span v-if="loggingIn" class="spinner" />
-          {{ loggingIn ? 'Logging in...' : 'Login sebagai Admin' }}
-        </button>
+        <form @submit.prevent="handleLogin" class="login-form">
+          <div class="form-group">
+            <label for="admin-user">Username</label>
+            <input id="admin-user" v-model="adminUsername" type="text" class="input" placeholder="Username admin" autocomplete="username" required />
+          </div>
+          <div class="form-group">
+            <label for="admin-pass">Password</label>
+            <input id="admin-pass" v-model="adminPassword" type="password" class="input" placeholder="Password" autocomplete="current-password" required />
+          </div>
+          <button type="submit" class="btn-primary" :disabled="loggingIn || !adminUsername || !adminPassword">
+            <span v-if="loggingIn" class="spinner" />
+            {{ loggingIn ? 'Logging in...' : 'Login' }}
+          </button>
+        </form>
       </div>
     </div>
 
@@ -173,14 +183,14 @@ interface UploadResult {
 }
 
 const ADMIN_API = 'http://localhost:3000/admin-api'
-const ADMIN_USERNAME = 'superadmin'
-const ADMIN_PASSWORD = 'superadmin'
 
 // Auth state
 const isAuthenticated = ref(false)
 const authToken = ref('')
 const loggingIn = ref(false)
 const loginError = ref('')
+const adminUsername = ref('')
+const adminPassword = ref('')
 
 // Upload form state
 const variantSearch = ref('')
@@ -221,7 +231,7 @@ async function handleLogin() {
             ... on NativeAuthStrategyError { message }
           }
         }`,
-        variables: { username: ADMIN_USERNAME, password: ADMIN_PASSWORD },
+        variables: { username: adminUsername.value, password: adminPassword.value },
       }),
     })
     const json = await res.json()
@@ -530,11 +540,7 @@ function getFileIcon(filename: string): string {
 }
 
 // --- Lifecycle ---
-
-onMounted(() => {
-  // Auto-login on mount
-  handleLogin()
-})
+// No auto-login — user must enter credentials manually
 </script>
 
 <style scoped>
@@ -574,6 +580,21 @@ onMounted(() => {
   color: var(--text-muted);
   margin-bottom: 1.5rem;
   font-size: 0.9rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.login-form .form-group {
+  margin-bottom: 0;
+}
+
+.login-form .btn-primary {
+  width: 100%;
+  margin-top: 0.5rem;
 }
 
 /* Admin Panel */

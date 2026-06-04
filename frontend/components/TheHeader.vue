@@ -31,8 +31,7 @@
       <nav class="nav-desktop" aria-label="Navigasi utama">
         <NuxtLink to="/" class="nav-link" active-class="nav-link-noop" exact-active-class="nav-active">Home</NuxtLink>
         <NuxtLink to="/products" class="nav-link" :class="{ 'nav-active': activeCategory === 'all' }">Katalog</NuxtLink>
-        <NuxtLink to="/products?category=ebooks" class="nav-link" :class="{ 'nav-active': activeCategory === 'ebooks' }">Ebooks</NuxtLink>
-        <NuxtLink to="/products?category=services" class="nav-link" :class="{ 'nav-active': activeCategory === 'services' }">Services</NuxtLink>
+        <a href="https://ngopidulur.my.id/blog/" class="nav-link" target="_blank" rel="noopener noreferrer">Blogs</a>
       </nav>
 
       <!-- Actions -->
@@ -96,8 +95,7 @@
 
         <NuxtLink to="/" class="nav-mobile-link" @click="closeMenu">Home</NuxtLink>
         <NuxtLink to="/products" class="nav-mobile-link" :class="{ 'nav-active': activeCategory === 'all' }" @click="closeMenu">Katalog</NuxtLink>
-        <NuxtLink to="/products?category=ebooks" class="nav-mobile-link" :class="{ 'nav-active': activeCategory === 'ebooks' }" @click="closeMenu">Ebooks</NuxtLink>
-        <NuxtLink to="/products?category=services" class="nav-mobile-link" :class="{ 'nav-active': activeCategory === 'services' }" @click="closeMenu">Services</NuxtLink>
+        <a href="https://ngopidulur.my.id/blog/" class="nav-mobile-link" target="_blank" rel="noopener noreferrer" @click="closeMenu">Blogs</a>
       </nav>
     </transition>
   </header>

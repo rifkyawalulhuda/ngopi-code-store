@@ -83,6 +83,7 @@
                         v-model="selectedChannel"
                         class="channel-radio"
                       />
+                      <img :src="`/img/payment/${ch.logo}.svg`" :alt="ch.name" class="channel-logo" />
                       <span class="channel-name">{{ ch.name }}</span>
                     </label>
                   </div>
@@ -104,6 +105,7 @@
                         v-model="selectedChannel"
                         class="channel-radio"
                       />
+                      <img :src="`/img/payment/${ch.logo}.svg`" :alt="ch.name" class="channel-logo" />
                       <span class="channel-name">{{ ch.name }}</span>
                     </label>
                   </div>
@@ -123,6 +125,7 @@
                         v-model="selectedChannel"
                         class="channel-radio"
                       />
+                      <img src="/img/payment/qris.svg" alt="QRIS" class="channel-logo" />
                       <span class="channel-name">QRIS (Semua Aplikasi)</span>
                     </label>
                   </div>
@@ -406,16 +409,16 @@ const paymentError = ref('')
 
 // Tripay payment channels (sandbox-compatible)
 const vaChannels = [
-  { code: 'BRIVA', name: 'BRI Virtual Account' },
-  { code: 'BNIVA', name: 'BNI Virtual Account' },
-  { code: 'MANDIRIVA', name: 'Mandiri Virtual Account' },
-  { code: 'BCAVA', name: 'BCA Virtual Account' },
+  { code: 'BRIVA', name: 'BRI Virtual Account', logo: 'bri' },
+  { code: 'BNIVA', name: 'BNI Virtual Account', logo: 'bni' },
+  { code: 'MANDIRIVA', name: 'Mandiri Virtual Account', logo: 'mandiri' },
+  { code: 'BCAVA', name: 'BCA Virtual Account', logo: 'bca' },
 ]
 
 const ewalletChannels = [
-  { code: 'OVO', name: 'OVO' },
-  { code: 'DANA', name: 'DANA' },
-  { code: 'SHOPEEPAY', name: 'ShopeePay' },
+  { code: 'OVO', name: 'OVO', logo: 'ovo' },
+  { code: 'DANA', name: 'DANA', logo: 'dana' },
+  { code: 'SHOPEEPAY', name: 'ShopeePay', logo: 'shopeepay' },
 ]
 
 // E-wallet channels require phone number
@@ -1010,6 +1013,14 @@ async function onProceedPayment() {
   font-size: 0.88rem;
   font-weight: 500;
   color: var(--text);
+}
+
+.channel-logo {
+  width: auto;
+  height: 22px;
+  max-width: 60px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 /* Payment error */

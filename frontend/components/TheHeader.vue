@@ -50,9 +50,9 @@
           <AppIcon name="user" :size="20" />
           <span v-if="hasPendingOrders && isLoggedIn" class="user-badge" :aria-label="`${pendingOrderCount} pesanan menunggu pembayaran`">{{ pendingOrderCount }}</span>
         </NuxtLink>
-        <NuxtLink to="/checkout" class="icon-btn cart-btn hide-mobile" aria-label="Keranjang belanja">
+        <NuxtLink to="/account?tab=orders" class="icon-btn cart-btn hide-mobile" aria-label="Riwayat Pesanan">
           <AppIcon name="cart" :size="20" />
-          <span v-if="cartItemCount > 0" class="cart-badge">{{ cartItemCount }}</span>
+          <span v-if="hasPendingOrders && isLoggedIn" class="cart-badge">{{ pendingOrderCount }}</span>
         </NuxtLink>
         <button
           class="icon-btn menu-toggle"
@@ -85,10 +85,10 @@
             <span>{{ isLoggedIn ? 'Akun Saya' : 'Masuk' }}</span>
             <span v-if="hasPendingOrders && isLoggedIn" class="nav-mobile-badge">{{ pendingOrderCount }}</span>
           </NuxtLink>
-          <NuxtLink to="/checkout" class="nav-mobile-action" @click="closeMenu">
+          <NuxtLink to="/account?tab=orders" class="nav-mobile-action" @click="closeMenu">
             <AppIcon name="cart" :size="20" />
-            <span>Keranjang</span>
-            <span v-if="cartItemCount > 0" class="nav-mobile-badge">{{ cartItemCount }}</span>
+            <span>Pesanan</span>
+            <span v-if="hasPendingOrders && isLoggedIn" class="nav-mobile-badge">{{ pendingOrderCount }}</span>
           </NuxtLink>
         </div>
 

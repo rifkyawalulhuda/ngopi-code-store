@@ -772,10 +772,16 @@ onMounted(async () => {
   to { transform: rotate(360deg); }
 }
 
-/* Print styles */
+/* Print styles — force light mode regardless of theme */
 @media print {
   .no-print {
     display: none !important;
+  }
+
+  * {
+    color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .receipt-page {
@@ -789,22 +795,51 @@ onMounted(async () => {
     border-radius: 0 !important;
     box-shadow: none !important;
     max-width: none;
-  }
-
-  .receipt-header,
-  .receipt-meta,
-  .receipt-section,
-  .receipt-totals,
-  .receipt-footer {
     background: #fff !important;
   }
 
-  .receipt-card,
-  .receipt-header,
-  .receipt-meta,
-  .receipt-section,
+  .receipt-header {
+    background: #fff !important;
+    border-color: #e5e5e5 !important;
+  }
+
+  .receipt-meta {
+    background: #f9fafb !important;
+    border: 1px solid #e5e5e5 !important;
+    border-radius: 8px !important;
+    margin: 0 2rem;
+    padding: 1rem 1.5rem !important;
+  }
+
+  .receipt-section {
+    background: #fff !important;
+    border-color: #e5e5e5 !important;
+  }
+
+  .receipt-totals {
+    background: #f9fafb !important;
+  }
+
   .receipt-footer {
+    background: #f9fafb !important;
+    border-color: #e5e5e5 !important;
+  }
+
+  /* Text colors - force light mode */
+  .receipt-title,
+  .brand-name,
+  .meta-value,
+  .buyer-name,
+  .item-name,
+  .total-row-final,
+  .payment-value,
+  .footer-thanks,
+  .items-table td {
     color: #000 !important;
+  }
+
+  .brand-accent {
+    color: #1f7a4d !important;
   }
 
   .meta-label,
@@ -814,51 +849,78 @@ onMounted(async () => {
   .footer-contact,
   .receipt-subtitle,
   .item-sku,
-  .total-row {
+  .total-row,
+  .items-table th {
     color: #555 !important;
-  }
-
-  .meta-value,
-  .buyer-name,
-  .item-name,
-  .total-row-final,
-  .brand-name,
-  .receipt-title {
-    color: #000 !important;
-  }
-
-  .brand-accent {
-    color: #1f7a4d !important;
-  }
-
-  .brand-mark {
-    print-color-adjust: exact;
-    -webkit-print-color-adjust: exact;
   }
 
   .total-amount {
     color: #1f7a4d !important;
   }
 
-  .status-badge {
-    print-color-adjust: exact;
-    -webkit-print-color-adjust: exact;
+  .footer-contact a {
+    color: #1f7a4d !important;
   }
 
+  /* Brand mark keeps green bg */
+  .brand-mark {
+    background: #1f7a4d !important;
+    color: #fff !important;
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  /* Status badge */
+  .status-badge {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  .status-success {
+    background: #ecfdf5 !important;
+    color: #166534 !important;
+  }
+
+  .status-pending {
+    background: #fef3c7 !important;
+    color: #92400e !important;
+  }
+
+  .status-danger {
+    background: #fef2f2 !important;
+    color: #b91c1c !important;
+  }
+
+  /* Table borders */
   .items-table th,
   .items-table td {
-    color: #000 !important;
+    border-color: #e5e5e5 !important;
   }
 
-  .items-table th {
-    color: #555 !important;
+  .total-row-final {
+    border-color: #e5e5e5 !important;
   }
 
-  .receipt-meta {
-    border: 1px solid #e5e5e5 !important;
-    border-radius: 8px !important;
-    margin: 0 2rem;
-    padding: 1rem 1.5rem !important;
+  /* Ensure no dark backgrounds leak */
+  .receipt-card *,
+  .receipt-page * {
+    background-color: transparent !important;
+  }
+
+  .receipt-card,
+  .receipt-header,
+  .receipt-section {
+    background: #fff !important;
+  }
+
+  .receipt-meta,
+  .receipt-totals,
+  .receipt-footer {
+    background: #f9fafb !important;
+  }
+
+  .brand-mark {
+    background: #1f7a4d !important;
   }
 }
 
@@ -922,6 +984,21 @@ onMounted(async () => {
   .payment-label {
     min-width: auto;
     font-size: 0.78rem;
+  }
+}
+</style>
+
+<style>
+/* Global print override — unscoped to reach html/body/nuxt root */
+@media print {
+  html,
+  body,
+  #__nuxt,
+  #__layout,
+  [data-theme='dark'] {
+    background: #fff !important;
+    background-color: #fff !important;
+    color: #000 !important;
   }
 }
 </style>

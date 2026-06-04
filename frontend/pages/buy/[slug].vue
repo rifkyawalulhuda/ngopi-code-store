@@ -126,7 +126,7 @@
                         class="channel-radio"
                       />
                       <img src="/img/payment/qris.svg" alt="QRIS" class="channel-logo" />
-                      <span class="channel-name">QRIS (Semua Aplikasi)</span>
+                      <span class="channel-name">QRIS</span>
                     </label>
                   </div>
                 </div>
@@ -409,10 +409,10 @@ const paymentError = ref('')
 
 // Tripay payment channels (sandbox-compatible)
 const vaChannels = [
-  { code: 'BRIVA', name: 'BRI Virtual Account', logo: 'bri' },
-  { code: 'BNIVA', name: 'BNI Virtual Account', logo: 'bni' },
-  { code: 'MANDIRIVA', name: 'Mandiri Virtual Account', logo: 'mandiri' },
-  { code: 'BCAVA', name: 'BCA Virtual Account', logo: 'bca' },
+  { code: 'BRIVA', name: 'BRI VA', logo: 'bri' },
+  { code: 'BNIVA', name: 'BNI VA', logo: 'bni' },
+  { code: 'MANDIRIVA', name: 'Mandiri VA', logo: 'mandiri' },
+  { code: 'BCAVA', name: 'BCA VA', logo: 'bca' },
 ]
 
 const ewalletChannels = [

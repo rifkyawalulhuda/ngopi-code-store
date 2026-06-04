@@ -29,7 +29,29 @@ export const shopApiExtensions: DocumentNode = gql`
     fileName: String!
   }
 
+  type DigitalDownloadItem {
+    id: ID!
+    fileName: String!
+    maxDownloads: Int!
+    currentDownloads: Int!
+    expiresAt: String!
+    isActive: Boolean!
+    downloadToken: String!
+  }
+
+  extend type Order {
+    downloads: [DigitalDownloadItem!]!
+  }
+
   extend type Mutation {
     generateDownloadUrl(productVariantId: ID!): DownloadUrl
+    requestDownloadLink(downloadToken: String!): DownloadLinkResult
+  }
+
+  type DownloadLinkResult {
+    url: String!
+    expiresIn: Int!
+    remainingDownloads: Int!
+    fileName: String!
   }
 `;

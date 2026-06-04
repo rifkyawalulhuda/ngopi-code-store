@@ -1,18 +1,131 @@
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
-import { Ctx, RequestContext, TransactionalConnection, ID, ForbiddenError } from '@vendure/core';
+import { Args, Mutation, Resolver, ResolveField, Parent } from '@nestjs/graphql';
+import { Ctx, RequestContext, TransactionalConnection, ID, ForbiddenError, Order } from '@vendure/core';
 import { DigitalProduct } from '../entities/digital-product.entity';
+import { DigitalDownload } from '../entities/digital-download.entity';
 import { MinioService } from '../services/minio.service';
 
 /**
  * Shop API resolver for customer download access.
  * Generates short-lived pre-signed URLs for authenticated product owners.
  */
-@Resolver()
+@Resolver('Order')
 export class DigitalProductShopResolver {
   constructor(
     private connection: TransactionalConnection,
     private minioService: MinioService,
   ) {}
+
+  /**
+   * Resolve downloads field on Order type.
+   * Returns digital download records for the order, enriched with fileName from DigitalProduct.
+   */
+  @ResolveField()
+  async downloads(
+    @Ctx() ctx: RequestContext,
+    @Parent() order: Order,
+  ): Promise<Array<{ id: ID; fileName: string; maxDownloads: number; currentDownloads: number; expiresAt: string; isActive: boolean; downloadToken: string }>> {
+    if (!ctx.activeUserId) {
+      return [];
+    }
+
+    const downloadRecords = await this.connection.rawConnection
+      .getRepository(DigitalDownload)
+      .find({ where: { orderId: order.id as any } });
+
+    if (!downloadRecords.length) {
+      return [];
+    }
+
+    // Enrich with file names from DigitalProduct
+    const results = [];
+    for (const dl of downloadRecords) {
+      const digitalProduct = await this.connection.rawConnection
+        .getRepository(DigitalProduct)
+        .findOne({ where: { productVariantId: dl.productVariantId as any } });
+
+      results.push({
+        id: dl.id,
+        fileName: digitalProduct?.originalFileName || 'file.zip',
+        maxDownloads: dl.maxDownloads,
+        currentDownloads: dl.currentDownloads,
+        expiresAt: dl.expiresAt instanceof Date ? dl.expiresAt.toISOString() : String(dl.expiresAt),
+        isActive: dl.isActive,
+        downloadToken: dl.downloadToken,
+      });
+    }
+
+    return results;
+  }
+
+  /**
+   * Request a download link using a download token.
+   * Validates ownership, increments download count, returns pre-signed URL.
+   */
+  @Mutation()
+  async requestDownloadLink(
+    @Ctx() ctx: RequestContext,
+    @Args() args: { downloadToken: string },
+  ): Promise<{ url: string; expiresIn: number; remainingDownloads: number; fileName: string } | null> {
+    if (!ctx.activeUserId) {
+      throw new ForbiddenError();
+    }
+
+    const { downloadToken } = args;
+
+    const downloadRecord = await this.connection.rawConnection
+      .getRepository(DigitalDownload)
+      .findOne({ where: { downloadToken } });
+
+    if (!downloadRecord) {
+      return null;
+    }
+
+    // Verify ownership: the download must belong to the current user
+    const ownershipCheck = await this.connection.rawConnection.query(
+      `SELECT c.id FROM customer c
+       JOIN "user" u ON c."userId" = u.id
+       WHERE u.id = $1 AND c.id = $2
+       LIMIT 1`,
+      [ctx.activeUserId, downloadRecord.customerId],
+    );
+
+    if (!ownershipCheck || ownershipCheck.length === 0) {
+      throw new ForbiddenError();
+    }
+
+    // Check if download is accessible
+    if (!downloadRecord.isAccessible()) {
+      return null;
+    }
+
+    // Increment download count
+    downloadRecord.currentDownloads += 1;
+    downloadRecord.lastDownloadedAt = new Date();
+    await this.connection.rawConnection.getRepository(DigitalDownload).save(downloadRecord);
+
+    // Get file info
+    const digitalProduct = await this.connection.rawConnection
+      .getRepository(DigitalProduct)
+      .findOne({ where: { productVariantId: downloadRecord.productVariantId as any } });
+
+    if (!digitalProduct) {
+      return null;
+    }
+
+    // Generate pre-signed URL (5 minutes)
+    const url = await this.minioService.getPresignedDownloadUrl(
+      digitalProduct.objectKey,
+      digitalProduct.originalFileName,
+      300,
+    );
+
+    return {
+      url,
+      expiresIn: 300,
+      remainingDownloads: downloadRecord.maxDownloads - downloadRecord.currentDownloads,
+      fileName: digitalProduct.originalFileName,
+    };
+  }
 
   /**
    * Generate a download URL for a digital product.

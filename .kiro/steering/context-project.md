@@ -20,7 +20,7 @@ ngopi-code-store/
 ├── backend/          # Vendure 3.6 (NestJS + TypeScript + PostgreSQL)
 ├── frontend/         # Nuxt 3 (Vue 3 + Apollo + Pinia, SSR, port 3001)
 ├── deploy/           # Cloudflare tunnel config
-├── docs/             # Architecture docs (context-project.md = full version)
+├── docs/             # Architecture docs
 ├── docker-compose.yml
 ├── dev.bat           # Auto-start backend + dashboard + frontend dev servers
 └── .kiro/            # Specs, steering, settings
@@ -46,7 +46,9 @@ ngopi-code-store/
 | `backend/vite.config.mts` | Builds the React Dashboard |
 | `backend/src/index.ts` | Bootstrap entry point |
 | `backend/src/plugins/tripay-payment/` | Payment gateway (webhook, service, signature) |
-| `backend/src/plugins/digital-fulfillment/` | Download management |
+| `backend/src/plugins/digital-fulfillment/` | Download management (entities, fulfillment, MinIO, Order.downloads resolver) |
+| `backend/src/plugins/digital-fulfillment/api/api-extensions.ts` | GraphQL schema: DigitalDownloadItem, Order.downloads, requestDownloadLink, generateDownloadUrl |
+| `backend/src/plugins/digital-fulfillment/api/digital-product-shop.resolver.ts` | Shop API: Order.downloads field resolver + download mutations |
 | `backend/src/plugins/email/email-verification.handler.ts` | EmailVerificationPlugin: handles AccountRegistrationEvent + IdentifierChangeRequestEvent → Resend |
 | `backend/src/plugins/email/templates/` | order-confirmation, email-verification, email-change templates |
 | `backend/src/config/custom-order-process.ts` | Order state machine |
@@ -65,22 +67,26 @@ ngopi-code-store/
 | `frontend/components/SearchCommand.vue` | Command palette search (Ctrl+K) |
 | `frontend/components/AppIcon.vue` | SVG icons (incl. whatsapp + github brand logos) |
 | `frontend/pages/index.vue` | Homepage |
-| `frontend/pages/products/index.vue` | Catalog (SSR, filters) |
+| `frontend/pages/products/index.vue` | Catalog (SSR, filters via collections) |
 | `frontend/pages/products/[slug].vue` | Product detail (Buy + ♡ + WA link) |
 | `frontend/pages/auth/index.vue` | Login/Register (tabs, confirm-password, redirects logged-in → /account) |
 | `frontend/pages/auth/verify.vue` | Account email verification (?token=) |
 | `frontend/pages/auth/verify-email.vue` | Email-CHANGE confirmation (?token=) |
-| `frontend/pages/account/index.vue` | Customer dashboard (collapsible sidebar, library/orders/settings tabs) |
+| `frontend/pages/account/index.vue` | Customer dashboard (sidebar, library with search+category filter, orders, wishlist, settings) |
 | `frontend/pages/checkout.vue` | Guest checkout |
-| `frontend/pages/order/[code].vue` | Payment confirmation |
-| `frontend/pages/downloads/[orderCode].vue` | Download page |
+| `frontend/pages/order/[code].vue` | Payment confirmation → "Unduh Sekarang" redirects to /account (Pustaka) |
+| `frontend/pages/downloads/[orderCode].vue` | Legacy download page (token-based downloads) |
 | `frontend/composables/useAuth.ts` | Shared auth state (useState): register/login/logout/verify/updateProfile/changePassword/email-change |
 | `frontend/composables/useWhatsapp.ts` | Channel contact (whatsappNumber, githubLink, ownerEmail) |
 | `frontend/composables/useShop.ts` | Product fetching |
-| `frontend/composables/useCart.ts`, `useCheckout.ts`, `useDownload.ts`, `useTheme.ts`, `useProductFilters.ts` | Feature composables |
+| `frontend/composables/useDownload.ts` | Download page composable (fetchDownloads, requestDownloadLink) |
+| `frontend/composables/useCart.ts`, `useCheckout.ts`, `useTheme.ts`, `useProductFilters.ts` | Feature composables |
 | `frontend/graphql/queries/products.ts` | GET_PRODUCT_BY_SLUG, SEARCH_PRODUCTS |
+| `frontend/graphql/queries/collections.ts` | GET_COLLECTIONS (used in catalog + account library filter) |
+| `frontend/graphql/queries/downloads.ts` | GET_ORDER_DOWNLOADS (orderByCode → downloads) |
 | `frontend/graphql/queries/settings.ts` | GET_ACTIVE_CHANNEL (whatsappNumber, githubLink, ownerEmail) |
 | `frontend/graphql/mutations/auth.ts` | REGISTER, LOGIN, LOGOUT, VERIFY_CUSTOMER, UPDATE_CUSTOMER, UPDATE_CUSTOMER_PASSWORD, REQUEST_UPDATE_EMAIL, UPDATE_EMAIL_ADDRESS, GET_ACTIVE_CUSTOMER(_ORDERS) |
+| `frontend/graphql/mutations/downloads.ts` | REQUEST_DOWNLOAD_LINK, GENERATE_DOWNLOAD_URL |
 
 ## Customer Auth Flow
 
@@ -96,10 +102,23 @@ Register (email+password, confirm password) → registerCustomerAccount
 ## Account Page (`/account`)
 
 - **Collapsible sidebar** (Nuxt Dashboard style): collapse toggle (icon-only) persisted via cookie; off-canvas drawer on mobile
-- **Tabs**: Pustaka Saya (owned products from paid orders), Riwayat Pesanan, Pengaturan
+- **Tabs**: Pustaka Saya (owned products from paid orders), Riwayat Pesanan, Wishlist, Pengaturan
+- **Pustaka Saya**: search bar + category filter chips (fetched from GET_COLLECTIONS, same as catalog). Products matched via `product.collections[].slug`.
 - **Settings = accordion** (one section open at a time): Profil (name + WhatsApp), Ubah Email, Ubah Password
 - Stats cards hidden on mobile except on Library tab
 - Header user icon shows active state on /account
+
+## Digital Download Flow
+
+```
+Payment confirmed → Order Fulfilled → DigitalDownload records created (per order line)
+→ User clicks "Unduh Sekarang" on order page → redirected to /account (Pustaka Saya)
+→ User clicks "Unduh" button on library card → generateDownloadUrl mutation → MinIO pre-signed URL (5 min)
+```
+- Alternative: `/downloads/[orderCode]` page uses `orderByCode` → `Order.downloads` field resolver
+- `requestDownloadLink` mutation: validates ownership, increments counter, returns pre-signed URL
+- Download limits: configurable per DigitalProduct (default 5, max 10)
+- Expiry: configurable hours (default 72h, max 168h)
 
 ## Settings Rules
 
@@ -133,6 +152,7 @@ Register (email+password, confirm password) → registerCustomerAccount
 - **Plugin architecture**: each backend feature is a self-contained Vendure plugin
 - **Composable pattern**: frontend logic in `use*` composables; `useAuth` uses shared `useState`
 - **GraphQL**: queries/mutations in dedicated files under `graphql/`
+- **Collections as categories**: Products belong to collections (Source Code, Ebooks, etc.) — used for catalog filtering AND account library filtering
 - **Test co-location**: `*.spec.ts`, `*.test.ts`, `*.pbt.spec.ts`
 - **IDR currency**: zero-decimal, stored as actual Rupiah (Rp 150.000 = 150000)
 - **Channel custom fields via activeChannel** (Shop API), NOT globalSettings (Admin-only)

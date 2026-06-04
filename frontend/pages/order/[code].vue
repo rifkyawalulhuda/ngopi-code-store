@@ -44,9 +44,9 @@
             <AppIcon name="download" :size="22" />
             <div>
               <h3>Produk Digital Siap Diunduh</h3>
-              <p>Akses produk digital Anda di halaman unduhan.</p>
+              <p>Akses produk digital Anda di Pustaka Saya.</p>
             </div>
-            <NuxtLink :to="`/downloads/${order.code}`" class="btn btn-primary">
+            <NuxtLink to="/account" class="btn btn-primary">
               Unduh Sekarang
             </NuxtLink>
           </div>

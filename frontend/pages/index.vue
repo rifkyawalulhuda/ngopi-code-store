@@ -759,16 +759,33 @@ main {
   .hero-split {
     grid-template-columns: 1fr;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   .hero-content {
     text-align: center;
+    display: contents;
+  }
+  .hero-eyebrow {
+    order: 1;
+  }
+  .hero-title {
+    order: 2;
+  }
+  .hero-sub {
+    order: 3;
+    margin-bottom: 1rem;
   }
   .hero-lottie {
     max-width: 280px;
-    order: -1;
+    order: 4;
+    margin-bottom: 1.5rem;
   }
   .hero-cta {
+    order: 5;
     justify-content: center;
+    width: 100%;
   }
   .hero-cta .btn {
     width: 100%;

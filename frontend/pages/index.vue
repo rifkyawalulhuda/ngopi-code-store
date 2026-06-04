@@ -122,7 +122,7 @@
       <!-- Newsletter -->
       <section class="section">
         <div class="newsletter">
-          <h2>Gabung Developer Circle</h2>
+          <h2>Gabung NgopiCode Newsletter</h2>
           <p>
             Berlangganan untuk mendapat akses awal ke rilisan kode baru, wawasan teknis,
             dan diskon layanan eksklusif.

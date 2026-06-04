@@ -7,8 +7,7 @@
           <span class="brand-name">Ngopi<span class="brand-accent">Code</span></span>
         </NuxtLink>
         <p class="footer-tagline">
-          Produk digital premium dengan desain minimalis dan efisien. Kami membangun
-          alat yang memberdayakan kreator dan developer.
+          Terus Belajar dan belajar karena ilmu adalah investasi masa depan.
         </p>
         <div class="footer-socials">
           <a
@@ -45,29 +44,6 @@
         </div>
       </div>
 
-      <div class="footer-col">
-        <h3>Store</h3>
-        <NuxtLink to="/products">Rilis Terbaru</NuxtLink>
-        <NuxtLink to="/products?category=source-code">Source Code</NuxtLink>
-        <NuxtLink to="/products?category=ebooks">Ebooks</NuxtLink>
-        <NuxtLink to="/products?category=components">Components</NuxtLink>
-      </div>
-
-      <div class="footer-col">
-        <h3>Services</h3>
-        <NuxtLink to="/products?category=services">Web Dev</NuxtLink>
-        <a href="#">Consulting</a>
-        <a href="#">UI Design</a>
-        <a href="#">Maintenance</a>
-      </div>
-
-      <div class="footer-col">
-        <h3>Support</h3>
-        <a href="#">Lisensi</a>
-        <a href="#">Dokumentasi</a>
-        <a href="#">Syarat &amp; Ketentuan</a>
-        <a href="#">Kontak</a>
-      </div>
     </div>
 
     <div class="footer-bottom">

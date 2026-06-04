@@ -1,3 +1,7 @@
+---
+inclusion: always
+---
+
 # Tech Stack & Build System
 
 ## Backend
@@ -58,7 +62,26 @@ npm run test:watch       # Run tests in watch mode
 | Frontend | Vitest | fast-check 4.x |
 
 - Unit tests: `*.spec.ts` (backend), `*.test.ts` (frontend)
-- Property-based tests: `*.pbt.spec.ts` (both)
+- Property-based tests: `*.pbt.spec.ts` (both layers)
+- Co-locate tests next to the source file they cover.
+- When adding new logic, write a property-based test (`*.pbt.spec.ts`) alongside the unit test.
+- Use `fast-check` arbitraries to generate inputs; avoid hand-crafting large fixture sets.
+
+## TypeScript Rules
+
+- Backend uses **CommonJS** (`require`/`module.exports`). Do NOT use ESM syntax (`import`/`export`) in backend source files unless inside a `.d.ts`.
+- Frontend uses **ESM**. Nuxt auto-imports composables and components — explicit imports are only needed for external packages and GraphQL documents.
+- Backend: strict mode, `experimentalDecorators: true`, `emitDecoratorMetadata: true`.
+- Frontend: strict mode, `typeCheck` disabled in nuxt config.
+- Path aliases (backend): `@plugins/*`, `@config/*`, `@shared/*` — use these instead of relative paths traversing more than two levels.
+- Path aliases (frontend): `~/` prefix (Nuxt convention).
+
+## Dependency & Import Guidelines
+
+- Prefer existing dependencies. Check `package.json` before introducing a new library.
+- Pin exact versions when adding a dependency (`npm install --save-exact`).
+- Backend NestJS services are `@Injectable()` — inject via constructor, never instantiate manually.
+- Vendure entities extend `VendureEntity` and use TypeORM decorators (`@Entity`, `@Column`, `@ManyToOne`, etc.).
 
 ## Deployment
 
@@ -68,11 +91,7 @@ docker compose down        # Stop all services
 docker compose logs <svc>  # View service logs
 ```
 
-Services: vendure (backend), postgres, minio, cloudflare-tunnel.
+Services: `vendure` (backend), `postgres`, `minio`, `cloudflare-tunnel`.
 
-## TypeScript Configuration
-
-- Backend: strict mode, experimentalDecorators, emitDecoratorMetadata
-- Frontend: strict mode, typeCheck disabled in nuxt config
-- Path aliases (backend): `@plugins/*`, `@config/*`, `@shared/*`
-- Path aliases (frontend): `~/` (Nuxt auto-imports)
+- Self-hosted on 8 GB RAM. Be mindful of memory — avoid unbounded in-memory collections.
+- Vendure heap max: 900 MB. PostgreSQL: 1 GB. MinIO: 512 MB.

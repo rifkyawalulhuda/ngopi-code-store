@@ -803,9 +803,9 @@ main {
 
 .faq-content p {
   margin: 0;
-  padding: 0 1.25rem 1rem;
-  font-size: 0.88rem;
-  line-height: 1.7;
+  padding: 0.5rem 1.25rem 1.5rem;
+  font-size: 0.9rem;
+  line-height: 1.75;
   color: var(--text-muted);
   max-width: 65ch;
 }

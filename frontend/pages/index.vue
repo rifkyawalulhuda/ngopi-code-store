@@ -119,30 +119,27 @@
         </div>
       </section>
 
-      <!-- Newsletter -->
-      <section class="section">
-        <div class="newsletter">
-          <h2>Gabung NgopiCode Newsletter</h2>
-          <p>
-            Berlangganan untuk mendapat akses awal ke rilisan kode baru, wawasan teknis,
-            dan diskon layanan eksklusif.
-          </p>
-          <form class="newsletter-form" @submit.prevent="onSubscribe">
-            <input
-              v-model="email"
-              type="email"
-              required
-              placeholder="email@anda.com"
-              aria-label="Alamat email"
-            />
-            <button type="submit" class="btn btn-primary">Berlangganan</button>
-          </form>
-          <p v-if="subscribed" class="newsletter-note success">
-            Terima kasih! Anda berhasil berlangganan.
-          </p>
-          <p v-else class="newsletter-note">
-            Dengan berlangganan, Anda menyetujui Kebijakan Privasi kami.
-          </p>
+      <!-- FAQ -->
+      <section class="section faq-section">
+        <div class="section-head section-head-center">
+          <span class="section-eyebrow">Bantuan</span>
+          <h2 class="section-title">Pertanyaan Umum</h2>
+        </div>
+
+        <div class="faq-list">
+          <details
+            v-for="(faq, i) in faqs"
+            :key="i"
+            class="faq-item"
+          >
+            <summary class="faq-question">
+              <span>{{ faq.q }}</span>
+              <AppIcon name="chevronDown" :size="18" class="faq-chevron" />
+            </summary>
+            <div class="faq-answer">
+              <p>{{ faq.a }}</p>
+            </div>
+          </details>
         </div>
       </section>
     </main>
@@ -223,7 +220,32 @@ const features = [
   },
 ]
 
-// Sample fallback shown when the catalog is empty (fresh store)
+const faqs = [
+  {
+    q: 'Bagaimana cara membeli produk di NgopiCode?',
+    a: 'Pilih produk yang diinginkan, klik tombol "Beli Sekarang", pilih metode pembayaran (Virtual Account, E-Wallet, atau QRIS), lalu selesaikan pembayaran. Produk digital akan langsung tersedia di Pustaka Saya setelah pembayaran dikonfirmasi.',
+  },
+  {
+    q: 'Metode pembayaran apa saja yang tersedia?',
+    a: 'Kami menerima Virtual Account (BRI, BNI, Mandiri, BCA), E-Wallet (OVO, DANA, ShopeePay), dan QRIS. Semua pembayaran diproses secara otomatis melalui gateway Tripay.',
+  },
+  {
+    q: 'Bagaimana cara mengunduh produk setelah pembelian?',
+    a: 'Setelah pembayaran berhasil, masuk ke halaman Akun Saya → Pustaka Saya. Klik tombol "Unduh" pada produk yang ingin didownload. Link download bersifat sementara (5 menit) dan aman.',
+  },
+  {
+    q: 'Apakah ada batas waktu untuk mengunduh produk?',
+    a: 'Tidak ada batas waktu permanen. Selama akun Anda aktif, Anda bisa mengunduh produk kapan saja dari Pustaka Saya. Setiap link download berlaku 5 menit dan bisa dibuat ulang.',
+  },
+  {
+    q: 'Apakah saya bisa membeli produk yang sama dua kali?',
+    a: 'Untuk produk bertipe "one-time", sistem akan mencegah pembelian ulang. Produk yang sudah dibeli akan tampil di Pustaka Saya untuk diunduh kapan saja.',
+  },
+  {
+    q: 'Bagaimana jika saya mengalami masalah dengan produk?',
+    a: 'Hubungi kami melalui WhatsApp atau email yang tersedia di halaman kontak. Tim kami akan merespons dalam 1x24 jam kerja.',
+  },
+]
 const sampleProducts = [
   { id: 's1', name: 'SaaS Dashboard Template', priceLabel: 'Rp 1.350.000', badge: 'Bestseller', cta: 'Unduh', to: '/products', image: null },
   { id: 's2', name: 'Mastering Web Architecture', priceLabel: 'Rp 590.000', badge: null, cta: 'Selengkapnya', to: '/products', image: null },
@@ -248,15 +270,6 @@ const displayProducts = computed(() => {
     }
   })
 })
-
-const email = ref('')
-const subscribed = ref(false)
-function onSubscribe() {
-  if (email.value) {
-    subscribed.value = true
-    email.value = ''
-  }
-}
 
 onMounted(() => {
   fetchProducts({ take: 4 })
@@ -671,65 +684,101 @@ main {
   margin: 0 auto;
 }
 
-/* Newsletter */
-.newsletter {
-  background: linear-gradient(135deg, #14241b 0%, #1f4733 100%);
-  border-radius: 22px;
-  padding: 3.5rem 2rem;
+/* FAQ Accordion */
+.faq-section {
+  max-width: 800px;
+}
+
+.section-head-center {
   text-align: center;
-  color: #fff;
-}
-
-.newsletter h2 {
-  font-size: clamp(1.6rem, 4vw, 2.1rem);
-  margin: 0 0 0.75rem;
-  letter-spacing: -0.02em;
-}
-
-.newsletter > p {
-  color: #b9cabf;
-  max-width: 520px;
-  margin: 0 auto 2rem;
-  line-height: 1.6;
-}
-
-.newsletter-form {
   display: flex;
-  gap: 0.6rem;
-  max-width: 480px;
-  margin: 0 auto;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
 }
 
-.newsletter-form input {
-  flex: 1;
-  min-width: 200px;
-  padding: 0.85rem 1.1rem;
-  border-radius: 10px;
-  border: 1px solid #2e5743;
-  background: #0f1d16;
-  color: #fff;
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.faq-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.faq-item:hover {
+  border-color: var(--btn-ghost-border);
+}
+
+.faq-item[open] {
+  border-color: var(--primary);
+  box-shadow: 0 2px 12px var(--shadow-card);
+}
+
+.faq-question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
   font-size: 0.95rem;
-}
-
-.newsletter-form input::placeholder {
-  color: #7d958a;
-}
-
-.newsletter-form input:focus {
-  outline: 2px solid #5cc98c;
-  outline-offset: 1px;
-}
-
-.newsletter-note {
-  margin: 1.25rem 0 0;
-  font-size: 0.85rem;
-  color: #8ba295;
-}
-
-.newsletter-note.success {
-  color: #5cc98c;
   font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+.faq-question::-webkit-details-marker {
+  display: none;
+}
+
+.faq-question::marker {
+  content: '';
+}
+
+.faq-question:hover {
+  background: var(--surface-2);
+}
+
+.faq-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 0.25s ease;
+}
+
+.faq-item[open] .faq-chevron {
+  transform: rotate(180deg);
+  color: var(--primary-text);
+}
+
+.faq-answer {
+  padding: 0 1.25rem 1.25rem;
+  animation: faq-fade-in 0.2s ease;
+}
+
+.faq-answer p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: var(--text-muted);
+  max-width: 65ch;
+}
+
+@keyframes faq-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Responsive */
@@ -793,9 +842,6 @@ main {
   .hero-cta .btn {
     width: 100%;
     justify-content: center;
-  }
-  .newsletter {
-    padding: 2.5rem 1.25rem;
   }
 }
 </style>

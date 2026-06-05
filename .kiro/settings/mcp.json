@@ -16,6 +16,23 @@
         "codegraph_files",
         "codegraph_status"
       ]
+    },
+    "nuxt": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://nuxt.com/mcp"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "list_documentation_pages",
+        "get_documentation_page",
+        "get_getting_started_guide",
+        "list_blog_posts",
+        "get_blog_post",
+        "list_deploy_providers",
+        "get_deploy_provider"
+      ]
     }
   }
 }

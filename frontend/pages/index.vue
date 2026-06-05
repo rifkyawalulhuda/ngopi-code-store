@@ -127,19 +127,37 @@
         </div>
 
         <div class="faq-list">
-          <details
+          <div
             v-for="(faq, i) in faqs"
             :key="i"
             class="faq-item"
+            :class="{ 'faq-open': openFaq === i }"
           >
-            <summary class="faq-question">
-              <span>{{ faq.q }}</span>
-              <AppIcon name="chevronDown" :size="18" class="faq-chevron" />
-            </summary>
-            <div class="faq-answer">
-              <p>{{ faq.a }}</p>
+            <button
+              type="button"
+              class="faq-trigger"
+              :aria-expanded="openFaq === i"
+              :aria-controls="`faq-panel-${i}`"
+              @click="toggleFaq(i)"
+            >
+              <span class="faq-label">{{ faq.q }}</span>
+              <span class="faq-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </button>
+            <div
+              :id="`faq-panel-${i}`"
+              class="faq-panel"
+              :class="{ 'faq-panel-open': openFaq === i }"
+              role="region"
+            >
+              <div class="faq-content">
+                <p>{{ faq.a }}</p>
+              </div>
             </div>
-          </details>
+          </div>
         </div>
       </section>
     </main>
@@ -246,6 +264,13 @@ const faqs = [
     a: 'Hubungi kami melalui WhatsApp atau email yang tersedia di halaman kontak. Tim kami akan merespons dalam 1x24 jam kerja.',
   },
 ]
+
+// FAQ accordion state (single open)
+const openFaq = ref<number | null>(null)
+
+function toggleFaq(index: number) {
+  openFaq.value = openFaq.value === index ? null : index
+}
 const sampleProducts = [
   { id: 's1', name: 'SaaS Dashboard Template', priceLabel: 'Rp 1.350.000', badge: 'Bestseller', cta: 'Unduh', to: '/products', image: null },
   { id: 's2', name: 'Mastering Web Architecture', priceLabel: 'Rp 590.000', badge: null, cta: 'Selengkapnya', to: '/products', image: null },
@@ -684,7 +709,7 @@ main {
   margin: 0 auto;
 }
 
-/* FAQ Accordion */
+/* FAQ Accordion — Nuxt UI style */
 .faq-section {
   max-width: 800px;
 }
@@ -699,86 +724,90 @@ main {
 .faq-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface);
 }
 
 .faq-item {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  overflow: hidden;
-  transition: border-color 0.18s, box-shadow 0.18s;
+  border-bottom: 1px solid var(--border);
 }
 
-.faq-item:hover {
-  border-color: var(--btn-ghost-border);
+.faq-item:last-child {
+  border-bottom: none;
 }
 
-.faq-item[open] {
-  border-color: var(--primary);
-  box-shadow: 0 2px 12px var(--shadow-card);
-}
-
-.faq-question {
+.faq-trigger {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
+  padding: 1rem 1.25rem;
   gap: 1rem;
-  padding: 1.1rem 1.25rem;
-  font-size: 0.95rem;
-  font-weight: 600;
+  border: none;
+  background: transparent;
   color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 500;
+  font-family: inherit;
+  text-align: left;
   cursor: pointer;
-  list-style: none;
-  user-select: none;
   transition: background 0.15s;
 }
 
-.faq-question::-webkit-details-marker {
-  display: none;
-}
-
-.faq-question::marker {
-  content: '';
-}
-
-.faq-question:hover {
+.faq-trigger:hover {
   background: var(--surface-2);
 }
 
-.faq-chevron {
-  flex-shrink: 0;
-  color: var(--text-muted);
-  transition: transform 0.25s ease;
+.faq-trigger:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+  border-radius: 4px;
 }
 
-.faq-item[open] .faq-chevron {
+.faq-label {
+  flex: 1;
+  line-height: 1.5;
+}
+
+.faq-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 0.2s ease, color 0.2s;
+}
+
+.faq-open .faq-icon {
   transform: rotate(180deg);
   color: var(--primary-text);
 }
 
-.faq-answer {
-  padding: 0 1.25rem 1.25rem;
-  animation: faq-fade-in 0.2s ease;
+.faq-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease;
 }
 
-.faq-answer p {
+.faq-panel-open {
+  grid-template-rows: 1fr;
+}
+
+.faq-content {
+  overflow: hidden;
+}
+
+.faq-content p {
   margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.65;
+  padding: 0 1.25rem 1rem;
+  font-size: 0.88rem;
+  line-height: 1.7;
   color: var(--text-muted);
   max-width: 65ch;
-}
-
-@keyframes faq-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* Responsive */

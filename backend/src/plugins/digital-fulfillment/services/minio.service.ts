@@ -67,14 +67,35 @@ export class MinioService implements OnModuleInit {
   /**
    * Generate a pre-signed GET URL for downloading a file.
    * URL expires after the specified seconds (default: 300 = 5 minutes).
-   * If MINIO_PUBLIC_URL is set, replaces the internal endpoint with the public one.
+   * Uses public endpoint if MINIO_PUBLIC_URL is configured (for external access).
    */
   async getPresignedDownloadUrl(
     objectKey: string,
     originalFileName: string,
     expirySeconds = 300,
   ): Promise<string> {
-    let url = await this.client.presignedGetObject(
+    // Use a separate client configured with public endpoint for signing
+    // This ensures the signature matches the hostname users will access
+    const publicUrl = process.env.MINIO_PUBLIC_URL;
+    let signingClient = this.client;
+
+    if (publicUrl) {
+      try {
+        const parsed = new URL(publicUrl);
+        signingClient = new Minio.Client({
+          endPoint: parsed.hostname,
+          port: parsed.port ? parseInt(parsed.port, 10) : (parsed.protocol === 'https:' ? 443 : 80),
+          useSSL: parsed.protocol === 'https:',
+          accessKey: process.env.MINIO_ACCESS_KEY || 'minioadmin',
+          secretKey: process.env.MINIO_SECRET_KEY || 'minioadmin',
+        });
+      } catch {
+        // Fallback to default client if URL parsing fails
+        signingClient = this.client;
+      }
+    }
+
+    const url = await signingClient.presignedGetObject(
       this.bucket,
       objectKey,
       expirySeconds,
@@ -82,17 +103,6 @@ export class MinioService implements OnModuleInit {
         'response-content-disposition': `attachment; filename="${encodeURIComponent(originalFileName)}"`,
       },
     );
-
-    // Replace internal MinIO endpoint with public URL for external access
-    const publicUrl = process.env.MINIO_PUBLIC_URL;
-    if (publicUrl) {
-      const endpoint = process.env.MINIO_ENDPOINT || 'localhost';
-      const port = process.env.MINIO_PORT || '9000';
-      const useSSL = process.env.MINIO_USE_SSL === 'true';
-      const protocol = useSSL ? 'https' : 'http';
-      const internalBase = `${protocol}://${endpoint}:${port}`;
-      url = url.replace(internalBase, publicUrl);
-    }
 
     return url;
   }

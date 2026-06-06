@@ -67,13 +67,14 @@ export class MinioService implements OnModuleInit {
   /**
    * Generate a pre-signed GET URL for downloading a file.
    * URL expires after the specified seconds (default: 300 = 5 minutes).
+   * If MINIO_PUBLIC_URL is set, replaces the internal endpoint with the public one.
    */
   async getPresignedDownloadUrl(
     objectKey: string,
     originalFileName: string,
     expirySeconds = 300,
   ): Promise<string> {
-    const url = await this.client.presignedGetObject(
+    let url = await this.client.presignedGetObject(
       this.bucket,
       objectKey,
       expirySeconds,
@@ -81,6 +82,17 @@ export class MinioService implements OnModuleInit {
         'response-content-disposition': `attachment; filename="${encodeURIComponent(originalFileName)}"`,
       },
     );
+
+    // Replace internal MinIO endpoint with public URL for external access
+    const publicUrl = process.env.MINIO_PUBLIC_URL;
+    if (publicUrl) {
+      const endpoint = process.env.MINIO_ENDPOINT || 'localhost';
+      const port = process.env.MINIO_PORT || '9000';
+      const useSSL = process.env.MINIO_USE_SSL === 'true';
+      const protocol = useSSL ? 'https' : 'http';
+      const internalBase = `${protocol}://${endpoint}:${port}`;
+      url = url.replace(internalBase, publicUrl);
+    }
 
     return url;
   }

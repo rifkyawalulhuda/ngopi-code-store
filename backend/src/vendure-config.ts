@@ -41,8 +41,10 @@ export const config: VendureConfig = {
       origin: [
         process.env.STOREFRONT_URL || 'http://localhost:3001',
         'http://localhost:3001',
+        'http://localhost:3000',
         'https://ngopicode.com',
         'https://www.ngopicode.com',
+        'https://api.ngopicode.com',
       ],
       credentials: true,
     },

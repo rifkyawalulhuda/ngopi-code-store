@@ -12,12 +12,20 @@ npm run dev -- --port 3001
 
 Akses Vendure admin :
 
-http://localhost:3000/dashboard/
+http://localhost:3000/dashboard/    https://api.ngopicode.com/dashboard
 
 akses minio storage s3
 http://localhost:9001/browser/products
 minioadmin / minioadmin
 
 
-http://localhost:3001/admin/upload
+http://localhost:3001/admin/upload   https://www.ngopicode.com/admin/upload
 superadmin / superadmin
+
+
+Running Cloudflare Docker Connector :
+docker run cloudflare/cloudflared:latest tunnel --no-autoupdate run --token eyJhIjoiNGQwZDQ0NTNjNzliZjk1NGI4OGI3YjBlNWIyZjdiYzEiLCJ0IjoiZGEzYWM3NDMtYmM4YS00NzY1LThhZjYtZWQxMmI4NzFhNTI4IiwicyI6IlpHTmlOakF5T0RZdE5HRXpaaTAwTTJJM0xUbGtPR1l0TVRBM01EZG1ZV00wWTJZNSJ9
+
+
+Running Cloudflare Tunnel :
+cloudflared tunnel --config C:\Users\rifky\.cloudflared\ngopicode.yml run --token eyJhIjoiNGQwZDQ0NTNjNzliZjk1NGI4OGI3YjBlNWIyZjdiYzEiLCJ0IjoiZGEzYWM3NDMtYmM4YS00NzY1LThhZjYtZWQxMmI4NzFhNTI4IiwicyI6IlpHTmlOakF5T0RZdE5HRXpaaTAwTTJJM0xUbGtPR1l0TVRBM01EZG1ZV00wWTJZNSJ9

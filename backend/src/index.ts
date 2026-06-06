@@ -32,6 +32,14 @@ async function main() {
 
     const app = await bootstrap(config);
 
+    // Trust proxy headers (Cloudflare Tunnel / reverse proxy)
+    // Required for correct client IP detection in rate limiters
+    const httpAdapter = app.getHttpAdapter();
+    if (httpAdapter && typeof httpAdapter.getInstance === 'function') {
+      const expressInstance = httpAdapter.getInstance();
+      expressInstance.set('trust proxy', 1);
+    }
+
     // After bootstrap (schema is ready), run custom migrations
     if (isDev) {
       (config.dbConnectionOptions as any).synchronize = false;

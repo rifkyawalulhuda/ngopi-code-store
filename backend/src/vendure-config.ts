@@ -36,6 +36,16 @@ export const config: VendureConfig = {
     port: parseInt(process.env.PORT || '3000', 10),
     adminApiPath: 'admin-api',
     shopApiPath: 'shop-api',
+    // CORS: allow frontend origins (credentials require explicit origin, not wildcard)
+    cors: {
+      origin: [
+        process.env.STOREFRONT_URL || 'http://localhost:3001',
+        'http://localhost:3001',
+        'https://ngopicode.com',
+        'https://www.ngopicode.com',
+      ],
+      credentials: true,
+    },
     middleware: [
       {
         handler: healthCheckMiddleware,

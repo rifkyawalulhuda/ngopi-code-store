@@ -966,7 +966,8 @@ onMounted(async () => {
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 0.85rem;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .sidebar-top {
@@ -1060,7 +1061,7 @@ onMounted(async () => {
 
 .sidebar-bottom {
   padding-top: 0.5rem;
-  margin-top: 0.5rem;
+  margin-top: auto;
   border-top: 1px solid var(--border);
 }
 
@@ -1948,11 +1949,14 @@ onMounted(async () => {
     left: 0;
     bottom: 0;
     height: 100vh;
+    height: 100dvh;
     width: 280px;
     border-radius: 0;
     z-index: 70;
     transform: translateX(-100%);
     transition: transform 0.25s ease;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .account-sidebar.mobile-open {

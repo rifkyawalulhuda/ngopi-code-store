@@ -120,6 +120,22 @@ export class DownloadRateLimiter {
   getTrackedCustomerCount(): number {
     return this.requests.size;
   }
+
+  /**
+   * Remove stale entries from the map to prevent unbounded memory growth.
+   * Called periodically by the cleanup interval.
+   */
+  cleanup(now: number = Date.now()): void {
+    const windowStart = now - this.config.windowMs;
+    for (const [key, timestamps] of this.requests.entries()) {
+      const valid = timestamps.filter((ts) => ts > windowStart);
+      if (valid.length === 0) {
+        this.requests.delete(key);
+      } else {
+        this.requests.set(key, valid);
+      }
+    }
+  }
 }
 
 /**
@@ -178,3 +194,12 @@ export function downloadRateLimitMiddleware(
     next();
   };
 }
+
+
+// Default singleton instance with periodic cleanup
+export const defaultDownloadLimiter = new DownloadRateLimiter();
+
+// Periodic cleanup to prevent memory leak from stale entries (every 2 minutes)
+setInterval(() => {
+  defaultDownloadLimiter.cleanup();
+}, 2 * 60 * 1000).unref();

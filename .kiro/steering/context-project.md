@@ -151,6 +151,16 @@ Payment confirmed → Order Fulfilled → DigitalDownload records created
 - **Collections as categories**: used for catalog filtering AND account library filtering
 - **IDR currency**: zero-decimal (Rp 150.000 = 150000)
 - **Channel custom fields via activeChannel** (Shop API)
+- **Rate limiter cleanup**: periodic interval prevents memory leak in in-memory Maps
+- **Batch queries**: Order.downloads resolver uses `IN (...)` batch instead of N+1 loops
+
+## Code Quality Notes
+
+- Rate limiters (auth + download) have periodic cleanup intervals to prevent unbounded Map growth
+- `Order.downloads` resolver uses batch query with `IN` clause (not N+1)
+- `.env.example` includes ⚠️ PRODUCTION warnings for all secrets that must be changed
+- HMAC signature verification uses `crypto.timingSafeEqual` (constant-time, anti timing-attack)
+- Download rate limiter exports `defaultDownloadLimiter` singleton with auto-cleanup
 
 ## Commands
 

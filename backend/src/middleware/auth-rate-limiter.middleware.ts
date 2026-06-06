@@ -86,6 +86,23 @@ export class AuthRateLimiter {
 const loginLimiter = new AuthRateLimiter(LOGIN_CONFIG);
 const registerLimiter = new AuthRateLimiter(REGISTER_CONFIG);
 
+// Periodic cleanup to prevent memory leak from stale entries (every 5 minutes)
+setInterval(() => {
+  const now = Date.now();
+  for (const limiter of [loginLimiter, registerLimiter]) {
+    const map = (limiter as any).attempts as Map<string, number[]>;
+    const windowMs = (limiter as any).config.windowMs as number;
+    for (const [key, timestamps] of map.entries()) {
+      const valid = timestamps.filter((ts: number) => now - ts < windowMs);
+      if (valid.length === 0) {
+        map.delete(key);
+      } else {
+        map.set(key, valid);
+      }
+    }
+  }
+}, 5 * 60 * 1000).unref(); // unref() prevents timer from keeping process alive
+
 /**
  * Extract client IP from request, considering proxies (Cloudflare, nginx).
  */

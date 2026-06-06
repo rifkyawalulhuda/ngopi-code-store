@@ -36,25 +36,27 @@ export class DigitalProductShopResolver {
       return [];
     }
 
-    // Enrich with file names from DigitalProduct
-    const results = [];
-    for (const dl of downloadRecords) {
-      const digitalProduct = await this.connection.rawConnection
-        .getRepository(DigitalProduct)
-        .findOne({ where: { productVariantId: dl.productVariantId as any } });
+    // Batch query all digital products for the variant IDs (avoid N+1)
+    const variantIds = downloadRecords.map(dl => dl.productVariantId);
+    const digitalProducts = await this.connection.rawConnection
+      .getRepository(DigitalProduct)
+      .createQueryBuilder('dp')
+      .where('dp.productVariantId IN (:...variantIds)', { variantIds })
+      .getMany();
 
-      results.push({
-        id: dl.id,
-        fileName: digitalProduct?.originalFileName || 'file.zip',
-        maxDownloads: dl.maxDownloads,
-        currentDownloads: dl.currentDownloads,
-        expiresAt: dl.expiresAt instanceof Date ? dl.expiresAt.toISOString() : String(dl.expiresAt),
-        isActive: dl.isActive,
-        downloadToken: dl.downloadToken,
-      });
-    }
+    const productMap = new Map(
+      digitalProducts.map(dp => [String(dp.productVariantId), dp]),
+    );
 
-    return results;
+    return downloadRecords.map(dl => ({
+      id: dl.id,
+      fileName: productMap.get(String(dl.productVariantId))?.originalFileName || 'file.zip',
+      maxDownloads: dl.maxDownloads,
+      currentDownloads: dl.currentDownloads,
+      expiresAt: dl.expiresAt instanceof Date ? dl.expiresAt.toISOString() : String(dl.expiresAt),
+      isActive: dl.isActive,
+      downloadToken: dl.downloadToken,
+    }));
   }
 
   /**

@@ -493,33 +493,6 @@ async function onProceedPayment() {
     }
 
     // Step 1: Add item to order (creates a new order or adds to existing active order)
-    // First check if active order is in a valid state
-    const { data: activeData } = await $apollo.defaultClient.query({
-      query: gql`query { activeOrder { id state } }`,
-      fetchPolicy: 'network-only',
-    })
-
-    const activeOrder = activeData?.activeOrder
-    if (activeOrder && !['AddingItems', 'ArrangingPayment'].includes(activeOrder.state)) {
-      // Active order is completed — clear session token to force new order
-      // Remove vendure auth token from cookies to reset session
-      const tokenCookie = useCookie('vendure-auth-token')
-      const sessionCookie = useCookie('session')
-      const sessionSig = useCookie('session.sig')
-      tokenCookie.value = null
-      sessionCookie.value = null
-      sessionSig.value = null
-
-      // Re-login to establish fresh session
-      const { ensureSession } = useAuth()
-      const customer = await ensureSession()
-      if (!customer) {
-        paymentError.value = 'Sesi berakhir. Silakan login kembali.'
-        navigateTo('/auth')
-        return
-      }
-    }
-
     const { data: addData } = await $apollo.defaultClient.mutate({
       mutation: ADD_ITEM_TO_ORDER,
       variables: { productVariantId: variantId, quantity: 1 },

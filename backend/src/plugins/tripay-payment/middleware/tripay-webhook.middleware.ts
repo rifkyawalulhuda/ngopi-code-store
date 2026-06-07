@@ -96,6 +96,7 @@ async function handleWebhook(req: any, res: any): Promise<void> {
   // Handle PAID status — transition order
   if (payload.status === 'PAID') {
     // Transition order: ArrangingPayment → PaymentSettled
+    // Set active=false so Vendure no longer treats it as the session's active order
     await connection.query(
       `UPDATE "order" SET state = 'PaymentSettled', "orderPlacedAt" = NOW(), "updatedAt" = NOW() WHERE id = $1`,
       [order.id],
@@ -107,9 +108,9 @@ async function handleWebhook(req: any, res: any): Promise<void> {
       [order.id],
     );
 
-    // Transition to Fulfilled
+    // Transition to Fulfilled AND mark as inactive (critical: active=false)
     await connection.query(
-      `UPDATE "order" SET state = 'Fulfilled', "updatedAt" = NOW() WHERE id = $1`,
+      `UPDATE "order" SET state = 'Fulfilled', active = false, "updatedAt" = NOW() WHERE id = $1`,
       [order.id],
     );
 

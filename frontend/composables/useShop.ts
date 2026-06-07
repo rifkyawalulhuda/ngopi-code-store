@@ -23,6 +23,7 @@ export interface Product {
     price: number
     currencyCode: string
   }>
+  collectionIds?: string[]
   customFields?: {
     keyFeatures?: string | null
     deliveryInfo?: string | null
@@ -56,6 +57,7 @@ interface SearchResultItem {
   description?: string
   price?: { value?: number; min?: number; max?: number }
   productAsset?: { id: string; preview: string } | null
+  collectionIds?: string[]
 }
 
 /** Extract a comparable price (minor units) from a Vendure search price union. */
@@ -76,6 +78,7 @@ function mapSearchItem(item: SearchResultItem): Product {
     featuredAsset: item.productAsset
       ? { id: item.productAsset.id, preview: item.productAsset.preview }
       : null,
+    collectionIds: item.collectionIds || [],
     variants: [
       {
         id: `${item.productId}-variant`,

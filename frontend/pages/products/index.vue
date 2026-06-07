@@ -348,8 +348,14 @@ function formatPrice(value: number): string {
 }
 
 function categoryLabel(product: any): string {
-  // Best-effort label; falls back to a generic tag.
-  return product.variants?.[0]?.name ? 'PRODUK' : 'PRODUK'
+  // Map the product's first assigned collection to its display name.
+  // Falls back to a generic "PRODUK" tag when uncategorized.
+  const ids: string[] = product.collectionIds || []
+  if (ids.length > 0) {
+    const matched = collections.value.find((c) => String(c.id) === String(ids[0]))
+    if (matched?.name) return matched.name
+  }
+  return 'PRODUK'
 }
 
 onMounted(async () => {

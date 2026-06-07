@@ -148,6 +148,14 @@
             <!-- Security badge -->
             <div v-if="paymentError" class="payment-error" role="alert">
               {{ paymentError }}
+              <NuxtLink
+                v-if="showPendingOrderHint"
+                to="/account?tab=orders"
+                class="payment-error-link"
+              >
+                Lihat Pesanan Tertunda
+                <AppIcon name="arrowRight" :size="14" />
+              </NuxtLink>
             </div>
 
             <div class="security-row">
@@ -418,6 +426,7 @@ const product = ref<any>(null)
 const selectedChannel = ref('')
 const processing = ref(false)
 const paymentError = ref('')
+const showPendingOrderHint = ref(false)
 
 // Tripay payment channels (sandbox-compatible)
 const vaChannels = [
@@ -483,6 +492,7 @@ async function onProceedPayment() {
 
   processing.value = true
   paymentError.value = ''
+  showPendingOrderHint.value = false
 
   try {
     const { $apollo } = useNuxtApp()
@@ -548,10 +558,22 @@ async function onProceedPayment() {
 
     const transResult = transData?.transitionOrderToState
     if (transResult?.__typename === 'OrderStateTransitionError') {
-      paymentError.value = transResult.message || transResult.transitionError || 'Gagal transition ke ArrangingPayment.'
+      const msg = transResult.message || ''
+      // Order already in ArrangingPayment = pending unpaid payment exists
+      if (msg.includes('ArrangingPayment" to "ArrangingPayment')) {
+        paymentError.value = 'Kamu masih memiliki pesanan yang menunggu pembayaran. Selesaikan atau batalkan pembayaran tersebut di halaman Riwayat Pesanan sebelum membuat pesanan baru.'
+        showPendingOrderHint.value = true
+        return
+      }
+      // Order in a completed state (Fulfilled/Delivered)
+      if (msg.includes('Fulfilled') || msg.includes('Delivered') || msg.includes('PaymentSettled')) {
+        paymentError.value = 'Sesi pesanan sebelumnya sudah selesai. Silakan muat ulang halaman untuk memulai pembelian baru.'
+        return
+      }
+      paymentError.value = transResult.message || transResult.transitionError || 'Gagal memproses pesanan.'
       return
     } else if (transResult?.__typename !== 'Order' || transResult?.state !== 'ArrangingPayment') {
-      paymentError.value = `Order state unexpected: ${transResult?.state || 'unknown'}. Coba refresh.`
+      paymentError.value = `Status pesanan tidak terduga: ${transResult?.state || 'unknown'}. Coba muat ulang halaman.`
       return
     }
 
@@ -1045,6 +1067,25 @@ async function onProceedPayment() {
   font-size: 0.88rem;
   line-height: 1.5;
   margin-bottom: 1rem;
+}
+
+.payment-error-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.6rem;
+  font-weight: 600;
+  color: #b91c1c;
+  text-decoration: underline;
+  font-size: 0.85rem;
+}
+
+.payment-error-link:hover {
+  opacity: 0.8;
+}
+
+[data-theme='dark'] .payment-error-link {
+  color: #fca5a5;
 }
 
 [data-theme='dark'] .payment-error {

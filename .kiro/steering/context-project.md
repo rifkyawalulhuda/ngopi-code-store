@@ -89,9 +89,12 @@ ngopi-code-store/
 
 ## Account Page (`/account`)
 
-- **Collapsible sidebar** persisted via cookie; off-canvas drawer on mobile
+- **Collapsible sidebar** persisted via cookie; off-canvas drawer on mobile (logout pinned to bottom, scrollable)
 - **Tabs**: Pustaka Saya, Riwayat Pesanan, Wishlist, Pengaturan
+- **Stat cards clickable**: Total Pesanan → orders tab, Produk Dimiliki → library tab, Wishlist → wishlist tab (button + hover lift)
 - **Pustaka Saya**: search bar + category filter chips (from GET_COLLECTIONS, matched via product.collections[].slug)
+- **Riwayat Pesanan**: orders with `ArrangingPayment` show "Bayar Sekarang" + "Batalkan" buttons
+- **Order cancellation**: custom modal (matches logout modal pattern) → `cancelMyOrder` mutation
 - **Settings = accordion** (Profil, Ubah Email, Ubah Password)
 
 ## Order Page (`/order/[code]`)
@@ -100,6 +103,14 @@ ngopi-code-store/
 - Download CTA → `/account` (Pustaka Saya)
 - Receipt CTA → `/receipt/[code]` (outline button style)
 - WhatsApp CTA for service orders
+- Pending payment error shows informative message + "Lihat Pesanan Tertunda" link
+
+## Order Cancellation
+
+- Shop API mutation `cancelMyOrder(orderCode)` — `backend/src/plugins/tripay-payment/api/cancel-order.resolver.ts`
+- Only `ArrangingPayment` orders cancellable by owner
+- Sets order `Cancelled` + `active = false`, cancels payment, marks Tripay tx `CANCELLED`, clears session
+- Note: Tripay has NO public cancel endpoint — its transaction auto-expires at `expired_time`
 
 ## Receipt Page (`/receipt/[code]`)
 
@@ -123,6 +134,39 @@ Payment confirmed → Order Fulfilled → DigitalDownload records created
 
 - **Header**: Home | Katalog | Blogs (external: ngopidulur.my.id/blog/)
 - **Footer**: Brand + social icons (WhatsApp, GitHub, Email) — no link columns
+
+## Webhook & Payment Sync (Tripay)
+
+- Webhook endpoint: `POST /payments/tripay/webhook` — `backend/src/plugins/tripay-payment/middleware/tripay-webhook.middleware.ts`
+- Registered via `apiOptions.middleware` in vendure-config; DB connection injected via `webhook-db.ts` after bootstrap
+- On PAID: sets order `PaymentSettled` → `Fulfilled`, `active = false`, `orderPlacedAt = NOW()`, settles payment, clears session
+- Looks up order by `code` (= merchant_ref), NOT tripay_transaction table
+- Sandbox mode (`TRIPAY_SANDBOX=true`) bypasses signature mismatch with warning log
+- `mcp.json`: codegraph + nuxt MCP servers
+
+## Catalog Badge
+
+- `products/index.vue` `categoryLabel()` maps `product.collectionIds[0]` → collection name from GET_COLLECTIONS
+- Fallback to "PRODUK" when uncategorized
+- `useShop.ts` SEARCH_PRODUCTS returns `collectionIds`, mapped into Product interface
+
+## Production Deployment
+
+- **Domain**: ngopicode.com (Cloudflare DNS)
+- **Backend**: `api.ngopicode.com` via Cloudflare Tunnel (`ngopi-backend` tunnel ID da3ac743-...) → localhost:3000
+- **Frontend**: Vercel (`ngopicode.com`), env `NUXT_PUBLIC_SHOP_API_URL=https://api.ngopicode.com/shop-api`
+- **MinIO public**: `storage.ngopicode.com` via tunnel; `MINIO_PUBLIC_URL` env → separate signing client for pre-signed URLs (avoids signature mismatch)
+- **CORS**: vendure-config `apiOptions.cors` whitelists ngopicode.com + localhost + api domain, credentials true
+- **trust proxy**: set on Express adapter in index.ts (for rate limiter IP detection behind Cloudflare)
+- **OAuth**: Google/GitHub origins + redirects must include `https://ngopicode.com`
+- **Env to update for prod**: STOREFRONT_URL, TRIPAY_RETURN_URL/CALLBACK_URL, MINIO_PUBLIC_URL (also set Return/Callback URL in Vendure Dashboard payment method)
+
+## Cleanup Scripts (backend/scripts/)
+
+- `clear-orders.js` — delete all orders + related records (handles session FK)
+- `fix-active-orders.js` — mark completed orders `active = false`, clear session refs
+- `fix-order-dates.js` — backfill `orderPlacedAt`
+- `check-transactions.js` — inspect tripay_transaction + orders
 
 ## Custom Fields (Vendure)
 

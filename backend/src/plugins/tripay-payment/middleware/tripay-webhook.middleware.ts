@@ -113,6 +113,12 @@ async function handleWebhook(req: any, res: any): Promise<void> {
       [order.id],
     );
 
+    // Clear session reference so next purchase creates a new order
+    await connection.query(
+      `UPDATE "session" SET "activeOrderId" = NULL WHERE "activeOrderId" = $1`,
+      [order.id],
+    );
+
     Logger.info(`Order ${order.code} (id=${order.id}) fulfilled via webhook`, loggerCtx);
   } else {
     Logger.info(`Webhook status ${payload.status} for ${payload.merchant_ref}, no order transition`, loggerCtx);

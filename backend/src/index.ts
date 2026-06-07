@@ -40,6 +40,14 @@ async function main() {
       expressInstance.set('trust proxy', 1);
     }
 
+    // Set DB connection for webhook middleware
+    const { setConnection } = await import('./plugins/tripay-payment/middleware/webhook-db');
+    const { DataSource } = await import('typeorm');
+    const ds = app.get(DataSource);
+    if (ds) {
+      setConnection(ds);
+    }
+
     // After bootstrap (schema is ready), run custom migrations
     if (isDev) {
       (config.dbConnectionOptions as any).synchronize = false;

@@ -4,6 +4,7 @@ import path from 'path';
 import { memoryGuardMiddleware } from './middleware/memory-guard.middleware';
 import { healthCheckMiddleware } from './middleware/health-check.middleware';
 import { authRateLimiterMiddleware } from './middleware/auth-rate-limiter.middleware';
+import { tripayWebhookMiddleware } from './plugins/tripay-payment/middleware/tripay-webhook.middleware';
 import { customOrderProcess } from './config/custom-order-process';
 import { IdrMoneyStrategy } from './config/idr-money-strategy';
 import { TripayPaymentPlugin } from './plugins/tripay-payment/tripay-payment.plugin';
@@ -58,6 +59,26 @@ export const config: VendureConfig = {
         handler: memoryGuardMiddleware,
         route: '*splat',
         beforeListen: true,
+      },
+      {
+        handler: (req: any, res: any, next: any) => {
+          // Capture raw body for webhook signature verification
+          if (req.method === 'POST' && req.url?.includes('/payments/tripay/webhook')) {
+            const chunks: Buffer[] = [];
+            const originalOn = req.on.bind(req);
+            // rawBody might already be available from body-parser verify
+            if (!req.rawBody && req.body) {
+              req.rawBody = JSON.stringify(req.body);
+            }
+          }
+          next();
+        },
+        route: 'payments/tripay/webhook',
+        beforeListen: true,
+      },
+      {
+        handler: tripayWebhookMiddleware,
+        route: 'payments/tripay/webhook',
       },
       {
         handler: authRateLimiterMiddleware,

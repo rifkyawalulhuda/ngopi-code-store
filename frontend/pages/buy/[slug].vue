@@ -500,6 +500,13 @@ async function onProceedPayment() {
 
     const addResult = addData?.addItemToOrder
     if (addResult?.__typename !== 'Order') {
+      if (addResult?.message?.includes('AddingItems') || addResult?.message?.includes('Fulfilled') || addResult?.message?.includes('cannot be modified')) {
+        // Active order is stuck in a completed state — need session reset
+        paymentError.value = 'Sesi pembelian sebelumnya sudah selesai. Silakan muat ulang halaman.'
+        // Auto-reload after brief delay to give user time to read
+        setTimeout(() => window.location.reload(), 2000)
+        return
+      }
       if (addResult?.__typename !== 'OrderModificationError') {
         paymentError.value = addResult?.message || 'Gagal menambahkan produk ke pesanan.'
         return

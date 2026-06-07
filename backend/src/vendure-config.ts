@@ -4,6 +4,7 @@ import path from 'path';
 import { memoryGuardMiddleware } from './middleware/memory-guard.middleware';
 import { healthCheckMiddleware } from './middleware/health-check.middleware';
 import { authRateLimiterMiddleware } from './middleware/auth-rate-limiter.middleware';
+import { sessionCleanupMiddleware } from './middleware/session-cleanup.middleware';
 import { tripayWebhookMiddleware } from './plugins/tripay-payment/middleware/tripay-webhook.middleware';
 import { customOrderProcess } from './config/custom-order-process';
 import { IdrMoneyStrategy } from './config/idr-money-strategy';
@@ -82,6 +83,10 @@ export const config: VendureConfig = {
       },
       {
         handler: authRateLimiterMiddleware,
+        route: 'shop-api',
+      },
+      {
+        handler: sessionCleanupMiddleware,
         route: 'shop-api',
       },
     ],

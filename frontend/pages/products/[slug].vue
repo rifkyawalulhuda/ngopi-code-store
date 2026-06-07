@@ -185,7 +185,29 @@
         <!-- Description & Specs -->
         <section class="detail-section">
           <h2 class="detail-title">Deskripsi &amp; Spesifikasi</h2>
-          <div class="detail-body" v-html="product.description" />
+          <div class="detail-collapsible">
+            <div
+              ref="descBody"
+              class="detail-body"
+              :class="{ 'is-clamped': descClampable && !descExpanded }"
+              v-html="product.description"
+            />
+            <button
+              v-if="descClampable"
+              type="button"
+              class="desc-toggle"
+              :aria-expanded="descExpanded"
+              @click="descExpanded = !descExpanded"
+            >
+              <span>{{ descExpanded ? 'Tampilkan Lebih Sedikit' : 'Tampilkan Semua' }}</span>
+              <AppIcon
+                name="chevronDown"
+                :size="16"
+                class="desc-toggle-icon"
+                :class="{ 'is-open': descExpanded }"
+              />
+            </button>
+          </div>
 
           <div v-if="specs.length" class="specs-table">
             <div v-for="spec in specs" :key="spec.label" class="spec-row">
@@ -232,7 +254,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useShop, type Product } from '~/composables/useShop'
 import { useWhatsapp } from '~/composables/useWhatsapp'
@@ -250,6 +272,19 @@ const relatedProducts = ref<Product[]>([])
 const activeIndex = ref(0)
 const lightboxOpen = ref(false)
 const lightboxIndex = ref(0)
+
+// Collapsible description state
+const descBody = ref<HTMLElement | null>(null)
+const descExpanded = ref(false)
+const descClampable = ref(false)
+const DESC_CLAMP_HEIGHT = 260 // px — collapsed max-height threshold
+
+function measureDescription() {
+  const el = descBody.value
+  if (!el) return
+  // Toggle is only needed when content exceeds the clamp height
+  descClampable.value = el.scrollHeight > DESC_CLAMP_HEIGHT + 24
+}
 
 // All product images (assets array, fallback to featuredAsset)
 const galleryImages = computed(() => {
@@ -420,6 +455,10 @@ onMounted(async () => {
   loading.value = true
   product.value = await getProductBySlug(slug.value)
   loading.value = false
+
+  // Measure description once rendered to decide if the toggle is needed
+  await nextTick()
+  measureDescription()
 
   // Fetch WhatsApp number and related products in parallel
   await Promise.all([
@@ -938,6 +977,61 @@ onMounted(async () => {
 
 .detail-body :deep(p) {
   margin: 0 0 1rem;
+}
+
+/* Collapsible description */
+.detail-collapsible {
+  margin-bottom: 2rem;
+}
+
+.detail-collapsible .detail-body {
+  margin-bottom: 0;
+  transition: max-height 0.3s ease;
+}
+
+.detail-collapsible .detail-body.is-clamped {
+  max-height: 260px;
+  overflow: hidden;
+  position: relative;
+  /* Fade out the bottom of clamped text */
+  -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+}
+
+.desc-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.85rem;
+  padding: 0.45rem 0.9rem;
+  background: var(--btn-ghost-bg);
+  border: 1px solid var(--btn-ghost-border);
+  border-radius: 999px;
+  color: var(--primary-text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+}
+
+.desc-toggle:hover {
+  background: var(--btn-ghost-hover);
+  border-color: var(--primary);
+}
+
+.desc-toggle-icon {
+  transition: transform 0.25s ease;
+}
+
+.desc-toggle-icon.is-open {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detail-collapsible .detail-body,
+  .desc-toggle-icon {
+    transition: none;
+  }
 }
 
 /* Specs table */

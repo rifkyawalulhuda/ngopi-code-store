@@ -1346,6 +1346,7 @@ onMounted(async () => {
   font-size: 1.6rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+  color: var(--text);
 }
 
 .stat-badge {

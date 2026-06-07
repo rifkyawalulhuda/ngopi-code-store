@@ -64,7 +64,7 @@ ngopi-code-store/
 | `frontend/components/AppIcon.vue` | SVG icons (Lucide-style + brand logos) |
 | `frontend/pages/index.vue` | Homepage (hero, categories, bestsellers, features, FAQ accordion) |
 | `frontend/pages/products/index.vue` | Catalog (SSR, filters via collections) |
-| `frontend/pages/products/[slug].vue` | Product detail (Buy + ♡ + WA link) |
+| `frontend/pages/products/[slug].vue` | Product detail (Buy + ♡ + WA link, collapsible description) |
 | `frontend/pages/auth/index.vue` | Login/Register |
 | `frontend/pages/account/index.vue` | Customer dashboard (sidebar, library with search+category filter, orders, wishlist, settings) |
 | `frontend/pages/order/[code].vue` | Payment confirmation (download CTA → /account, receipt CTA → /receipt/[code]) |
@@ -92,10 +92,19 @@ ngopi-code-store/
 - **Collapsible sidebar** persisted via cookie; off-canvas drawer on mobile (logout pinned to bottom, scrollable)
 - **Tabs**: Pustaka Saya, Riwayat Pesanan, Wishlist, Pengaturan
 - **Stat cards clickable**: Total Pesanan → orders tab, Produk Dimiliki → library tab, Wishlist → wishlist tab (button + hover lift)
+- **Stat value color**: `.stat-value` uses `var(--text)` (black in light, white in dark) for readable numbers in both themes
 - **Pustaka Saya**: search bar + category filter chips (from GET_COLLECTIONS, matched via product.collections[].slug)
 - **Riwayat Pesanan**: orders with `ArrangingPayment` show "Bayar Sekarang" + "Batalkan" buttons
 - **Order cancellation**: custom modal (matches logout modal pattern) → `cancelMyOrder` mutation
 - **Settings = accordion** (Profil, Ubah Email, Ubah Password)
+
+## Product Detail (`/products/[slug]`)
+
+- Gallery with lightbox + thumbnails
+- Buy CTA + wishlist toggle + WhatsApp link
+- "Sudah dimiliki" banner for owned one-time products (hidden for repeatable)
+- **Collapsible description**: "Deskripsi & Spesifikasi" body clamped to max-height 260px with fade mask; "Tampilkan Semua" / "Tampilkan Lebih Sedikit" toggle with rotating chevron. Toggle only shown when content overflows (measured via scrollHeight after nextTick). Respects prefers-reduced-motion.
+- Specs table from product custom fields
 
 ## Order Page (`/order/[code]`)
 

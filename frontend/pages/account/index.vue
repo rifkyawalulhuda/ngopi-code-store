@@ -256,6 +256,21 @@
                   <span class="oc-price">{{ formatPriceIDR(order.totalWithTax) }}</span>
                 </div>
               </NuxtLink>
+              <!-- Cancel action for pending payment orders -->
+              <div v-if="order.state === 'ArrangingPayment'" class="oc-actions">
+                <NuxtLink :to="`/order/${order.code}`" class="oc-pay-btn">
+                  Bayar Sekarang
+                </NuxtLink>
+                <button
+                  type="button"
+                  class="oc-cancel-btn"
+                  :disabled="cancellingOrderId === order.id"
+                  @click="onCancelOrder(order)"
+                >
+                  <span v-if="cancellingOrderId === order.id">Membatalkan...</span>
+                  <span v-else>Batalkan</span>
+                </button>
+              </div>
             </article>
           </div>
 
@@ -767,6 +782,38 @@ async function onLogout() {
 }
 
 const showLogoutConfirm = ref(false)
+
+// Order cancellation (pending payment orders)
+import { CANCEL_MY_ORDER } from '~/graphql/mutations/orders'
+
+const cancellingOrderId = ref<string | null>(null)
+
+async function onCancelOrder(order: CustomerOrder) {
+  if (!confirm(`Batalkan pesanan #${order.code}? Tindakan ini tidak bisa dibatalkan.`)) {
+    return
+  }
+
+  cancellingOrderId.value = order.id
+  try {
+    const { $apollo } = useNuxtApp()
+    const { data } = await $apollo.defaultClient.mutate({
+      mutation: CANCEL_MY_ORDER,
+      variables: { orderCode: order.code },
+    })
+
+    const result = data?.cancelMyOrder
+    if (result?.success) {
+      // Remove the cancelled order from the local list
+      orders.value = orders.value.filter((o) => o.id !== order.id)
+    } else {
+      alert(result?.message || 'Gagal membatalkan pesanan.')
+    }
+  } catch (err: any) {
+    alert(err.message || 'Gagal membatalkan pesanan.')
+  } finally {
+    cancellingOrderId.value = null
+  }
+}
 
 async function confirmLogout() {
   showLogoutConfirm.value = false
@@ -1432,6 +1479,67 @@ onMounted(async () => {
 .order-card:hover {
   border-color: var(--primary);
   box-shadow: 0 2px 8px var(--shadow-card);
+}
+
+/* Order action buttons (pending payment) */
+.oc-actions {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0 1.15rem 1rem;
+}
+
+.oc-pay-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 1rem;
+  border-radius: 9px;
+  background: var(--primary);
+  color: var(--primary-contrast);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.18s;
+}
+
+.oc-pay-btn:hover {
+  background: var(--primary-hover);
+}
+
+.oc-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 1rem;
+  border-radius: 9px;
+  background: transparent;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+}
+
+.oc-cancel-btn:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #b91c1c;
+}
+
+.oc-cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+[data-theme='dark'] .oc-cancel-btn {
+  color: #fca5a5;
+  border-color: rgba(185, 28, 28, 0.4);
+}
+
+[data-theme='dark'] .oc-cancel-btn:hover:not(:disabled) {
+  background: rgba(185, 28, 28, 0.12);
 }
 
 .order-card-link {

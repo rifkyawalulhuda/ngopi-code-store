@@ -110,18 +110,18 @@
 
         <!-- Stats row -->
         <div class="stats-row" :class="{ 'mobile-hidden': activeTab !== 'library' }">
-          <div class="stat-card">
+          <button type="button" class="stat-card stat-card-clickable" @click="selectTab('orders')">
             <span class="stat-label">Total Pesanan</span>
             <span class="stat-value">{{ orders.length }}</span>
-          </div>
-          <div class="stat-card">
+          </button>
+          <button type="button" class="stat-card stat-card-clickable" @click="selectTab('library')">
             <span class="stat-label">Produk Dimiliki</span>
             <span class="stat-value">{{ totalProducts }}</span>
-          </div>
-          <div class="stat-card">
+          </button>
+          <button type="button" class="stat-card stat-card-clickable" @click="selectTab('wishlist')">
             <span class="stat-label">Wishlist</span>
             <span class="stat-value">{{ wishlistCount }}</span>
-          </div>
+          </button>
           <div class="stat-card">
             <span class="stat-label">Status Akun</span>
             <span class="stat-badge">Terverifikasi</span>
@@ -533,6 +533,50 @@
         </div>
       </transition>
     </Teleport>
+
+    <!-- Cancel Order Confirmation Modal -->
+    <Teleport to="body">
+      <transition name="modal">
+        <div
+          v-if="orderToCancel"
+          class="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cancel-dialog-title"
+          aria-describedby="cancel-dialog-desc"
+          @click.self="orderToCancel = null"
+          @keydown.escape="orderToCancel = null"
+        >
+          <div class="modal-box" tabindex="-1">
+            <div class="modal-icon modal-icon-danger">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+            </div>
+            <h3 id="cancel-dialog-title" class="modal-title">Batalkan pesanan?</h3>
+            <p id="cancel-dialog-desc" class="modal-desc">
+              Pesanan <strong>#{{ orderToCancel?.code }}</strong> akan dibatalkan dan tidak bisa dikembalikan. Kamu bisa membuat pesanan baru setelahnya.
+            </p>
+            <div class="modal-actions">
+              <button type="button" class="btn-modal btn-cancel" @click="orderToCancel = null">
+                Kembali
+              </button>
+              <button
+                type="button"
+                class="btn-modal btn-danger"
+                :disabled="cancellingOrderId !== null"
+                @click="confirmCancelOrder"
+              >
+                <span v-if="cancellingOrderId !== null" class="btn-spinner-sm" />
+                <span v-else>Ya, Batalkan</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </Teleport>
   </div>
 </template>
 
@@ -787,11 +831,15 @@ const showLogoutConfirm = ref(false)
 import { CANCEL_MY_ORDER } from '~/graphql/mutations/orders'
 
 const cancellingOrderId = ref<string | null>(null)
+const orderToCancel = ref<CustomerOrder | null>(null)
 
-async function onCancelOrder(order: CustomerOrder) {
-  if (!confirm(`Batalkan pesanan #${order.code}? Tindakan ini tidak bisa dibatalkan.`)) {
-    return
-  }
+function onCancelOrder(order: CustomerOrder) {
+  orderToCancel.value = order
+}
+
+async function confirmCancelOrder() {
+  const order = orderToCancel.value
+  if (!order) return
 
   cancellingOrderId.value = order.id
   try {
@@ -805,6 +853,7 @@ async function onCancelOrder(order: CustomerOrder) {
     if (result?.success) {
       // Remove the cancelled order from the local list
       orders.value = orders.value.filter((o) => o.id !== order.id)
+      orderToCancel.value = null
     } else {
       alert(result?.message || 'Gagal membatalkan pesanan.')
     }
@@ -1263,6 +1312,29 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+}
+
+/* Clickable stat cards (navigate to tab) */
+.stat-card-clickable {
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.18s, box-shadow 0.18s;
+}
+
+.stat-card-clickable:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  box-shadow: 0 6px 18px var(--shadow-card);
+}
+
+.stat-card-clickable:active {
+  transform: translateY(0);
+}
+
+.stat-card-clickable:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .stat-label {

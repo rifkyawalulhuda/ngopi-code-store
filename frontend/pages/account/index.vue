@@ -239,7 +239,7 @@
           </div>
 
           <div v-if="orders.length" class="orders-list">
-            <article v-for="order in orders" :key="order.id" class="order-card">
+            <article v-for="order in paginatedOrders" :key="order.id" class="order-card">
               <NuxtLink :to="`/order/${order.code}`" class="order-card-link" :aria-label="`Lihat pesanan ${order.code}`">
                 <div class="oc-top">
                   <div class="oc-product">
@@ -272,6 +272,65 @@
                 </button>
               </div>
             </article>
+
+            <!-- Pagination controls -->
+            <div class="pagination-bar">
+              <div class="pagination-per-page">
+                <label for="orders-per-page">Tampilkan</label>
+                <select
+                  id="orders-per-page"
+                  :value="ordersPerPage"
+                  @change="onPerPageChange"
+                >
+                  <option :value="15">15</option>
+                  <option :value="30">30</option>
+                  <option :value="50">50</option>
+                  <option :value="100">100</option>
+                </select>
+                <span>per halaman</span>
+              </div>
+
+              <div v-if="ordersTotalPages > 1" class="pagination-pages" role="navigation" aria-label="Navigasi halaman pesanan">
+                <button
+                  type="button"
+                  class="page-btn"
+                  :disabled="ordersPage === 1"
+                  aria-label="Halaman sebelumnya"
+                  @click="ordersPage--"
+                >
+                  <AppIcon name="chevronDown" :size="14" class="page-chevron prev" />
+                </button>
+
+                <template v-for="pg in ordersPaginationRange" :key="pg">
+                  <span v-if="pg === '...'" class="page-ellipsis">…</span>
+                  <button
+                    v-else
+                    type="button"
+                    class="page-btn"
+                    :class="{ active: pg === ordersPage }"
+                    :aria-current="pg === ordersPage ? 'page' : undefined"
+                    :aria-label="`Halaman ${pg}`"
+                    @click="ordersPage = pg as number"
+                  >
+                    {{ pg }}
+                  </button>
+                </template>
+
+                <button
+                  type="button"
+                  class="page-btn"
+                  :disabled="ordersPage === ordersTotalPages"
+                  aria-label="Halaman berikutnya"
+                  @click="ordersPage++"
+                >
+                  <AppIcon name="chevronDown" :size="14" class="page-chevron next" />
+                </button>
+              </div>
+
+              <span class="pagination-info">
+                {{ ordersRangeStart }}–{{ ordersRangeEnd }} dari {{ orders.length }}
+              </span>
+            </div>
           </div>
 
           <div v-else class="empty-state">
@@ -832,6 +891,41 @@ import { CANCEL_MY_ORDER } from '~/graphql/mutations/orders'
 
 const cancellingOrderId = ref<string | null>(null)
 const orderToCancel = ref<CustomerOrder | null>(null)
+
+// Orders pagination state
+const ordersPage = ref(1)
+const ordersPerPage = ref(15)
+
+const ordersTotalPages = computed(() => Math.ceil(orders.value.length / ordersPerPage.value))
+
+const paginatedOrders = computed(() => {
+  const start = (ordersPage.value - 1) * ordersPerPage.value
+  return orders.value.slice(start, start + ordersPerPage.value)
+})
+
+const ordersRangeStart = computed(() => orders.value.length === 0 ? 0 : (ordersPage.value - 1) * ordersPerPage.value + 1)
+const ordersRangeEnd = computed(() => Math.min(ordersPage.value * ordersPerPage.value, orders.value.length))
+
+// Build a compact pagination range: [1, '...', 4, 5, 6, '...', 10]
+const ordersPaginationRange = computed(() => {
+  const total = ordersTotalPages.value
+  const current = ordersPage.value
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+
+  const pages: (number | string)[] = [1]
+  if (current > 3) pages.push('...')
+  for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+    pages.push(i)
+  }
+  if (current < total - 2) pages.push('...')
+  pages.push(total)
+  return pages
+})
+
+function onPerPageChange(e: Event) {
+  ordersPerPage.value = Number((e.target as HTMLSelectElement).value)
+  ordersPage.value = 1
+}
 
 function onCancelOrder(order: CustomerOrder) {
   orderToCancel.value = order
@@ -1541,6 +1635,140 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+/* Pagination bar */
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface-2);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.pagination-per-page {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.pagination-per-page select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0.35rem 1.75rem 0.35rem 0.6rem;
+  font-size: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 0.5rem center;
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.pagination-per-page select:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.page-btn {
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  font-variant-numeric: tabular-nums;
+}
+
+.page-btn:hover:not(:disabled):not(.active) {
+  background: var(--btn-ghost-hover);
+  color: var(--text);
+}
+
+.page-btn.active {
+  background: var(--primary);
+  color: var(--primary-contrast);
+  border-color: var(--primary);
+  font-weight: 700;
+}
+
+.page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.page-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.page-chevron {
+  transition: transform 0.15s;
+}
+
+.page-chevron.prev {
+  transform: rotate(90deg);
+}
+
+.page-chevron.next {
+  transform: rotate(-90deg);
+}
+
+.page-ellipsis {
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  user-select: none;
+}
+
+.pagination-info {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .pagination-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .pagination-per-page {
+    justify-content: center;
+  }
+
+  .pagination-pages {
+    justify-content: center;
+  }
+
+  .pagination-info {
+    text-align: center;
+  }
 }
 
 .order-card {

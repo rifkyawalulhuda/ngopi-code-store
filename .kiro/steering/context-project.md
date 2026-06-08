@@ -94,7 +94,7 @@ ngopi-code-store/
 - **Stat cards clickable**: Total Pesanan → orders tab, Produk Dimiliki → library tab, Wishlist → wishlist tab (button + hover lift)
 - **Stat value color**: `.stat-value` uses `var(--text)` (black in light, white in dark) for readable numbers in both themes
 - **Pustaka Saya**: search bar + category filter chips (from GET_COLLECTIONS, matched via product.collections[].slug)
-- **Riwayat Pesanan**: orders with `ArrangingPayment` show "Bayar Sekarang" + "Batalkan" buttons
+- **Riwayat Pesanan**: orders with `ArrangingPayment` show "Bayar Sekarang" + "Batalkan" buttons; **paginated** (default 15 rows, options 15/30/50/100, page numbers with back/next chevrons, range info "1–15 dari N")
 - **Order cancellation**: custom modal (matches logout modal pattern) → `cancelMyOrder` mutation
 - **Settings = accordion** (Profil, Ubah Email, Ubah Password)
 
@@ -186,7 +186,7 @@ Payment confirmed → Order Fulfilled → DigitalDownload records created
 - `whatsappNumber` (optional)
 
 ### Product
-- `keyFeatures`, `deliveryInfo`, `productType`, `fileFormat`, `licenseType`
+- `shortDescription`, `keyFeatures`, `deliveryInfo`, `productType`, `fileFormat`, `licenseType`
 
 ## Design System
 
@@ -218,10 +218,17 @@ Payment confirmed → Order Fulfilled → DigitalDownload records created
 ## Commands
 
 ```bash
-dev.bat                              # Start all (backend + dashboard + frontend)
+dev.bat                              # Start all (backend + dashboard + frontend), shows LAN IP
 cd backend && npm run dev            # Vendure (port 3000, dashboard at /dashboard)
 cd backend && npm run build          # tsc + build:dashboard
 cd backend && npm test               # Jest
-cd frontend && npm run dev           # Nuxt (port 3001)
+cd frontend && npm run dev           # Nuxt (port 3001, host 0.0.0.0 for LAN)
 cd frontend && npm run build         # Production build
 ```
+
+## LAN Development Access
+
+- `dev.bat` detects LAN IP via `ipconfig` and displays network URLs
+- Frontend `devServer.host: '0.0.0.0'` in nuxt.config (accessible from other devices)
+- Backend CORS allows `192.168.x.x` origins via regex pattern
+- Admin upload page (`/admin/upload`) uses `window.location.hostname` dynamically (not hardcoded localhost)

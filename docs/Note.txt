@@ -13,13 +13,14 @@ npm run dev -- --port 3001
 Akses Vendure admin :
 
 http://localhost:3000/dashboard/    https://api.ngopicode.com/dashboard
+http://192.168.1.85:3000/dashboard
 
 akses minio storage s3
 http://localhost:9001/browser/products
 minioadmin / minioadmin
 
 
-http://localhost:3001/admin/upload   https://www.ngopicode.com/admin/upload
+http://localhost:3001/admin/upload   http://192.168.1.85:3001/admin/upload
 superadmin / superadmin
 
 

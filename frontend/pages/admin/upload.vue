@@ -182,7 +182,9 @@ interface UploadResult {
   fileSize: number
 }
 
-const ADMIN_API = 'http://localhost:3000/admin-api'
+const ADMIN_API = import.meta.client
+  ? `http://${window.location.hostname}:3000/admin-api`
+  : 'http://localhost:3000/admin-api'
 
 // Auth state
 const isAuthenticated = ref(false)

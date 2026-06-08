@@ -326,6 +326,10 @@ const priceLabel = computed(() => {
 })
 
 const cleanDescription = computed(() => {
+  // Use dedicated short description custom field if available,
+  // otherwise fall back to stripping HTML from the main description
+  const short = product.value?.customFields?.shortDescription
+  if (short) return short.trim()
   const desc = product.value?.description || ''
   return desc.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 })

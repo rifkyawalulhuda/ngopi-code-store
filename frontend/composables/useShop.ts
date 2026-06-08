@@ -25,6 +25,7 @@ export interface Product {
   }>
   collectionIds?: string[]
   customFields?: {
+    shortDescription?: string | null
     keyFeatures?: string | null
     deliveryInfo?: string | null
     productType?: string | null

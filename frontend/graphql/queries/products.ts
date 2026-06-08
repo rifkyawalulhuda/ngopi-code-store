@@ -63,6 +63,7 @@ export const GET_PRODUCT_BY_SLUG = gql`
         }
       }
       customFields {
+        shortDescription
         keyFeatures
         deliveryInfo
         productType

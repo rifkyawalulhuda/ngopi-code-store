@@ -46,6 +46,8 @@ export const config: VendureConfig = {
         'https://ngopicode.com',
         'https://www.ngopicode.com',
         'https://api.ngopicode.com',
+        // Allow LAN access for dev (192.168.x.x on any port)
+        /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}(:\d+)?$/,
       ],
       credentials: true,
     },
@@ -173,6 +175,15 @@ export const config: VendureConfig = {
       },
     ],
     Product: [
+      {
+        name: 'shortDescription',
+        type: 'text',
+        label: [{ languageCode: LanguageCode.en, value: 'Short Description' }],
+        description: [{ languageCode: LanguageCode.en, value: 'Brief product summary shown beside the gallery on the product page. Keep it 1-3 sentences. The main Description field is displayed in the "Deskripsi & Spesifikasi" section below.' }],
+        nullable: true,
+        public: true,
+        ui: { component: 'textarea-form-input' },
+      },
       {
         name: 'keyFeatures',
         type: 'text',

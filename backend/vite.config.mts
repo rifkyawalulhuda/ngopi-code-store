@@ -11,7 +11,9 @@ export default defineConfig({
   plugins: [
     vendureDashboardPlugin({
       vendureConfigPath: pathToFileURL('./src/vendure-config.ts'),
-      api: { host: 'http://localhost', port: 3000 },
+      api: process.env.NODE_ENV === 'production'
+        ? { host: 'https://api.ngopicode.com', port: 443 }
+        : { host: 'http://localhost', port: 3000 },
       gqlOutputPath: './src/gql',
     }),
   ],

@@ -161,14 +161,32 @@ Payment confirmed → Order Fulfilled → DigitalDownload records created
 
 ## Production Deployment
 
+- **Host machine**: self-hosted **Xubuntu** box runs backend + PostgreSQL + MinIO + Cloudflare Tunnel. Frontend is on Vercel.
 - **Domain**: ngopicode.com (Cloudflare DNS)
 - **Backend**: `api.ngopicode.com` via Cloudflare Tunnel (`ngopi-backend` tunnel ID da3ac743-...) → localhost:3000
 - **Frontend**: Vercel (`ngopicode.com`), env `NUXT_PUBLIC_SHOP_API_URL=https://api.ngopicode.com/shop-api`
 - **MinIO public**: `storage.ngopicode.com` via tunnel; `MINIO_PUBLIC_URL` env → separate signing client for pre-signed URLs (avoids signature mismatch)
-- **CORS**: vendure-config `apiOptions.cors` whitelists ngopicode.com + localhost + api domain, credentials true
+- **CORS**: vendure-config `apiOptions.cors` whitelists ngopicode.com + localhost + api domain + regex `^http://192\.168\.\d+\.\d+(:\d+)?$` (LAN), credentials true
 - **trust proxy**: set on Express adapter in index.ts (for rate limiter IP detection behind Cloudflare)
 - **OAuth**: Google/GitHub origins + redirects must include `https://ngopicode.com`
 - **Env to update for prod**: STOREFRONT_URL, TRIPAY_RETURN_URL/CALLBACK_URL, MINIO_PUBLIC_URL (also set Return/Callback URL in Vendure Dashboard payment method)
+
+### Self-Hosted Setup (Xubuntu)
+
+- **PostgreSQL + MinIO**: `docker compose up -d postgres minio` (run from repo root; `.env` must be copied to root since compose reads it there, not from `backend/`)
+- **Backend**: built with `npm run build`, run via PM2 — `pm2 start node --name vendure -- --max-old-space-size=900 dist/index.js`; `pm2 save` + `pm2 startup` for boot persistence
+- **Frontend (LAN)**: optional Nuxt instance for LAN admin access — `npm run build` then `HOST=0.0.0.0 PORT=3001 pm2 start .output/server/index.mjs --name nuxt-frontend`
+- **Cloudflare Tunnel**: `cloudflared` installed as systemd service via connector token; public hostname routes (api → localhost:3000, storage → localhost:9000) configured in Cloudflare Zero Trust dashboard ("Published application" route type, empty path, `http://localhost:PORT` service)
+- **Firewall (UFW)**: allow ports 3000, 3001, 9000, 9001 for LAN access
+- **Common gotcha**: files extracted from a Windows zip lose execute bit on `node_modules/.bin/*` → `chmod +x node_modules/.bin/*` or reinstall fresh
+- Node v24 (nvm) in use; `sudo npm` fails (nvm PATH) — install global tools without sudo (`npm install -g pm2`)
+
+### Vendure Dashboard API Host (build-time)
+
+- Dashboard API URL is **baked at build time** in `backend/vite.config.mts` → `vendureDashboardPlugin({ api: { host, port } })`. NOT `window.location.origin`.
+- For remote/LAN access, set `api.host` to `https://api.ngopicode.com` (port 443) or the LAN IP, then `npm run build` + `pm2 restart vendure`.
+- Editing dist JS with `sed` does NOT work (URL is composed from host+port, not a literal string).
+- Dashboard accessible from any device via `https://api.ngopicode.com/dashboard/` once host is set to the public domain.
 
 ## Cleanup Scripts (backend/scripts/)
 
@@ -187,6 +205,14 @@ Payment confirmed → Order Fulfilled → DigitalDownload records created
 
 ### Product
 - `shortDescription`, `keyFeatures`, `deliveryInfo`, `productType`, `fileFormat`, `licenseType`
+
+## Purchase Rule Facet
+
+- **Facet code**: `purchase-rule`
+- **Values**:
+  - `one-time` — single purchase; appears in Pustaka, blocks re-purchase, shows Download CTA
+  - `repeatable` — services/jasa; multiple purchases, NOT in Pustaka, shows WhatsApp CTA
+- Frontend detects via `product.facetValues.some(fv => fv.code === 'repeatable')` (see `products/[slug].vue`, `account/index.vue`, `useOrderConfirmation.ts`, `order/[code].vue`)
 
 ## Design System
 

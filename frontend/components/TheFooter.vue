@@ -7,7 +7,7 @@
           <span class="brand-name">Ngopi<span class="brand-accent">Code</span></span>
         </NuxtLink>
         <p class="footer-tagline">
-          Terus Belajar dan belajar karena ilmu adalah investasi masa depan.
+          Source Code, Template, Ebook, Jasa Install Website
         </p>
         <div class="footer-socials">
           <a

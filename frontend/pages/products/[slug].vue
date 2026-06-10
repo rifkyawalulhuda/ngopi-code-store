@@ -490,6 +490,7 @@ onMounted(async () => {
   width: 100%;
   margin: 0 auto;
   padding: 2rem 1.25rem 4rem;
+  overflow-x: hidden;
 }
 
 /* Breadcrumb */
@@ -981,6 +982,8 @@ onMounted(async () => {
 /* Detail section */
 .detail-section {
   margin-bottom: 3.5rem;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .detail-title {
@@ -993,22 +996,56 @@ onMounted(async () => {
   color: var(--text-muted);
   line-height: 1.7;
   font-size: 0.98rem;
-  max-width: 720px;
+  max-width: 100%;
   margin-bottom: 2rem;
+  overflow-x: auto;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .detail-body :deep(p) {
   margin: 0 0 1rem;
 }
 
+/* Contain wide HTML tables from rich text editor */
+.detail-body :deep(table) {
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.detail-body :deep(td),
+.detail-body :deep(th) {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.detail-body :deep(img) {
+  max-width: 100%;
+  height: auto;
+}
+
+.detail-body :deep(pre) {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
 /* Collapsible description */
 .detail-collapsible {
   margin-bottom: 2rem;
+  min-width: 0;
 }
 
 .detail-collapsible .detail-body {
   margin-bottom: 0;
   transition: max-height 0.3s ease;
+  overflow-x: auto;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .detail-collapsible .detail-body.is-clamped {

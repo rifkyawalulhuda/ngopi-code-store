@@ -88,6 +88,12 @@ export const config: VendureConfig = {
       },
     ],
   },
+  assetOptions: {
+    // GraphQL upload size limit (applies to all Upload scalars, including the
+    // custom digital product upload mutation). Default is 20MB which truncates
+    // larger files. Raised to 500MB to match the digital product service limit.
+    uploadMaxFileSize: 524288000, // 500 MB
+  },
   authOptions: {
     tokenMethod: ['bearer', 'cookie'],
     requireVerification: true,

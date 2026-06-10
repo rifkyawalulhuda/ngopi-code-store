@@ -521,7 +521,20 @@ onMounted(async () => {
   margin-bottom: 3.5rem;
 }
 
+/* Prevent grid children (gallery / info) from expanding past their track,
+   which would push the whole page wider than the viewport on mobile. */
+.pdp-grid > * {
+  min-width: 0;
+}
+
 /* Gallery */
+.gallery {
+  /* Grid items default to min-width:auto, which lets the horizontally
+     scrollable thumbnail strip force the whole page wider than the viewport.
+     min-width:0 lets overflow-x:auto on .gallery-thumbs work correctly. */
+  min-width: 0;
+}
+
 .gallery-main {
   position: relative;
   aspect-ratio: 4 / 3;
@@ -590,6 +603,10 @@ onMounted(async () => {
   margin-top: 0.85rem;
   overflow-x: auto;
   padding-bottom: 0.25rem;
+  max-width: 100%;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .thumb-btn {
@@ -599,6 +616,7 @@ onMounted(async () => {
   border-radius: 10px;
   overflow: hidden;
   border: 2px solid transparent;
+  scroll-snap-align: start;
   cursor: pointer;
   padding: 0;
   background: var(--surface-2);

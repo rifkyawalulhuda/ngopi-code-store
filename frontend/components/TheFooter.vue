@@ -44,6 +44,12 @@
         </div>
       </div>
 
+      <nav class="footer-links" aria-label="Halaman Legal">
+        <NuxtLink to="/tentang">Tentang Kami</NuxtLink>
+        <NuxtLink to="/kebijakan-privasi">Kebijakan Privasi</NuxtLink>
+        <NuxtLink to="/syarat-ketentuan">Syarat & Ketentuan</NuxtLink>
+        <NuxtLink to="/kontak">Kontak</NuxtLink>
+      </nav>
     </div>
 
     <div class="footer-bottom">
@@ -165,6 +171,24 @@ onMounted(() => {
   border-top: 1px solid #1d3329;
   padding: 1.5rem 1.25rem;
   text-align: center;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.footer-links a {
+  color: #93a69c;
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: color 0.18s;
+}
+
+.footer-links a:hover {
+  color: #5cc98c;
 }
 
 .footer-bottom p {

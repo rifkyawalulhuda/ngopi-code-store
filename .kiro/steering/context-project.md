@@ -142,16 +142,32 @@ Payment confirmed → Order Fulfilled → DigitalDownload records created
 ## Navigation
 
 - **Header**: Home | Katalog | Blogs (external: ngopidulur.my.id/blog/)
-- **Footer**: Brand + social icons (WhatsApp, GitHub, Email) — no link columns
+- **Footer**: Brand + social icons (WhatsApp, GitHub, Email) + legal links (Tentang, Privasi, S&K, Kontak)
+
+## Static Pages (Legal — required by Tripay)
+
+- `/tentang` — Tentang Kami (deskripsi bisnis, misi, cara kerja)
+- `/kebijakan-privasi` — Kebijakan Privasi (data collection, 3rd party, hak user, cookie)
+- `/syarat-ketentuan` — Syarat & Ketentuan (akun, produk digital, lisensi, refund)
+- `/kontak` — Kontak Support (WhatsApp, Email, GitHub — data from activeChannel)
+- All linked in TheFooter.vue
+
+## Favicon
+
+- `frontend/public/favicon.png` — served at `/favicon.png`
+- Configured in `nuxt.config.ts` `app.head.link` as `rel: 'icon'` + `rel: 'apple-touch-icon'`
 
 ## Webhook & Payment Sync (Tripay)
 
 - Webhook endpoint: `POST /payments/tripay/webhook` — `backend/src/plugins/tripay-payment/middleware/tripay-webhook.middleware.ts`
 - Registered via `apiOptions.middleware` in vendure-config; DB connection injected via `webhook-db.ts` after bootstrap
-- On PAID: sets order `PaymentSettled` → `Fulfilled`, `active = false`, `orderPlacedAt = NOW()`, settles payment, clears session
+- Handles 3 statuses:
+  - **PAID**: order `ArrangingPayment` → `PaymentSettled` → `Fulfilled`, payment `Settled`, `active = false`, `orderPlacedAt = NOW()`, clears session
+  - **EXPIRED**: order → `Cancelled`, payment → `Cancelled`, tripay_tx → `EXPIRED`, `active = false`, clears session
+  - **FAILED**: order → `Cancelled`, payment → `Cancelled`, tripay_tx → `FAILED`, `active = false`, clears session
 - Looks up order by `code` (= merchant_ref), NOT tripay_transaction table
+- Idempotency: skips if order is already NOT in `ArrangingPayment` state
 - Sandbox mode (`TRIPAY_SANDBOX=true`) bypasses signature mismatch with warning log
-- `mcp.json`: codegraph + nuxt MCP servers
 
 ## Catalog Badge
 
@@ -232,6 +248,8 @@ Payment confirmed → Order Fulfilled → DigitalDownload records created
 - **Channel custom fields via activeChannel** (Shop API)
 - **Rate limiter cleanup**: periodic interval prevents memory leak in in-memory Maps
 - **Batch queries**: Order.downloads resolver uses `IN (...)` batch instead of N+1 loops
+- **Mobile overflow prevention**: `.pdp-main`, `.checkout-main` use `overflow-x: hidden`; grid children get `min-width: 0`; scrollable containers (gallery thumbs, rich text tables) use `overflow-x: auto` with `max-width: 100%`
+- **File upload limit**: `assetOptions.uploadMaxFileSize` set to 500 MB in vendure-config (default was 20 MB, which truncates large zip files)
 
 ## Code Quality Notes
 

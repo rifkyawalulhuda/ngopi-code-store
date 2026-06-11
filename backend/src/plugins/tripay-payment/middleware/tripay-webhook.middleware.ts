@@ -121,6 +121,55 @@ async function handleWebhook(req: any, res: any): Promise<void> {
     );
 
     Logger.info(`Order ${order.code} (id=${order.id}) fulfilled via webhook`, loggerCtx);
+  } else if (payload.status === 'EXPIRED') {
+    // Handle EXPIRED status — cancel order so user can create a new one
+    await connection.query(
+      `UPDATE "order" SET state = 'Cancelled', active = false, "updatedAt" = NOW() WHERE id = $1`,
+      [order.id],
+    );
+
+    // Cancel the payment record
+    await connection.query(
+      `UPDATE payment SET state = 'Cancelled', "updatedAt" = NOW() WHERE "orderId" = $1`,
+      [order.id],
+    );
+
+    // Update tripay_transaction status if record exists
+    await connection.query(
+      `UPDATE tripay_transaction SET status = 'EXPIRED', "updatedAt" = NOW() WHERE "merchantRef" = $1`,
+      [payload.merchant_ref],
+    );
+
+    // Clear session reference so next purchase creates a new order
+    await connection.query(
+      `UPDATE "session" SET "activeOrderId" = NULL WHERE "activeOrderId" = $1`,
+      [order.id],
+    );
+
+    Logger.info(`Order ${order.code} (id=${order.id}) cancelled — payment expired via webhook`, loggerCtx);
+  } else if (payload.status === 'FAILED') {
+    // Handle FAILED status — same as EXPIRED (cancel order)
+    await connection.query(
+      `UPDATE "order" SET state = 'Cancelled', active = false, "updatedAt" = NOW() WHERE id = $1`,
+      [order.id],
+    );
+
+    await connection.query(
+      `UPDATE payment SET state = 'Cancelled', "updatedAt" = NOW() WHERE "orderId" = $1`,
+      [order.id],
+    );
+
+    await connection.query(
+      `UPDATE tripay_transaction SET status = 'FAILED', "updatedAt" = NOW() WHERE "merchantRef" = $1`,
+      [payload.merchant_ref],
+    );
+
+    await connection.query(
+      `UPDATE "session" SET "activeOrderId" = NULL WHERE "activeOrderId" = $1`,
+      [order.id],
+    );
+
+    Logger.info(`Order ${order.code} (id=${order.id}) cancelled — payment failed via webhook`, loggerCtx);
   } else {
     Logger.info(`Webhook status ${payload.status} for ${payload.merchant_ref}, no order transition`, loggerCtx);
   }

@@ -640,12 +640,14 @@ async function onProceedPayment() {
 .checkout-main {
   flex: 1;
   padding: 2rem 1.25rem 4rem;
+  overflow-x: hidden;
 }
 
 .checkout-container {
   max-width: 1100px;
   width: 100%;
   margin: 0 auto;
+  min-width: 0;
 }
 
 /* Header */
@@ -658,6 +660,8 @@ async function onProceedPayment() {
   font-weight: 800;
   letter-spacing: -0.02em;
   margin: 0 0 0.4rem;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .checkout-subtitle {
@@ -673,6 +677,10 @@ async function onProceedPayment() {
   grid-template-columns: 1fr 380px;
   gap: 2rem;
   align-items: start;
+}
+
+.checkout-grid > * {
+  min-width: 0;
 }
 
 /* Loading */
@@ -875,9 +883,8 @@ async function onProceedPayment() {
 .summary-item-name {
   font-size: 0.92rem;
   font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .summary-item-license {

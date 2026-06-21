@@ -924,7 +924,33 @@ onMounted(async () => {
     align-items: flex-start;
   }
   .product-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  .card-body {
+    padding: 0.75rem;
+    gap: 0.3rem;
+  }
+  .card-name {
+    font-size: 0.88rem;
+    min-height: unset;
+    -webkit-line-clamp: 2;
+  }
+  .card-desc {
+    font-size: 0.78rem;
+    -webkit-line-clamp: 2;
+  }
+  .card-price {
+    font-size: 0.9rem;
+  }
+  .card-link {
+    font-size: 0.78rem;
+  }
+  .badge {
+    font-size: 0.6rem;
+    padding: 0.2rem 0.5rem;
+    top: 0.5rem;
+    left: 0.5rem;
   }
 }
 </style>

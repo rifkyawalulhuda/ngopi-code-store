@@ -91,10 +91,11 @@ function mapSearchItem(item: SearchResultItem): Product {
   }
 }
 
-/** Build the DefaultSearchPlugin sort input. "latest" uses default index order. */
+/** Build the DefaultSearchPlugin sort input. */
 function buildSearchSort(sort?: SortOption) {
   if (sort === 'price-asc') return { price: 'ASC' as const }
   if (sort === 'price-desc') return { price: 'DESC' as const }
+  // 'latest' → sort client-side (DefaultSearchPlugin doesn't support createdAt sort)
   return undefined
 }
 
@@ -139,13 +140,19 @@ export function useShop() {
 
       const items: Product[] = data.search.items.map(mapSearchItem)
 
+      // Client-side sort for 'latest' — DefaultSearchPlugin doesn't support
+      // createdAt sort, so we sort by productId descending (higher ID = newer).
+      const sortedItems = (!sort)
+        ? [...items].sort((a, b) => Number(b.id) - Number(a.id))
+        : items
+
       if (priceActive) {
         const max = options!.priceMax as number
-        const filtered = items.filter((p) => (p.variants[0]?.price ?? 0) <= max)
+        const filtered = sortedItems.filter((p) => (p.variants[0]?.price ?? 0) <= max)
         totalItems.value = filtered.length
         products.value = filtered.slice(skip, skip + take)
       } else {
-        products.value = items
+        products.value = sortedItems
         totalItems.value = data.search.totalItems
       }
     } catch (err: any) {

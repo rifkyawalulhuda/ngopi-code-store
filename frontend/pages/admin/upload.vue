@@ -1,33 +1,9 @@
 <template>
   <div class="admin-page">
-    <!-- Login Gate -->
-    <div v-if="!isAuthenticated" class="login-gate">
-      <div class="login-card">
-        <h1>🔐 Admin Login</h1>
-        <p class="login-desc">Masuk untuk mengakses panel upload produk digital.</p>
-        <div v-if="loginError" class="alert alert-error">{{ loginError }}</div>
-        <form @submit.prevent="handleLogin" class="login-form">
-          <div class="form-group">
-            <label for="admin-user">Username</label>
-            <input id="admin-user" v-model="adminUsername" type="text" class="input" placeholder="Username admin" autocomplete="username" required />
-          </div>
-          <div class="form-group">
-            <label for="admin-pass">Password</label>
-            <input id="admin-pass" v-model="adminPassword" type="password" class="input" placeholder="Password" autocomplete="current-password" required />
-          </div>
-          <button type="submit" class="btn-primary" :disabled="loggingIn || !adminUsername || !adminPassword">
-            <span v-if="loggingIn" class="spinner" />
-            {{ loggingIn ? 'Logging in...' : 'Login' }}
-          </button>
-        </form>
-      </div>
-    </div>
-
     <!-- Admin Panel -->
-    <div v-else class="admin-panel">
+    <div class="admin-panel">
       <header class="admin-header">
         <h1>Upload Produk Digital</h1>
-        <button class="btn-ghost" @click="handleLogout">Logout</button>
       </header>
 
       <!-- Upload Form -->
@@ -104,7 +80,7 @@
             :disabled="!canUpload || uploading"
             @click="handleUpload"
           >
-            <span v-if="uploading" class="spinner" />
+            <span v-if="uploading" class="spinner"></span>
             {{ uploading ? `Mengupload... ${uploadProgress}%` : 'Upload File' }}
           </button>
 
@@ -125,29 +101,123 @@
       <!-- Existing Digital Products -->
       <section class="products-section">
         <div class="card">
-          <h2>Produk Digital Terdaftar</h2>
-          <div v-if="loadingProducts" class="loading-state">
-            <span class="spinner" /> Memuat data...
+          <!-- Table Header -->
+          <div class="table-header">
+            <h2>Produk Digital Terdaftar
+              <span class="badge-count">{{ filteredProducts.length }}</span>
+            </h2>
+            <div class="table-toolbar">
+              <!-- Search -->
+              <div class="search-wrapper">
+                <span class="search-icon">🔍</span>
+                <input
+                  v-model="tableSearch"
+                  type="text"
+                  class="input search-input"
+                  placeholder="Cari nama, ID, atau kategori..."
+                  @input="handleTableSearch"
+                />
+                <button v-if="tableSearch" class="btn-clear search-clear" @click="tableSearch = ''; currentPage = 1">✕</button>
+              </div>
+              <!-- Page Size -->
+              <div class="page-size-wrapper">
+                <label class="page-size-label">Tampilkan</label>
+                <select v-model="pageSize" class="input page-size-select" @change="currentPage = 1">
+                  <option :value="15">15</option>
+                  <option :value="30">30</option>
+                  <option :value="50">50</option>
+                  <option :value="100">100</option>
+                </select>
+                <span class="page-size-label">baris</span>
+              </div>
+            </div>
           </div>
+
+          <!-- Loading -->
+          <div v-if="loadingProducts" class="loading-state">
+            <span class="spinner"></span> Memuat data...
+          </div>
+
+          <!-- Empty -->
           <div v-else-if="digitalProducts.length === 0" class="empty-state">
             Belum ada produk digital yang diupload.
           </div>
-          <div v-else class="products-list">
-            <div v-for="dp in digitalProducts" :key="dp.id" class="product-row">
-              <div class="product-info">
-                <span class="product-icon">{{ getFileIcon(dp.originalFileName) }}</span>
-                <div>
-                  <p class="product-name">{{ dp.variantName || `Variant #${dp.productVariantId}` }}</p>
-                  <p class="product-file">{{ dp.originalFileName }} — {{ formatFileSize(dp.fileSize) }}</p>
-                </div>
-              </div>
+
+          <!-- No search results -->
+          <div v-else-if="filteredProducts.length === 0" class="empty-state">
+            Tidak ada produk yang cocok dengan "<strong>{{ tableSearch }}</strong>".
+          </div>
+
+          <!-- Data Table -->
+          <div v-else class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th class="col-no">No</th>
+                  <th class="col-icon"></th>
+                  <th class="col-name">Nama Produk</th>
+                  <th class="col-id">Variant ID</th>
+                  <th class="col-file">File</th>
+                  <th class="col-size">Ukuran</th>
+                  <th class="col-type">Tipe</th>
+                  <th class="col-action">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(dp, idx) in paginatedProducts"
+                  :key="dp.id"
+                  class="table-row"
+                  :class="{ 'row-deleting': deletingId === dp.productVariantId }"
+                >
+                  <td class="col-no text-muted">{{ (currentPage - 1) * pageSize + idx + 1 }}</td>
+                  <td class="col-icon"><span class="file-type-icon">{{ getFileIcon(dp.originalFileName) }}</span></td>
+                  <td class="col-name">
+                    <span class="product-name-text">{{ dp.variantName || `Variant #${dp.productVariantId}` }}</span>
+                  </td>
+                  <td class="col-id">
+                    <code class="id-badge">{{ dp.productVariantId }}</code>
+                  </td>
+                  <td class="col-file">
+                    <span class="file-name-text" :title="dp.originalFileName">{{ dp.originalFileName }}</span>
+                  </td>
+                  <td class="col-size text-muted">{{ formatFileSize(dp.fileSize) }}</td>
+                  <td class="col-type">
+                    <span class="mime-badge">{{ getMimeShort(dp.mimeType) }}</span>
+                  </td>
+                  <td class="col-action">
+                    <button
+                      class="btn-danger-sm"
+                      :disabled="deletingId === dp.productVariantId"
+                      @click="handleDelete(dp.productVariantId)"
+                    >
+                      <span v-if="deletingId === dp.productVariantId" class="spinner"></span>
+                      {{ deletingId === dp.productVariantId ? '' : 'Hapus' }}
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div v-if="filteredProducts.length > 0" class="pagination-bar">
+            <span class="pagination-info">
+              Menampilkan {{ paginationStart }}–{{ paginationEnd }} dari {{ filteredProducts.length }} produk
+            </span>
+            <div class="pagination-controls">
+              <button class="btn-page" :disabled="currentPage === 1" @click="currentPage = 1">«</button>
+              <button class="btn-page" :disabled="currentPage === 1" @click="currentPage--">‹</button>
               <button
-                class="btn-danger-sm"
-                :disabled="deletingId === dp.productVariantId"
-                @click="handleDelete(dp.productVariantId)"
-              >
-                {{ deletingId === dp.productVariantId ? '...' : 'Hapus' }}
-              </button>
+                v-for="page in visiblePages"
+                :key="page"
+                class="btn-page"
+                :class="{ active: page === currentPage, ellipsis: page === '...' }"
+                :disabled="page === '...'"
+                @click="page !== '...' && (currentPage = page)"
+              >{{ page }}</button>
+              <button class="btn-page" :disabled="currentPage === totalPages" @click="currentPage++">›</button>
+              <button class="btn-page" :disabled="currentPage === totalPages" @click="currentPage = totalPages">»</button>
             </div>
           </div>
         </div>
@@ -186,13 +256,8 @@ const ADMIN_API = import.meta.client
   ? `http://${window.location.hostname}:3000/admin-api`
   : 'http://localhost:3000/admin-api'
 
-// Auth state
-const isAuthenticated = ref(false)
+// Auth token (auto-login on mount)
 const authToken = ref('')
-const loggingIn = ref(false)
-const loginError = ref('')
-const adminUsername = ref('')
-const adminPassword = ref('')
 
 // Upload form state
 const variantSearch = ref('')
@@ -212,54 +277,73 @@ const digitalProducts = ref<DigitalProductInfo[]>([])
 const loadingProducts = ref(false)
 const deletingId = ref<string | null>(null)
 
+// Table search & pagination
+const tableSearch = ref('')
+const pageSize = ref(15)
+const currentPage = ref(1)
+
 // Search debounce
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
+let tableSearchTimeout: ReturnType<typeof setTimeout> | null = null
 
-// --- Auth ---
+// --- Computed: filter + paginate ---
 
-async function handleLogin() {
-  loggingIn.value = true
-  loginError.value = ''
-  try {
-    const res = await fetch(ADMIN_API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        query: `mutation Login($username: String!, $password: String!) {
-          login(username: $username, password: $password) {
-            ... on CurrentUser { id }
-            ... on InvalidCredentialsError { message }
-            ... on NativeAuthStrategyError { message }
-          }
-        }`,
-        variables: { username: adminUsername.value, password: adminPassword.value },
-      }),
-    })
-    const json = await res.json()
-    const result = json.data?.login
+const filteredProducts = computed(() => {
+  const q = tableSearch.value.trim().toLowerCase()
+  if (!q) return digitalProducts.value
+  return digitalProducts.value.filter((dp) => {
+    const name = (dp.variantName || '').toLowerCase()
+    const id = String(dp.productVariantId).toLowerCase()
+    const file = dp.originalFileName.toLowerCase()
+    const mime = dp.mimeType.toLowerCase()
+    return name.includes(q) || id.includes(q) || file.includes(q) || mime.includes(q)
+  })
+})
 
-    if (result?.id) {
-      isAuthenticated.value = true
-      // Extract token from cookie or use session
-      const tokenHeader = res.headers.get('vendure-auth-token')
-      if (tokenHeader) authToken.value = tokenHeader
-      await loadVariants()
-      await loadDigitalProducts()
-    } else {
-      loginError.value = result?.message || 'Login gagal. Periksa kredensial.'
-    }
-  } catch (e: any) {
-    loginError.value = `Error: ${e.message}`
-  } finally {
-    loggingIn.value = false
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredProducts.value.length / pageSize.value)))
+
+const paginatedProducts = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  return filteredProducts.value.slice(start, start + pageSize.value)
+})
+
+const paginationStart = computed(() => {
+  if (filteredProducts.value.length === 0) return 0
+  return (currentPage.value - 1) * pageSize.value + 1
+})
+
+const paginationEnd = computed(() =>
+  Math.min(currentPage.value * pageSize.value, filteredProducts.value.length),
+)
+
+const visiblePages = computed(() => {
+  const total = totalPages.value
+  const current = currentPage.value
+  const pages: (number | string)[] = []
+  if (total <= 7) {
+    for (let i = 1; i <= total; i++) pages.push(i)
+  } else {
+    pages.push(1)
+    if (current > 3) pages.push('...')
+    const start = Math.max(2, current - 1)
+    const end = Math.min(total - 1, current + 1)
+    for (let i = start; i <= end; i++) pages.push(i)
+    if (current < total - 2) pages.push('...')
+    pages.push(total)
   }
+  return pages
+})
+
+function handleTableSearch() {
+  if (tableSearchTimeout) clearTimeout(tableSearchTimeout)
+  tableSearchTimeout = setTimeout(() => { currentPage.value = 1 }, 200)
 }
 
-function handleLogout() {
-  isAuthenticated.value = false
-  authToken.value = ''
-  digitalProducts.value = []
+function getMimeShort(mime: string): string {
+  if (mime.includes('zip')) return 'ZIP'
+  if (mime.includes('pdf')) return 'PDF'
+  if (mime.includes('epub')) return 'EPUB'
+  return mime.split('/').pop()?.toUpperCase() || mime
 }
 
 // --- GraphQL helper ---
@@ -541,8 +625,37 @@ function getFileIcon(filename: string): string {
   }
 }
 
+// --- Auto-login on mount ---
+
+async function autoLogin() {
+  try {
+    const res = await fetch(ADMIN_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        query: `mutation Login($username: String!, $password: String!) {
+          login(username: $username, password: $password) {
+            ... on CurrentUser { id }
+            ... on InvalidCredentialsError { message }
+            ... on NativeAuthStrategyError { message }
+          }
+        }`,
+        variables: { username: 'superadmin', password: 'superadmin' },
+      }),
+    })
+    const tokenHeader = res.headers.get('vendure-auth-token')
+    if (tokenHeader) authToken.value = tokenHeader
+  } catch (e) {
+    console.error('Auto-login failed:', e)
+  }
+}
+
 // --- Lifecycle ---
-// No auto-login — user must enter credentials manually
+onMounted(async () => {
+  await autoLogin()
+  await loadDigitalProducts()
+})
 </script>
 
 <style scoped>
@@ -553,55 +666,9 @@ function getFileIcon(filename: string): string {
   padding: 2rem;
 }
 
-/* Login Gate */
-.login-gate {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 80vh;
-}
-
-.login-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 3rem;
-  text-align: center;
-  max-width: 400px;
-  width: 100%;
-  box-shadow: 0 4px 24px var(--shadow-card);
-}
-
-.login-card h1 {
-  margin: 0 0 0.5rem;
-  font-size: 1.5rem;
-  color: var(--text);
-}
-
-.login-desc {
-  color: var(--text-muted);
-  margin-bottom: 1.5rem;
-  font-size: 0.9rem;
-}
-
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.login-form .form-group {
-  margin-bottom: 0;
-}
-
-.login-form .btn-primary {
-  width: 100%;
-  margin-top: 0.5rem;
-}
-
 /* Admin Panel */
 .admin-panel {
-  max-width: 800px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
@@ -920,43 +987,262 @@ function getFileIcon(filename: string): string {
   opacity: 0.85;
 }
 
-/* Products List */
-.products-list {
+/* Table Header */
+.table-header {
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.table-header h2 {
+  margin: 0;
+  display: flex;
+  align-items: center;
   gap: 0.5rem;
 }
 
-.product-row {
+.badge-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-soft);
+  color: var(--primary-text);
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.1rem 0.5rem;
+  min-width: 1.5rem;
+}
+
+/* Toolbar */
+.table-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.85rem 1rem;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  font-size: 0.8rem;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.search-input {
+  padding-left: 2.1rem !important;
+  padding-right: 2rem !important;
+  width: 220px;
+  font-size: 0.85rem;
+}
+
+.search-clear {
+  position: absolute;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.25rem;
+  border-radius: 4px;
+  line-height: 1;
+}
+
+.search-clear:hover {
+  color: var(--text);
   background: var(--surface-2);
+}
+
+.page-size-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.page-size-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.page-size-select {
+  width: auto !important;
+  padding: 0.4rem 0.6rem !important;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+/* Data Table */
+.table-wrapper {
+  overflow-x: auto;
   border-radius: 10px;
   border: 1px solid var(--border);
 }
 
-.product-info {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.product-icon {
-  font-size: 1.5rem;
-}
-
-.product-name {
-  margin: 0;
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
   font-size: 0.85rem;
+}
+
+.data-table thead tr {
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.data-table th {
+  padding: 0.7rem 0.85rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.data-table td {
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.table-row:last-child td {
+  border-bottom: none;
+}
+
+.table-row:hover td {
+  background: var(--surface-2);
+}
+
+.table-row.row-deleting td {
+  opacity: 0.5;
+}
+
+/* Column widths */
+.col-no   { width: 3rem; }
+.col-icon { width: 2.5rem; }
+.col-name { min-width: 140px; }
+.col-id   { width: 90px; }
+.col-file { min-width: 150px; max-width: 200px; }
+.col-size { width: 80px; white-space: nowrap; }
+.col-type { width: 70px; }
+.col-action { width: 80px; text-align: center; }
+
+.text-muted { color: var(--text-muted); }
+
+.file-type-icon {
+  font-size: 1.2rem;
+}
+
+.product-name-text {
   font-weight: 500;
   color: var(--text);
 }
 
-.product-file {
-  margin: 0.15rem 0 0;
-  font-size: 0.75rem;
+.id-badge {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.15rem 0.35rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  white-space: nowrap;
+}
+
+.file-name-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.mime-badge {
+  background: var(--primary-soft);
+  color: var(--primary-text);
+  border-radius: 5px;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* Pagination */
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.pagination-info {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.btn-page {
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-page:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--primary);
+  color: var(--primary-text);
+}
+
+.btn-page.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-contrast);
+  font-weight: 600;
+}
+
+.btn-page:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.btn-page.ellipsis {
+  border-color: transparent;
+  background: transparent;
+  cursor: default;
   color: var(--text-muted);
 }
 
@@ -992,6 +1278,31 @@ function getFileIcon(filename: string): string {
 }
 
 /* Responsive */
+@media (max-width: 768px) {
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .table-toolbar {
+    width: 100%;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .pagination-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .col-id,
+  .col-type {
+    display: none;
+  }
+}
+
 @media (max-width: 640px) {
   .admin-page {
     padding: 1rem;
@@ -1008,6 +1319,12 @@ function getFileIcon(filename: string): string {
 
   .drop-zone {
     padding: 1.5rem 1rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.78rem;
   }
 }
 </style>

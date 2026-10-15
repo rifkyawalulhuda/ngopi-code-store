@@ -105,3 +105,70 @@ palette was rejected to preserve brand identity.
 3. New category? Add it to `backend/scripts/setup-catalog.js` and re-run it —
    the homepage reads categories from Vendure, so no frontend change is needed.
 4. Re-check the table above before shipping.
+
+---
+
+# Catalog page UX
+
+`frontend/pages/products/index.vue` — the product listing page (PLP).
+
+## Layout
+
+Desktop: **filter sidebar + top toolbar** (count, sort). Mobile: the sidebar is
+replaced by a **bottom sheet** (`CatalogFilterPanel` reused inside a dialog with
+a 50% scrim, Escape/backdrop/close to dismiss, and a sticky apply button).
+
+Products load in a growing window driven by `page` in the URL; **"Muat Lebih
+Banyak"** enlarges the window rather than replacing results, so a client-side
+price filter stays exact.
+
+## Test data is excluded by scoping to real collections
+
+The catalog passes `collectionSlugs: ['source-code', 'ebooks', 'services']` to
+the search query. Seeded `mockup-*` products belong to no collection, so they are
+excluded **server-side with accurate counts**.
+
+> **Why not a facet filter?** Vendure's `FacetValueFilterInput` supports
+> `and`/`or` — *inclusion only*. There is no exclusion, custom fields are not
+> indexed by `DefaultSearchPlugin`, and `PostgresSearchStrategy.applyTermAndFilters`
+> is private, so a custom strategy would mean duplicating core query logic.
+> Collection scoping is the supported equivalent.
+
+**Trade-off:** a real product left uncategorized will not appear in the catalog.
+`scripts/setup-catalog.js` warns about untagged products for exactly this reason.
+
+## URL is the source of truth
+
+`category`, `search`, `page`, `sort`, and `max` are all synced to the query
+string, and a watcher re-reads them on navigation — so a filtered view is
+shareable and **browser back/forward restores the previous filter combination**.
+Defaults are omitted to keep pristine URLs clean.
+
+## Filter feedback
+
+Active filters render as **removable chips** (`ActiveFilterChips`) above the
+grid, with a "Hapus semua" affordance. The empty state distinguishes "no match
+for your filters" (offers to clear them) from "catalog is empty" (offers
+support) — it never invents products to fill the space.
+
+## Quality requirements (verified in-browser)
+
+Same table as the homepage, plus:
+
+| Requirement | Target | Notes |
+|-------------|--------|-------|
+| Filter/sort controls | ≥ 44 px | Options, chips, sort select, sheet buttons |
+| Scrim opacity | 40–60% black | Sheet uses 50% |
+| Contrast | ≥ 4.5:1 | Active filter option raised to 5.66:1 |
+| No horizontal scroll | 375 px | Verified 0 overflow |
+| Loading feedback | Skeleton grid | "Load more" keeps existing cards visible |
+| Reduced motion | respected | Sheet slide + spinner disabled |
+
+## Changing the catalog
+
+1. New filter? Add it to `useProductFilters` (state + URL sync) and
+   `CatalogFilterPanel` (UI) — the panel is shared by sidebar and sheet, so both
+   stay in sync automatically.
+2. New sort option? Extend `SortOption` and `buildSearchSort`.
+3. Re-check the quality table before shipping.
+

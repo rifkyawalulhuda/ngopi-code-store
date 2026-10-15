@@ -8,6 +8,7 @@ export const GET_COLLECTIONS = gql`
         name
         slug
         description
+        productVariantCount
         featuredAsset {
           id
           preview

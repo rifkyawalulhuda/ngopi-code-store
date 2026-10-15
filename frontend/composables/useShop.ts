@@ -38,12 +38,23 @@ export type SortOption = 'latest' | 'price-asc' | 'price-desc'
 
 export interface ProductFilterOptions {
   categorySlug?: string
+  /**
+   * Restrict results to these collection slugs.
+   *
+   * Used to scope the catalog to the *real* product collections, which also
+   * keeps uncategorized test data (seeded mockups) out of shopper-facing
+   * results — server-side, with accurate counts. Vendure's search supports
+   * facet *inclusion* only, so there is no way to exclude by facet.
+   */
+  collectionSlugs?: string[]
   search?: string
   skip?: number
   take?: number
   sort?: SortOption
   /** Client-side max price filter (DefaultSearchPlugin has no server-side price range). */
   priceMax?: number
+  /** True for "load more": keeps existing results visible instead of showing skeletons. */
+  append?: boolean
 }
 
 /** Upper bound above which the price filter is considered inactive. */
@@ -103,10 +114,17 @@ export function useShop() {
   const products: Ref<Product[]> = ref([])
   const totalItems: Ref<number> = ref(0)
   const loading: Ref<boolean> = ref(false)
+  /** True while a "load more" request is in flight (existing cards stay visible). */
+  const loadingMore: Ref<boolean> = ref(false)
   const error: Ref<string | null> = ref(null)
 
   async function fetchProducts(options?: ProductFilterOptions) {
-    loading.value = true
+    const isAppend = options?.append ?? false
+    if (isAppend) {
+      loadingMore.value = true
+    } else {
+      loading.value = true
+    }
     error.value = null
 
     const take = options?.take ?? 12
@@ -114,6 +132,12 @@ export function useShop() {
     const sort = buildSearchSort(options?.sort)
     const term = options?.search || ''
     const collectionSlug = options?.categorySlug || undefined
+    // Scope to the real product collections when no single category is chosen.
+    // This is what keeps uncategorized test data out of shopper-facing results.
+    const collectionSlugs =
+      !collectionSlug && options?.collectionSlugs?.length
+        ? options.collectionSlugs
+        : undefined
     const priceActive =
       typeof options?.priceMax === 'number' && options.priceMax < PRICE_FILTER_CEILING
 
@@ -126,7 +150,8 @@ export function useShop() {
       const input: Record<string, unknown> = {
         groupByProduct: true,
         term,
-        collectionSlug,
+        ...(collectionSlug ? { collectionSlug } : {}),
+        ...(collectionSlugs ? { collectionSlugs } : {}),
         ...(sort ? { sort } : {}),
         take: priceActive ? PRICE_FILTER_FETCH_CAP : take,
         skip: priceActive ? 0 : skip,
@@ -150,17 +175,21 @@ export function useShop() {
         const max = options!.priceMax as number
         const filtered = sortedItems.filter((p) => (p.variants[0]?.price ?? 0) <= max)
         totalItems.value = filtered.length
-        products.value = filtered.slice(skip, skip + take)
+        // `take` is the visible window size; the window grows on "load more".
+        products.value = filtered.slice(0, take)
       } else {
         products.value = sortedItems
         totalItems.value = data.search.totalItems
       }
     } catch (err: any) {
       error.value = err.message || 'Failed to fetch products'
-      products.value = []
-      totalItems.value = 0
+      if (!isAppend) {
+        products.value = []
+        totalItems.value = 0
+      }
     } finally {
       loading.value = false
+      loadingMore.value = false
     }
   }
 
@@ -178,11 +207,12 @@ export function useShop() {
   }
 
   return {
-    products,
-    totalItems,
-    loading,
-    error,
-    fetchProducts,
-    getProductBySlug,
+      products,
+      totalItems,
+      loading,
+      loadingMore,
+      error,
+      fetchProducts,
+      getProductBySlug,
+    }
   }
-}

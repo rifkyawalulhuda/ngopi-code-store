@@ -100,6 +100,8 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
+  /* Keeps the tap target at the 44px minimum */
+  min-height: 44px;
   text-decoration: none;
   color: #fff;
   font-weight: 700;

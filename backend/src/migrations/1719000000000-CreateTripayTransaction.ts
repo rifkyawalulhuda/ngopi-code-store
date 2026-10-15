@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner, Table, TableIndex } from 'typeorm';
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
  * Creates the tripay_transaction table for storing payment transaction records.
@@ -8,134 +8,78 @@ import { MigrationInterface, QueryRunner, Table, TableIndex } from 'typeorm';
  * - merchantRef (unique): for webhook lookups by Vendure order code
  * - tripayReference: for lookups by Tripay-assigned reference
  *
+ * Idempotent: table uses IF NOT EXISTS and each index is created only when the
+ * column is not already indexed, so running after a `synchronize`-created schema
+ * (with differently-named indexes) does not create duplicates.
+ *
  * @see Requirements 1.2
  */
 export class CreateTripayTransaction1719000000000 implements MigrationInterface {
+  name = 'CreateTripayTransaction1719000000000';
+
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.createTable(
-      new Table({
-        name: 'tripay_transaction',
-        columns: [
-          {
-            name: 'id',
-            type: 'int',
-            isPrimary: true,
-            isGenerated: true,
-            generationStrategy: 'increment',
-          },
-          {
-            name: 'createdAt',
-            type: 'timestamp',
-            default: 'CURRENT_TIMESTAMP',
-          },
-          {
-            name: 'updatedAt',
-            type: 'timestamp',
-            default: 'CURRENT_TIMESTAMP',
-          },
-          {
-            name: 'orderId',
-            type: 'int',
-            isNullable: false,
-          },
-          {
-            name: 'merchantRef',
-            type: 'varchar',
-            isNullable: false,
-            isUnique: true,
-          },
-          {
-            name: 'tripayReference',
-            type: 'varchar',
-            isNullable: true,
-          },
-          {
-            name: 'paymentMethod',
-            type: 'varchar',
-            isNullable: false,
-          },
-          {
-            name: 'amount',
-            type: 'int',
-            isNullable: false,
-          },
-          {
-            name: 'feeMerchant',
-            type: 'int',
-            default: 0,
-          },
-          {
-            name: 'feeCustomer',
-            type: 'int',
-            default: 0,
-          },
-          {
-            name: 'status',
-            type: 'varchar',
-            default: "'UNPAID'",
-          },
-          {
-            name: 'paymentUrl',
-            type: 'varchar',
-            isNullable: true,
-          },
-          {
-            name: 'expiredAt',
-            type: 'timestamp',
-            isNullable: true,
-          },
-          {
-            name: 'paidAt',
-            type: 'timestamp',
-            isNullable: true,
-          },
-        ],
-      }),
+    await queryRunner.query(`
+      CREATE TABLE IF NOT EXISTS "tripay_transaction" (
+        "id" SERIAL NOT NULL,
+        "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
+        "updatedAt" TIMESTAMP NOT NULL DEFAULT now(),
+        "orderId" integer NOT NULL,
+        "merchantRef" character varying NOT NULL,
+        "tripayReference" character varying,
+        "paymentMethod" character varying NOT NULL,
+        "amount" integer NOT NULL,
+        "feeMerchant" integer NOT NULL DEFAULT 0,
+        "feeCustomer" integer NOT NULL DEFAULT 0,
+        "status" character varying NOT NULL DEFAULT 'UNPAID',
+        "paymentUrl" character varying,
+        "expiredAt" TIMESTAMP,
+        "paidAt" TIMESTAMP,
+        CONSTRAINT "PK_tripay_transaction_id" PRIMARY KEY ("id"),
+        CONSTRAINT "UQ_tripay_transaction_merchantRef" UNIQUE ("merchantRef")
+      )
+    `);
+
+    await this.ensureIndex(queryRunner, 'IDX_tripay_transaction_orderId', 'orderId', false);
+    await this.ensureIndex(
+      queryRunner,
+      'IDX_tripay_transaction_merchantRef',
+      'merchantRef',
       true,
     );
-
-    // Index on orderId for order-based lookups
-    await queryRunner.createIndex(
-      'tripay_transaction',
-      new TableIndex({
-        name: 'IDX_TRIPAY_TRANSACTION_ORDER_ID',
-        columnNames: ['orderId'],
-      }),
-    );
-
-    // Index on merchantRef (already unique, but explicit index for clarity)
-    await queryRunner.createIndex(
-      'tripay_transaction',
-      new TableIndex({
-        name: 'IDX_TRIPAY_TRANSACTION_MERCHANT_REF',
-        columnNames: ['merchantRef'],
-        isUnique: true,
-      }),
-    );
-
-    // Index on tripayReference for Tripay-side lookups
-    await queryRunner.createIndex(
-      'tripay_transaction',
-      new TableIndex({
-        name: 'IDX_TRIPAY_TRANSACTION_TRIPAY_REFERENCE',
-        columnNames: ['tripayReference'],
-      }),
+    await this.ensureIndex(
+      queryRunner,
+      'IDX_tripay_transaction_tripayReference',
+      'tripayReference',
+      false,
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropIndex(
-      'tripay_transaction',
-      'IDX_TRIPAY_TRANSACTION_TRIPAY_REFERENCE',
-    );
-    await queryRunner.dropIndex(
-      'tripay_transaction',
-      'IDX_TRIPAY_TRANSACTION_MERCHANT_REF',
-    );
-    await queryRunner.dropIndex(
-      'tripay_transaction',
-      'IDX_TRIPAY_TRANSACTION_ORDER_ID',
-    );
-    await queryRunner.dropTable('tripay_transaction');
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_tripay_transaction_tripayReference"`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_tripay_transaction_merchantRef"`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_tripay_transaction_orderId"`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "tripay_transaction"`);
+  }
+
+  /** Creates the index only if no index already covers the given column. */
+  private async ensureIndex(
+    queryRunner: QueryRunner,
+    indexName: string,
+    column: string,
+    unique: boolean,
+  ): Promise<void> {
+    await queryRunner.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_indexes
+          WHERE tablename = 'tripay_transaction'
+            AND indexdef LIKE '%("${column}")%'
+        ) THEN
+          CREATE ${unique ? 'UNIQUE ' : ''}INDEX "${indexName}"
+            ON "tripay_transaction" ("${column}");
+        END IF;
+      END $$;
+    `);
   }
 }

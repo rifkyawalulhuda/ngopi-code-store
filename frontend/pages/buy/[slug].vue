@@ -26,7 +26,8 @@
                 <h2 class="section-title">Detail Pembeli</h2>
               </div>
 
-              <div class="billing-form">
+              <!-- Logged in: details taken from the account (read-only) -->
+              <div v-if="isLoggedIn" class="billing-form">
                 <div class="form-group">
                   <label class="form-label" for="ck-name">Nama Lengkap</label>
                   <input
@@ -66,6 +67,56 @@
                 <p class="billing-note">
                   Data di atas diambil dari akun Anda.
                   <NuxtLink to="/account" class="billing-link">Ubah di Pengaturan</NuxtLink>
+                </p>
+              </div>
+
+              <!-- Guest: enter details directly, no account required -->
+              <div v-else class="billing-form">
+                <div class="form-group">
+                  <label class="form-label" for="guest-email">Email Address</label>
+                  <input
+                    id="guest-email"
+                    v-model="guestForm.email"
+                    type="email"
+                    class="form-input"
+                    placeholder="nama@email.com"
+                    autocomplete="email"
+                    :class="{ 'input-invalid': guestErrors.email }"
+                  />
+                  <span v-if="guestErrors.email" class="field-error">{{ guestErrors.email }}</span>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="guest-name">Nama Lengkap</label>
+                  <input
+                    id="guest-name"
+                    v-model="guestForm.fullName"
+                    type="text"
+                    class="form-input"
+                    placeholder="Nama lengkap Anda"
+                    autocomplete="name"
+                    :class="{ 'input-invalid': guestErrors.fullName }"
+                  />
+                  <span v-if="guestErrors.fullName" class="field-error">{{ guestErrors.fullName }}</span>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="guest-phone">No. Telepon / WhatsApp</label>
+                  <input
+                    id="guest-phone"
+                    v-model="guestForm.whatsappNumber"
+                    type="tel"
+                    class="form-input"
+                    placeholder="0812xxxxxxx"
+                    autocomplete="tel"
+                    :class="{ 'input-invalid': guestErrors.whatsappNumber }"
+                  />
+                  <span v-if="guestErrors.whatsappNumber" class="field-error">{{ guestErrors.whatsappNumber }}</span>
+                </div>
+
+                <p class="billing-note">
+                  Belum punya akun? Tidak masalah — isi data di atas dan tautan download akan dikirim ke email Anda.
+                  <NuxtLink to="/auth" class="billing-link">Masuk / Daftar</NuxtLink>
                 </p>
               </div>
             </div>
@@ -226,7 +277,7 @@
               <button
                 type="button"
                 class="btn btn-primary btn-full checkout-cta"
-                :disabled="!selectedChannel || processing || needsPhone"
+                :disabled="!selectedChannel || processing || needsPhone || (!isLoggedIn && !guestFormValid)"
                 @click="onProceedPayment"
               >
                 <span v-if="processing" class="btn-spinner-sm" />
@@ -264,11 +315,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useAuth } from '~/composables/useAuth'
 import { GET_PRODUCT_BY_SLUG } from '~/graphql/queries/products'
 import { formatPriceIDR } from '~/utils/format'
 import gql from 'graphql-tag'
+
+const SET_CUSTOMER_FOR_ORDER = gql`
+  mutation SetCustomerForOrder($input: CreateCustomerInput!) {
+    setCustomerForOrder(input: $input) {
+      ... on Order {
+        id
+        code
+      }
+      ... on AlreadyLoggedInError {
+        message
+      }
+      ... on EmailAddressConflictError {
+        message
+      }
+      ... on GuestCheckoutError {
+        message
+        errorDetail
+      }
+      ... on NoActiveOrderError {
+        message
+      }
+    }
+  }
+`
 
 const ADD_ITEM_TO_ORDER = gql`
   mutation AddItemToOrder($productVariantId: ID!, $quantity: Int!) {
@@ -428,6 +503,48 @@ const processing = ref(false)
 const paymentError = ref('')
 const showPendingOrderHint = ref(false)
 
+// Guest checkout form (used when the visitor is not logged in)
+const guestForm = reactive({
+  email: '',
+  fullName: '',
+  whatsappNumber: '',
+})
+const guestErrors = reactive<{ email: string | null; fullName: string | null; whatsappNumber: string | null }>({
+  email: null,
+  fullName: null,
+  whatsappNumber: null,
+})
+
+function computeGuestErrors(form: { email: string; fullName: string; whatsappNumber: string }) {
+  const email = form.email.trim()
+  const name = form.fullName.trim()
+  const phone = form.whatsappNumber.trim().replace(/[\s-]/g, '')
+
+  return {
+    email: !email
+      ? 'Email wajib diisi'
+      : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+        ? null
+        : 'Format email tidak valid',
+    fullName: name.length < 2 ? 'Nama lengkap wajib diisi' : null,
+    whatsappNumber: !phone
+      ? 'Nomor WhatsApp wajib diisi'
+      : /^(\+?62|0)8[1-9][0-9]{6,11}$/.test(phone)
+        ? null
+        : 'Nomor WhatsApp tidak valid (contoh: 081234567890)',
+  }
+}
+
+const guestFormValid = computed(() => {
+  const e = computeGuestErrors(guestForm)
+  return !e.email && !e.fullName && !e.whatsappNumber
+})
+
+function validateGuestForm(): boolean {
+  Object.assign(guestErrors, computeGuestErrors(guestForm))
+  return !guestErrors.email && !guestErrors.fullName && !guestErrors.whatsappNumber
+}
+
 // Tripay payment channels (sandbox-compatible)
 const vaChannels = [
   { code: 'BRIVA', name: 'BRI VA', logo: 'bri' },
@@ -445,12 +562,18 @@ const ewalletChannels = [
 // E-wallet channels require phone number
 const ewalletCodes = new Set(['OVO', 'DANA', 'SHOPEEPAY'])
 const isEwalletSelected = computed(() => ewalletCodes.has(selectedChannel.value))
-const customerPhone = computed(() => customer.value?.customFields?.whatsappNumber || '')
+const customerPhone = computed(() =>
+  isLoggedIn.value
+    ? customer.value?.customFields?.whatsappNumber || ''
+    : guestForm.whatsappNumber.trim().replace(/[\s-]/g, ''),
+)
 const needsPhone = computed(() => isEwalletSelected.value && !customerPhone.value)
 
 const fullName = computed(() => {
-  if (!customer.value) return ''
-  return `${customer.value.firstName} ${customer.value.lastName}`.trim()
+  if (isLoggedIn.value && customer.value) {
+    return `${customer.value.firstName} ${customer.value.lastName}`.trim()
+  }
+  return guestForm.fullName.trim()
 })
 
 const formattedPrice = computed(() => {
@@ -459,12 +582,9 @@ const formattedPrice = computed(() => {
 })
 
 onMounted(async () => {
-  // Ensure user is logged in
-  const activeCustomer = await ensureSession()
-  if (!activeCustomer) {
-    navigateTo('/auth')
-    return
-  }
+  // Check for an existing session, but do NOT require one — guests may check out
+  // by filling in their details directly.
+  await ensureSession()
 
   // Fetch product data
   try {
@@ -490,6 +610,12 @@ onMounted(async () => {
 async function onProceedPayment() {
   if (!selectedChannel.value || !product.value) return
 
+  // Guests must provide their details before we can create the order customer.
+  if (!isLoggedIn.value && !validateGuestForm()) {
+    paymentError.value = 'Lengkapi data pembeli terlebih dahulu.'
+    return
+  }
+
   processing.value = true
   paymentError.value = ''
   showPendingOrderHint.value = false
@@ -512,6 +638,44 @@ async function onProceedPayment() {
     if (addResult?.__typename !== 'Order') {
       if (addResult?.__typename !== 'OrderModificationError') {
         paymentError.value = addResult?.message || 'Gagal menambahkan produk ke pesanan.'
+        return
+      }
+    }
+
+    // Step 1b: For guests, attach the customer to the order.
+    // Must happen while the order is still in AddingItems, before ArrangingPayment.
+    if (!isLoggedIn.value) {
+      const nameParts = guestForm.fullName.trim().split(/\s+/)
+      const firstName = nameParts[0]
+      const lastName = nameParts.slice(1).join(' ') || '-'
+
+      const { data: custData } = await $apollo.defaultClient.mutate({
+        mutation: SET_CUSTOMER_FOR_ORDER,
+        variables: {
+          input: {
+            emailAddress: guestForm.email.trim(),
+            firstName,
+            lastName,
+            customFields: {
+              whatsappNumber: guestForm.whatsappNumber.trim().replace(/[\s-]/g, ''),
+            },
+          },
+        },
+      })
+
+      const custResult = custData?.setCustomerForOrder
+      if (custResult?.__typename === 'EmailAddressConflictError') {
+        paymentError.value =
+          'Email ini sudah terdaftar. Silakan masuk ke akun Anda atau minta tautan akses pesanan.'
+        return
+      }
+      if (custResult?.__typename === 'GuestCheckoutError') {
+        paymentError.value =
+          custResult.errorDetail || 'Checkout tamu sedang tidak tersedia. Silakan masuk terlebih dahulu.'
+        return
+      }
+      if (custResult?.__typename !== 'Order') {
+        paymentError.value = custResult?.message || 'Gagal menyimpan data pembeli.'
         return
       }
     }
@@ -766,6 +930,24 @@ async function onProceedPayment() {
 .form-input[readonly] {
   opacity: 0.75;
   cursor: default;
+}
+
+.input-invalid {
+  border-color: #dc2626;
+}
+
+[data-theme='dark'] .input-invalid {
+  border-color: #f87171;
+}
+
+.field-error {
+  font-size: 0.78rem;
+  color: #dc2626;
+  line-height: 1.4;
+}
+
+[data-theme='dark'] .field-error {
+  color: #fca5a5;
 }
 
 .billing-note {

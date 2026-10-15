@@ -201,7 +201,9 @@ describe('TripayService', () => {
 
       expect(body.signature).toBeDefined();
       expect(body.callback_url).toBe('https://example.com/webhook');
-      expect(body.return_url).toBe('https://example.com/return');
+      // The merchant ref (order code) is appended so Tripay returns the customer
+      // to the correct order on the storefront.
+      expect(body.return_url).toBe('https://example.com/return/ORD-001');
       expect(body.expired_time).toBeGreaterThan(Math.floor(Date.now() / 1000));
     });
 

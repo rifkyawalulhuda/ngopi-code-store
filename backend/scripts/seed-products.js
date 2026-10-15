@@ -7,6 +7,11 @@
  *
  * Usage:
  *   node scripts/seed-products.js
+ *   node scripts/setup-store.js   # ensures currency/tax/shipping are correct
+ *
+ * NOTE: this script seeds the catalog. Channel currency, tax rate and the
+ * shipping method are guaranteed by `scripts/setup-store.js` — run that too, or
+ * checkout will not work. See docs/store-setup.md.
  */
 
 const http = require('http');
@@ -279,11 +284,17 @@ async function main() {
         `, {
           input: {
             id: defaultChannel.id,
+            // This store is IDR-only (IdrMoneyStrategy precision 0, Rupiah
+            // prices, Rupiah formatting in the storefront). Without this the
+            // channel keeps Vendure's default USD and every price is
+            // mislabelled. See docs/store-setup.md.
+            defaultCurrencyCode: 'IDR',
+            availableCurrencyCodes: ['IDR'],
             defaultTaxZoneId: zoneId,
             defaultShippingZoneId: zoneId,
           }
         });
-        console.log(`   ✅ Default tax zone set on channel`);
+        console.log(`   ✅ Default currency set to IDR + tax zone set on channel`);
       }
     } catch (err) {
       console.log('   ⚠️  Channel update issue:', err.message.substring(0, 150));

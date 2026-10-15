@@ -12,10 +12,12 @@ import { formatPriceIDR, truncateDescription } from '~/utils/format'
 describe('Product Catalog Page - Core Logic', () => {
   describe('Price display (IDR format)', () => {
     it('displays price in IDR format for typical digital product prices', () => {
-      // Typical prices for digital products in Indonesia
-      expect(formatPriceIDR(5000000)).toBe('Rp 50.000')   // Rp 50.000
-      expect(formatPriceIDR(15000000)).toBe('Rp 150.000') // Rp 150.000
-      expect(formatPriceIDR(50000000)).toBe('Rp 500.000') // Rp 500.000
+      // IDR is zero-decimal: prices are stored as the actual Rupiah amount
+      // (IdrMoneyStrategy precision 0), so no division happens.
+      expect(formatPriceIDR(50000)).toBe('Rp 50.000') // Rp 50.000
+      expect(formatPriceIDR(150000)).toBe('Rp 150.000') // Rp 150.000
+      expect(formatPriceIDR(500000)).toBe('Rp 500.000') // Rp 500.000
+      expect(formatPriceIDR(1500000)).toBe('Rp 1.500.000') // Rp 1.500.000
     })
   })
 

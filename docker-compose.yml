@@ -32,6 +32,11 @@ services:
       - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
       - MINIO_USE_SSL=false
       - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-products}
+      # Host used to SIGN download URLs. Must be the PUBLIC host the customer's
+      # browser can reach, and the same MinIO the backend uploads to. Without it
+      # the internal client signs with `minio:9000`, which no browser can
+      # resolve, so every download fails.
+      - MINIO_PUBLIC_URL=${MINIO_PUBLIC_URL}
       - TRIPAY_API_KEY=${TRIPAY_API_KEY}
       - TRIPAY_PRIVATE_KEY=${TRIPAY_PRIVATE_KEY}
       - TRIPAY_MERCHANT_CODE=${TRIPAY_MERCHANT_CODE}
@@ -42,6 +47,24 @@ services:
       - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS}
       - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-NgopiCode Store}
       - STOREFRONT_URL=${STOREFRONT_URL}
+      # Guest checkout (buy without login/register).
+      # Setting GUEST_CHECKOUT_ENABLED=false blocks NEW guest checkouts and new
+      # magic links; existing paid orders stay retrievable.
+      - GUEST_CHECKOUT_ENABLED=${GUEST_CHECKOUT_ENABLED:-true}
+      - GUEST_LINK_TTL_HOURS=${GUEST_LINK_TTL_HOURS:-72}
+      # WhatsApp (WAHA) — complementary to email, which stays primary.
+      # Leave WAHA_API_KEY empty to keep WhatsApp disabled without breaking email.
+      - WHATSAPP_ENABLED=${WHATSAPP_ENABLED:-true}
+      - WAHA_BASE_URL=${WAHA_BASE_URL:-https://waha.ngopicode.com}
+      - WAHA_API_KEY=${WAHA_API_KEY:-}
+      - WAHA_SESSION=${WAHA_SESSION:-default}
+      # Unpaid-order reminder scan.
+      - WHATSAPP_REMINDER_ENABLED=${WHATSAPP_REMINDER_ENABLED:-true}
+      - WHATSAPP_REMINDER_INTERVAL_MINUTES=${WHATSAPP_REMINDER_INTERVAL_MINUTES:-15}
+      - WHATSAPP_REMINDER_LEAD_MINUTES=${WHATSAPP_REMINDER_LEAD_MINUTES:-60}
+      # Search index maintenance (safety net against a stale index).
+      - SEARCH_REINDEX_ENABLED=${SEARCH_REINDEX_ENABLED:-true}
+      - SEARCH_REINDEX_INTERVAL_HOURS=${SEARCH_REINDEX_INTERVAL_HOURS:-24}
     depends_on:
       postgres:
         condition: service_healthy

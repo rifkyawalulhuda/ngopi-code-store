@@ -21,9 +21,13 @@
         <!-- Success State (Paid/Fulfilled) -->
         <div v-else-if="isSuccess && order" class="order-state">
           <!-- Back button -->
-          <NuxtLink to="/account" class="back-link">
+          <NuxtLink v-if="isLoggedIn" to="/account" class="back-link">
             <AppIcon name="arrowRight" :size="16" class="back-arrow" />
             Kembali ke Riwayat Pesanan
+          </NuxtLink>
+          <NuxtLink v-else to="/products" class="back-link">
+            <AppIcon name="arrowRight" :size="16" class="back-arrow" />
+            Kembali ke Katalog
           </NuxtLink>
 
           <div class="state-badge state-success">
@@ -44,10 +48,14 @@
             <AppIcon name="download" :size="22" />
             <div>
               <h3>Produk Digital Siap Diunduh</h3>
-              <p>Akses produk digital Anda di Pustaka Saya.</p>
+              <p v-if="isLoggedIn">Akses produk digital Anda di Pustaka Saya.</p>
+              <p v-else>Kami telah mengirim tautan download ke email Anda. Tidak menemukannya? Minta tautan baru di sini.</p>
             </div>
-            <NuxtLink to="/account" class="btn btn-primary">
+            <NuxtLink v-if="isLoggedIn" to="/account" class="btn btn-primary">
               Unduh Sekarang
+            </NuxtLink>
+            <NuxtLink v-else to="/order/lookup" class="btn btn-primary">
+              Minta Tautan Download
             </NuxtLink>
           </div>
 
@@ -88,9 +96,13 @@
         <!-- Pending State (Waiting Payment) -->
         <div v-else-if="isPending && order" class="order-state">
           <!-- Back button -->
-          <NuxtLink to="/account" class="back-link">
+          <NuxtLink v-if="isLoggedIn" to="/account" class="back-link">
             <AppIcon name="arrowRight" :size="16" class="back-arrow" />
             Kembali ke Riwayat Pesanan
+          </NuxtLink>
+          <NuxtLink v-else to="/products" class="back-link">
+            <AppIcon name="arrowRight" :size="16" class="back-arrow" />
+            Kembali ke Katalog
           </NuxtLink>
 
           <div class="state-badge state-pending">
@@ -208,6 +220,7 @@ import { formatPriceIDR } from '~/utils/format'
 import OrderSummaryItems from '~/components/OrderSummaryItems.vue'
 
 const route = useRoute()
+const { isLoggedIn, ensureSession } = useAuth()
 
 const {
   order,
@@ -288,15 +301,10 @@ async function refreshOrder() {
 }
 
 onMounted(async () => {
-  // Ensure user session is active (might be lost after cross-site redirect from Tripay)
-  const { ensureSession, isLoggedIn } = useAuth()
+  // Ensure any existing session is loaded, but do NOT require one: guests can
+  // view their confirmation via Vendure's short-lived anonymous order access.
+  // Download access for guests is delivered by the emailed magic link.
   await ensureSession()
-
-  // If not logged in after redirect, send to login with return URL
-  if (!isLoggedIn.value) {
-    navigateTo(`/auth?redirect=/order/${route.params.code}`)
-    return
-  }
 
   const code = route.params.code as string
   const status = route.query.status as string | undefined

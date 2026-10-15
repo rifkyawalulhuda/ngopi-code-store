@@ -17,18 +17,52 @@ export class MinioService implements OnModuleInit {
   private bucket: string;
 
   constructor() {
-    this.bucket = process.env.MINIO_BUCKET_NAME || 'products';
+    // Trim: a stray trailing space in .env / a Docker `-e` flag otherwise
+    // produces "Invalid bucket name" on every upload — a very confusing failure.
+    this.bucket = (process.env.MINIO_BUCKET_NAME || 'products').trim();
   }
 
-  onModuleInit() {
+  async onModuleInit() {
     this.client = new Minio.Client({
-      endPoint: process.env.MINIO_ENDPOINT || 'localhost',
+      endPoint: (process.env.MINIO_ENDPOINT || 'localhost').trim(),
       port: parseInt(process.env.MINIO_PORT || '9000', 10),
       useSSL: process.env.MINIO_USE_SSL === 'true',
-      accessKey: process.env.MINIO_ACCESS_KEY || 'minioadmin',
-      secretKey: process.env.MINIO_SECRET_KEY || 'minioadmin',
+      accessKey: (process.env.MINIO_ACCESS_KEY || 'minioadmin').trim(),
+      secretKey: (process.env.MINIO_SECRET_KEY || 'minioadmin').trim(),
     });
+    await this.ensureBucket();
     Logger.info('MinIO client initialized', loggerCtx);
+  }
+
+  /**
+   * Creates the bucket when it does not exist yet.
+   *
+   * Uploads fail with a bare "The specified bucket does not exist" otherwise,
+   * which is easy to misread as a credentials problem. In production the
+   * `minio-init` compose service creates it, but nothing does so for a plain
+   * local `npm run dev` — so a fresh environment silently cannot accept files.
+   *
+   * A bucket created by MinIO is private by default; anonymous access is never
+   * granted here (see `src/config/security.ts`).
+   *
+   * Never blocks startup: if MinIO is unreachable the server still boots and
+   * the failure surfaces when an upload is attempted.
+   */
+  private async ensureBucket(): Promise<void> {
+    try {
+      const exists = await this.client.bucketExists(this.bucket);
+      if (exists) {
+        return;
+      }
+      await this.client.makeBucket(this.bucket);
+      Logger.info(`Created MinIO bucket "${this.bucket}" (private)`, loggerCtx);
+    } catch (error) {
+      Logger.warn(
+        `Could not verify/create MinIO bucket "${this.bucket}": ${(error as Error).message}. ` +
+          `File uploads will fail until the bucket exists.`,
+        loggerCtx,
+      );
+    }
   }
 
   /**

@@ -45,6 +45,7 @@
       </div>
 
       <nav class="footer-links" aria-label="Halaman Legal">
+        <NuxtLink to="/order/lookup">Cek Pesanan</NuxtLink>
         <NuxtLink to="/tentang">Tentang Kami</NuxtLink>
         <NuxtLink to="/kebijakan-privasi">Kebijakan Privasi</NuxtLink>
         <NuxtLink to="/syarat-ketentuan">Syarat & Ketentuan</NuxtLink>

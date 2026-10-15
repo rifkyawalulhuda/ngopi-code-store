@@ -12,6 +12,7 @@ import {
   AUTHENTICATE_WITH_GOOGLE,
   AUTHENTICATE_WITH_GITHUB,
 } from '~/graphql/mutations/auth'
+import { AUTHENTICATE_WITH_ORDER_LINK, SET_PASSWORD_FOR_GUEST } from '~/graphql/mutations/guestCheckout'
 
 export interface ActiveCustomer {
   id: string
@@ -398,6 +399,61 @@ export function useAuth() {
     }
   }
 
+  /**
+   * Open a session using a magic order-access link (guest purchases).
+   * The backend sets the session cookie; we just refresh local state.
+   */
+  async function loginWithOrderLink(
+    token: string,
+  ): Promise<{ success: boolean; orderCode?: string | null }> {
+    loading.value = true
+    error.value = null
+    try {
+      const { $apollo } = useNuxtApp()
+      const { data } = await $apollo.defaultClient.mutate({
+        mutation: AUTHENTICATE_WITH_ORDER_LINK,
+        variables: { token },
+      })
+
+      const result = data?.authenticateWithOrderLink
+      if (result?.success) {
+        await fetchActiveCustomer()
+        return { success: true, orderCode: result.orderCode ?? null }
+      }
+
+      error.value = result?.message || 'Tautan tidak valid atau sudah kedaluwarsa.'
+      return { success: false }
+    } catch (err: any) {
+      error.value = err.message || 'Terjadi kesalahan saat membuka tautan.'
+      return { success: false }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Claim a guest account by setting a password (no current password needed).
+   */
+  async function setPasswordForGuest(newPassword: string): Promise<boolean> {
+    error.value = null
+    try {
+      const { $apollo } = useNuxtApp()
+      const { data } = await $apollo.defaultClient.mutate({
+        mutation: SET_PASSWORD_FOR_GUEST,
+        variables: { newPassword },
+      })
+      const result = data?.setPasswordForGuest
+      if (result?.success) {
+        return true
+      }
+      error.value = result?.message || 'Gagal menyimpan password.'
+      return false
+    } catch (err: any) {
+      error.value = err.message || 'Terjadi kesalahan saat menyimpan password.'
+      return false
+    }
+  }
+
   return {
     customer,
     isLoggedIn,
@@ -408,6 +464,8 @@ export function useAuth() {
     login,
     loginWithGoogle,
     loginWithGitHub,
+    loginWithOrderLink,
+    setPasswordForGuest,
     logout,
     verifyEmail,
     fetchActiveCustomer,

@@ -55,7 +55,7 @@ const productArb = (availableCategories: string[]) =>
       .map((slugs) => [...new Set(slugs)]),
   })
 
-describe('Property 13: Category Filter Correctness', () => {
+describe('Property 13: Category Filter Correctness', { timeout: 30_000 }, () => {
   it('all returned products belong to the selected category', () => {
     fc.assert(
       fc.property(

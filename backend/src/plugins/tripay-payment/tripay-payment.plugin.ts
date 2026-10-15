@@ -3,6 +3,8 @@ import gql from 'graphql-tag';
 import { TripayTransaction } from './entities/tripay-transaction.entity';
 import { tripayPaymentMethodHandler } from './tripay-payment-method.handler';
 import { CancelOrderResolver } from './api/cancel-order.resolver';
+import { TripayWebhookService } from './services/tripay-webhook.service';
+import { DigitalFulfillmentPlugin } from '../digital-fulfillment/digital-fulfillment.plugin';
 
 const shopApiExtensions = gql`
   type CancelMyOrderResult {
@@ -30,8 +32,10 @@ const shopApiExtensions = gql`
  * `args` as a native settings form.
  */
 @VendurePlugin({
-  imports: [PluginCommonModule],
+  imports: [PluginCommonModule, DigitalFulfillmentPlugin],
   entities: [TripayTransaction],
+  providers: [TripayWebhookService],
+  exports: [TripayWebhookService],
   shopApiExtensions: {
     schema: shopApiExtensions,
     resolvers: [CancelOrderResolver],

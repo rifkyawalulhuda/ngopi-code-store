@@ -52,9 +52,25 @@ describe('DigitalProduct Entity', () => {
       expect(maxDownloadErrors).toHaveLength(0);
     });
 
-    it('should pass validation with value 10 (maximum)', async () => {
+    it('should pass validation with value 1000 (maximum)', async () => {
       const product = createValidDigitalProduct();
-      product.maxDownloadsPerOrder = 10;
+      product.maxDownloadsPerOrder = 1000;
+      const errors = await validate(product);
+      const maxDownloadErrors = errors.filter(
+        (e) => e.property === 'maxDownloadsPerOrder',
+      );
+      expect(maxDownloadErrors).toHaveLength(0);
+    });
+
+    /**
+     * Regression guard: 999 is the "unlimited" sentinel the Admin uploader
+     * writes. When the bound was 10, this value failed validation and the
+     * matching DB CHECK constraint rejected fulfillment inserts — a paid order
+     * ended up Fulfilled with zero download records.
+     */
+    it('should pass validation with 999 (the "unlimited" sentinel)', async () => {
+      const product = createValidDigitalProduct();
+      product.maxDownloadsPerOrder = 999;
       const errors = await validate(product);
       const maxDownloadErrors = errors.filter(
         (e) => e.property === 'maxDownloadsPerOrder',
@@ -82,9 +98,9 @@ describe('DigitalProduct Entity', () => {
       expect(maxDownloadErrors.length).toBeGreaterThan(0);
     });
 
-    it('should fail validation with value 11 (above maximum)', async () => {
+    it('should fail validation with value 1001 (above maximum)', async () => {
       const product = createValidDigitalProduct();
-      product.maxDownloadsPerOrder = 11;
+      product.maxDownloadsPerOrder = 1001;
       const errors = await validate(product);
       const maxDownloadErrors = errors.filter(
         (e) => e.property === 'maxDownloadsPerOrder',

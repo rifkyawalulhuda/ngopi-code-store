@@ -210,6 +210,8 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  /* Keeps the tap target at the 44px minimum */
+  min-height: 44px;
   text-decoration: none;
   color: var(--text);
   font-weight: 700;
@@ -226,8 +228,9 @@ onBeforeUnmount(() => {
 .theme-toggle {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  /* 44px meets the minimum touch target size */
+  width: 44px;
+  height: 44px;
   border: 1px solid var(--border);
   background: var(--surface-2);
   color: var(--text-muted);
@@ -285,8 +288,9 @@ onBeforeUnmount(() => {
   position: relative;
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  /* 44px meets the minimum touch target size */
+  width: 44px;
+  height: 44px;
   border: none;
   background: transparent;
   color: var(--text);

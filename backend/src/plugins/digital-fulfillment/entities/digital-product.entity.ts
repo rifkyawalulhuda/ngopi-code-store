@@ -67,10 +67,18 @@ export class DigitalProduct extends VendureEntity {
 
   /**
    * Maximum number of times a customer can download this product per order.
-   * Valid range: 1 to 10. Default: 5.
+   *
+   * `999` is the sentinel used by the Admin uploader to mean "unlimited" — the
+   * dashboard upload flow stores it directly, and `OrderFulfillmentRunner`
+   * copies it into each `DigitalDownload` record. The DB CHECK constraint on
+   * `digital_download.maxDownloads` allows up to 1000 for that reason
+   * (see migration `WidenDigitalDownloadMaxRange`).
+   *
+   * The column default (5) is only used when a record is created without an
+   * explicit value, which the upload flow never does.
    */
   @Min(1)
-  @Max(10)
+  @Max(1000)
   @Column({ default: 5 })
   maxDownloadsPerOrder: number;
 

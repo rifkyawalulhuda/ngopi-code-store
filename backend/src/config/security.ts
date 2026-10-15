@@ -26,7 +26,8 @@ import { randomUUID } from 'crypto';
  *
  * The bucket policy explicitly denies all public GetObject requests.
  * This is enforced at two levels:
- * 1. Application level: `initializeMinioBuckets()` sets a Deny policy on bucket creation
+ * 1. Application level: `MinioService.ensureBucket()` creates the bucket, and
+ *    MinIO buckets are private by default (no anonymous access is ever granted)
  * 2. Infrastructure level: `docker-compose.yml` runs `mc anonymous set none` on startup
  *
  * @see Requirements 13.1
@@ -40,7 +41,8 @@ export const MINIO_SECURITY_CONFIG = {
 
   /**
    * Private bucket policy that denies all public access.
-   * Applied when creating the bucket via `initializeMinioBuckets()`.
+   * Reference policy for the private bucket (MinIO already defaults to private;
+   * see `MinioService.ensureBucket()`).
    */
   getPrivateBucketPolicy(bucketName: string): string {
     return JSON.stringify({

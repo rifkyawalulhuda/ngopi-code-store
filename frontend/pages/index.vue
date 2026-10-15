@@ -3,67 +3,85 @@
     <TheHeader />
 
     <main>
-      <!-- Hero -->
+      <!-- ============ Hero: search-first ============ -->
       <section class="hero">
-        <div class="hero-inner hero-split">
-          <div class="hero-lottie">
-            <LottiePlayer src="/animations/hero-rocket.lottie" :loop="true" :autoplay="true" />
-          </div>
-          <div class="hero-content">
-            <span class="hero-eyebrow">Premium Digital Assets</span>
-            <h1 class="hero-title">
-              Bangun Aplikasimu secara cepat, untuk
-              <span class="hl">Developer</span>
-            </h1>
-            <p class="hero-sub">
-              Dapatkan source code siap pakai, bersih, dan mudah dikembangkan untuk proyek Aplikasi Anda.
-            </p>
-            <div class="hero-cta">
-              <NuxtLink to="/products" class="btn btn-primary">
-                Jelajahi Katalog
-                <AppIcon name="arrowRight" :size="18" />
+        <div class="hero-inner">
+          <span class="hero-eyebrow">Premium Digital Assets</span>
+
+          <h1 class="hero-title">
+            Temukan aset digital siap pakai untuk
+            <span class="hl">proyek Anda</span>
+          </h1>
+
+          <p class="hero-sub">
+            Source code, ebook teknis, dan layanan web — langsung diunduh setelah pembayaran.
+          </p>
+
+          <!-- Primary action: search -->
+          <form class="hero-search" role="search" @submit.prevent="onSearch">
+            <span class="hero-search-icon" aria-hidden="true">
+              <AppIcon name="search" :size="20" />
+            </span>
+            <label class="sr-only" for="hero-search-input">Cari produk</label>
+            <input
+              id="hero-search-input"
+              v-model="searchTerm"
+              type="search"
+              class="hero-search-input"
+              placeholder="Cari source code, ebook, template…"
+              autocomplete="off"
+            />
+            <button type="submit" class="hero-search-btn" :disabled="!canSearch">
+              Cari
+            </button>
+          </form>
+          <p class="hero-search-hint">Tekan <kbd>Ctrl</kbd> + <kbd>K</kbd> untuk pencarian cepat dari halaman mana pun.</p>
+
+          <!-- Category chips -->
+          <ul v-if="collections.length" class="hero-chips">
+            <li v-for="c in collections" :key="c.id">
+              <NuxtLink :to="categoryUrl(c.slug)" class="hero-chip">
+                {{ c.name }}
               </NuxtLink>
-              <a
-                v-if="whatsappLink"
-                :href="whatsappLink"
-                class="btn btn-ghost"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <AppIcon name="whatsapp" :size="18" />
-                WhatsApp Support
-              </a>
-            </div>
-          </div>
-        </div>
-        <div class="hero-glow" aria-hidden="true" />
-      </section>
+            </li>
+          </ul>
 
-      <!-- Category cards -->
-      <section class="section categories">
-        <div
-          v-for="cat in categories"
-          :key="cat.slug"
-          class="category-card"
-        >
-          <span class="category-icon">
-            <AppIcon :name="cat.icon" :size="26" />
-          </span>
-          <h3>{{ cat.title }}</h3>
-          <p>{{ cat.desc }}</p>
-          <NuxtLink :to="cat.to" class="category-link">
-            {{ cat.cta }}
-            <AppIcon name="arrowRight" :size="16" />
-          </NuxtLink>
+          <!-- Trust signals -->
+          <ul class="hero-trust">
+            <li>
+              <AppIcon name="check" :size="15" />
+              <span><strong>Tanpa daftar akun</strong> — beli langsung, tautan dikirim ke email &amp; WhatsApp</span>
+            </li>
+            <li>
+              <AppIcon name="download" :size="15" />
+              <span>Pengiriman instan setelah pembayaran</span>
+            </li>
+            <li>
+              <AppIcon name="lock" :size="15" />
+              <span>Unduhan aman via tautan sementara</span>
+            </li>
+          </ul>
         </div>
       </section>
 
-      <!-- Bestsellers -->
-      <section id="bestsellers" class="section">
+      <!-- ============ Payment methods ============ -->
+      <section class="payment-strip" aria-labelledby="payment-strip-title">
+        <div class="payment-strip-inner">
+          <p id="payment-strip-title" class="payment-strip-label">Pembayaran aman via Tripay</p>
+          <ul class="payment-logos">
+            <li v-for="m in paymentMethods" :key="m.file">
+              <img :src="`/img/payment/${m.file}`" :alt="m.name" loading="lazy" decoding="async" />
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ============ Categories ============ -->
+      <section v-if="collections.length" class="section">
         <div class="section-head">
           <div>
-            <span class="section-eyebrow">Pilihan Terbaik</span>
-            <h2 class="section-title">Digital Best-Sellers</h2>
+            <span class="section-eyebrow">Kategori</span>
+            <h2 class="section-title">Jelajahi berdasarkan jenis</h2>
           </div>
           <NuxtLink to="/products" class="view-all">
             Lihat Semua
@@ -71,44 +89,75 @@
           </NuxtLink>
         </div>
 
-        <div v-if="loading" class="grid-products">
-          <div v-for="n in 4" :key="n" class="product-card skeleton">
-            <div class="thumb skeleton-box" />
-            <div class="skeleton-line" />
-            <div class="skeleton-line short" />
-          </div>
-        </div>
-
-        <div v-else class="grid-products">
-          <article
-            v-for="product in displayProducts"
-            :key="product.id"
-            class="product-card"
+        <div class="grid-categories">
+          <NuxtLink
+            v-for="c in collections"
+            :key="c.id"
+            :to="categoryUrl(c.slug)"
+            class="category-card"
           >
-            <div class="thumb">
-              <img
-                v-if="product.image"
-                :src="product.image"
-                :alt="product.name"
-                loading="lazy"
-              />
-              <div v-else class="thumb-placeholder">
-                <AppIcon name="code" :size="34" />
-              </div>
-              <span v-if="product.badge" class="badge">{{ product.badge }}</span>
-            </div>
-            <div class="product-body">
-              <h3 class="product-name">{{ product.name }}</h3>
-              <p class="product-price">{{ product.priceLabel }}</p>
-              <NuxtLink :to="product.to" class="btn btn-sm">
-                {{ product.cta }}
-              </NuxtLink>
-            </div>
-          </article>
+            <span class="category-icon">
+              <AppIcon :name="presentationFor(c.slug).icon" :size="26" />
+            </span>
+            <h3>{{ c.name }}</h3>
+            <p>{{ presentationFor(c.slug).desc }}</p>
+            <span class="category-link">
+              Lihat kategori
+              <AppIcon name="arrowRight" :size="16" />
+            </span>
+          </NuxtLink>
         </div>
       </section>
 
-      <!-- Features -->
+      <!-- ============ Latest products ============ -->
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <span class="section-eyebrow">Katalog</span>
+            <h2 class="section-title">Produk Terbaru</h2>
+          </div>
+          <NuxtLink to="/products" class="view-all">
+            Lihat Semua
+            <AppIcon name="arrowRight" :size="16" />
+          </NuxtLink>
+        </div>
+
+        <!-- Loading -->
+        <div v-if="loading" class="grid-products">
+          <ProductCard v-for="n in 4" :key="`sk-${n}`" :product="null" />
+        </div>
+
+        <!-- Honest empty state — never invent products -->
+        <div v-else-if="latestProducts.length === 0" class="state-box">
+          <span class="state-icon">
+            <AppIcon name="package" :size="30" />
+          </span>
+          <h3>Belum ada produk</h3>
+          <p>Katalog sedang kami siapkan. Hubungi kami bila Anda butuh aset tertentu.</p>
+          <a
+            v-if="whatsappLink"
+            :href="whatsappLink"
+            class="btn btn-primary"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <AppIcon name="whatsapp" :size="18" />
+            Tanya via WhatsApp
+          </a>
+        </div>
+
+        <!-- Grid -->
+        <div v-else class="grid-products">
+          <ProductCard
+            v-for="product in latestProducts"
+            :key="product.id"
+            :product="product"
+            :badge="badgeFor(product)"
+          />
+        </div>
+      </section>
+
+      <!-- ============ Features ============ -->
       <section class="section features">
         <div v-for="feat in features" :key="feat.title" class="feature">
           <span class="feature-icon">
@@ -119,7 +168,7 @@
         </div>
       </section>
 
-      <!-- FAQ -->
+      <!-- ============ FAQ ============ -->
       <section class="section faq-section">
         <div class="section-head section-head-center">
           <span class="section-eyebrow">Bantuan</span>
@@ -168,19 +217,10 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useShop } from '~/composables/useShop'
+import { useShop, type Product } from '~/composables/useShop'
 import { useWhatsapp } from '~/composables/useWhatsapp'
-import { formatPriceIDR } from '~/utils/format'
-
-const { whatsappNumber, fetchWhatsappNumber } = useWhatsapp()
-
-// Direct WhatsApp support link to the owner
-const whatsappLink = computed(() => {
-  if (!whatsappNumber.value) return ''
-  const cleanNumber = whatsappNumber.value.replace(/\D/g, '')
-  const message = encodeURIComponent('Halo NgopiCode, saya butuh bantuan (support).')
-  return `https://wa.me/${cleanNumber}?text=${message}`
-})
+import { GET_COLLECTIONS } from '~/graphql/queries/collections'
+import { categoryUrl, excludeTestProducts, searchUrl } from '~/utils/catalog'
 
 useHead({
   title: 'NgopiCode Digital Store - Aset Digital Premium untuk Developer',
@@ -188,38 +228,119 @@ useHead({
     {
       name: 'description',
       content:
-        'Koleksi source code, ebook teknis, dan layanan web premium untuk developer Indonesia.',
+        'Koleksi source code, ebook teknis, dan layanan web premium untuk developer Indonesia. Beli tanpa daftar akun, produk dikirim instan.',
     },
   ],
 })
 
-const categories = [
-  {
-    slug: 'source-code',
+// ---------------------------------------------------------------- WhatsApp CTA
+const { whatsappNumber, fetchWhatsappNumber } = useWhatsapp()
+
+const whatsappLink = computed(() => {
+  if (!whatsappNumber.value) return ''
+  const cleanNumber = whatsappNumber.value.replace(/\D/g, '')
+  const message = encodeURIComponent('Halo NgopiCode, saya butuh bantuan (support).')
+  return `https://wa.me/${cleanNumber}?text=${message}`
+})
+
+// ---------------------------------------------------------------- Hero search
+const MIN_SEARCH_LENGTH = 2
+const searchTerm = ref('')
+const canSearch = computed(() => searchTerm.value.trim().length >= MIN_SEARCH_LENGTH)
+
+function onSearch() {
+  if (!canSearch.value) return
+  navigateTo(searchUrl(searchTerm.value))
+}
+
+// ---------------------------------------------------------------- Categories
+interface Collection {
+  id: string
+  name: string
+  slug: string
+}
+
+const collections = ref<Collection[]>([])
+
+/** Per-slug icon + blurb; falls back gracefully for collections added later. */
+const CATEGORY_PRESENTATION: Record<string, { icon: string; desc: string }> = {
+  'source-code': {
     icon: 'code',
-    title: 'Source Code',
     desc: 'Script dan template siap pakai untuk mempercepat proyek Anda.',
-    cta: 'Belanja Script',
-    to: '/products?category=source-code',
   },
-  {
-    slug: 'ebooks',
+  ebooks: {
     icon: 'book',
-    title: 'Ebooks',
     desc: 'Materi teknis mendalam untuk meningkatkan keahlian Anda.',
-    cta: 'Pelajari',
-    to: '/products?category=ebooks',
   },
-  {
-    slug: 'services',
+  services: {
     icon: 'briefcase',
-    title: 'Web Services',
-    desc: 'Layanan pengembangan web khusus sesuai kebutuhan bisnis.',
-    cta: 'Lihat Layanan',
-    to: '/products?category=services',
+    desc: 'Layanan pengembangan web sesuai kebutuhan bisnis Anda.',
   },
+}
+
+const FALLBACK_PRESENTATION = {
+  icon: 'package',
+  desc: 'Koleksi produk digital pilihan untuk developer.',
+}
+
+function presentationFor(slug: string) {
+  return CATEGORY_PRESENTATION[slug] ?? FALLBACK_PRESENTATION
+}
+
+async function loadCollections() {
+  try {
+    const { $apollo } = useNuxtApp()
+    const { data } = await $apollo.defaultClient.query({
+      query: GET_COLLECTIONS,
+      fetchPolicy: 'cache-first',
+    })
+    collections.value = data?.collections?.items ?? []
+  } catch {
+    collections.value = []
+  }
+}
+
+// ---------------------------------------------------------------- Products
+const { products, loading, fetchProducts } = useShop()
+
+/**
+ * Newest products, with test data removed.
+ *
+ * Previously this fell back to four hardcoded products with invented prices, so
+ * an empty or failed catalog showed shoppers products that did not exist.
+ * We now show only real data, and an explicit empty state otherwise.
+ */
+const latestProducts = computed<Product[]>(() =>
+  excludeTestProducts(products.value).slice(0, 8),
+)
+
+/**
+ * Badge shows the product's category (its first assigned collection), matching
+ * the catalog page. No invented "bestseller" claim — there is no sales data to
+ * support one.
+ */
+function badgeFor(product: Product): string | null {
+  const ids: string[] = product.collectionIds ?? []
+  if (ids.length > 0) {
+    const matched = collections.value.find((c) => String(c.id) === String(ids[0]))
+    if (matched?.name) return matched.name
+  }
+  return null
+}
+
+// ---------------------------------------------------------------- Payment strip
+const paymentMethods = [
+  { file: 'bri.svg', name: 'BRI Virtual Account' },
+  { file: 'bni.svg', name: 'BNI Virtual Account' },
+  { file: 'mandiri.svg', name: 'Mandiri Virtual Account' },
+  { file: 'bca.svg', name: 'BCA Virtual Account' },
+  { file: 'ovo.svg', name: 'OVO' },
+  { file: 'dana.svg', name: 'DANA' },
+  { file: 'shopeepay.svg', name: 'ShopeePay' },
+  { file: 'qris.svg', name: 'QRIS' },
 ]
 
+// ---------------------------------------------------------------- Static content
 const features = [
   {
     icon: 'download',
@@ -229,7 +350,7 @@ const features = [
   {
     icon: 'lock',
     title: 'Akses Aman',
-    desc: 'Unduhan dan data Anda dilindungi enkripsi tingkat enterprise dan autentikasi aman.',
+    desc: 'Unduhan dan data Anda dilindungi tautan sementara dan autentikasi aman.',
   },
   {
     icon: 'support',
@@ -240,8 +361,12 @@ const features = [
 
 const faqs = [
   {
+    q: 'Apakah saya harus mendaftar akun untuk membeli?',
+    a: 'Tidak. Anda bisa membeli tanpa membuat akun — cukup isi email dan nomor WhatsApp. Tautan unduhan dikirim ke email dan WhatsApp Anda, dan bisa dibuka kapan saja. Jika ingin, Anda dapat membuat password setelah pembelian untuk menyimpan pembelian itu ke akun.',
+  },
+  {
     q: 'Bagaimana cara membeli produk di NgopiCode?',
-    a: 'Pilih produk yang diinginkan, klik tombol "Beli Sekarang", pilih metode pembayaran (Virtual Account, E-Wallet, atau QRIS), lalu selesaikan pembayaran. Produk digital akan langsung tersedia di Pustaka Saya setelah pembayaran dikonfirmasi.',
+    a: 'Pilih produk yang diinginkan, klik tombol beli, pilih metode pembayaran (Virtual Account, E-Wallet, atau QRIS), lalu selesaikan pembayaran. Setelah pembayaran dikonfirmasi, tautan unduhan langsung dikirim ke email dan WhatsApp Anda.',
   },
   {
     q: 'Metode pembayaran apa saja yang tersedia?',
@@ -249,15 +374,11 @@ const faqs = [
   },
   {
     q: 'Bagaimana cara mengunduh produk setelah pembelian?',
-    a: 'Setelah pembayaran berhasil, masuk ke halaman Akun Saya → Pustaka Saya. Klik tombol "Unduh" pada produk yang ingin didownload. Link download bersifat sementara (5 menit) dan aman.',
+    a: 'Buka tautan yang kami kirim ke email atau WhatsApp Anda. Tautan itu langsung membuka halaman unduhan. Link unduhan bersifat sementara (5 menit) dan aman, dan bisa dibuat ulang.',
   },
   {
     q: 'Apakah ada batas waktu untuk mengunduh produk?',
-    a: 'Tidak ada batas waktu permanen. Selama akun Anda aktif, Anda bisa mengunduh produk kapan saja dari Pustaka Saya. Setiap link download berlaku 5 menit dan bisa dibuat ulang.',
-  },
-  {
-    q: 'Apakah saya bisa membeli produk yang sama dua kali?',
-    a: 'Untuk produk bertipe "one-time", sistem akan mencegah pembelian ulang. Produk yang sudah dibeli akan tampil di Pustaka Saya untuk diunduh kapan saja.',
+    a: 'Tidak ada batas waktu permanen. Anda bisa meminta tautan akses baru kapan saja dari halaman Cek Pesanan, selama email yang Anda masukkan sama dengan saat pembelian.',
   },
   {
     q: 'Bagaimana jika saya mengalami masalah dengan produk?',
@@ -265,40 +386,18 @@ const faqs = [
   },
 ]
 
-// FAQ accordion state (single open)
+// ---------------------------------------------------------------- FAQ accordion
 const openFaq = ref<number | null>(null)
 
 function toggleFaq(index: number) {
   openFaq.value = openFaq.value === index ? null : index
 }
-const sampleProducts = [
-  { id: 's1', name: 'SaaS Dashboard Template', priceLabel: 'Rp 1.350.000', badge: 'Bestseller', cta: 'Unduh', to: '/products', image: null },
-  { id: 's2', name: 'Mastering Web Architecture', priceLabel: 'Rp 590.000', badge: null, cta: 'Selengkapnya', to: '/products', image: null },
-  { id: 's3', name: 'Custom Corporate Website', priceLabel: 'Mulai Rp 38.000.000', badge: null, cta: 'Dapatkan', to: '/products', image: null },
-  { id: 's4', name: 'React Component Library', priceLabel: 'Rp 1.800.000', badge: null, cta: 'Unduh', to: '/products', image: null },
-]
-
-const { products, loading, fetchProducts } = useShop()
-
-const displayProducts = computed(() => {
-  if (!products.value.length) return sampleProducts
-  return products.value.slice(0, 4).map((p) => {
-    const price = p.variants?.[0]?.price
-    return {
-      id: p.id,
-      name: p.name,
-      priceLabel: price != null ? formatPriceIDR(price) : 'Lihat detail',
-      badge: null as string | null,
-      cta: 'Lihat Produk',
-      to: `/products`,
-      image: p.featuredAsset?.preview ?? null,
-    }
-  })
-})
 
 onMounted(() => {
-  fetchProducts({ take: 4 })
+  // Fetch a few extra so removing test data still leaves a full grid.
+  fetchProducts({ take: 12 })
   fetchWhatsappNumber()
+  loadCollections()
 })
 </script>
 
@@ -315,7 +414,20 @@ main {
   flex: 1;
 }
 
-/* Hero */
+/* Screen-reader-only label */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============ Hero ============ */
 .hero {
   position: relative;
   overflow: hidden;
@@ -326,32 +438,15 @@ main {
 .hero-inner {
   position: relative;
   z-index: 1;
-  max-width: 1200px;
+  max-width: 860px;
   margin: 0 auto;
-  padding: 4rem 1.25rem 4.5rem;
-}
-
-.hero-split {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2.5rem;
-  align-items: center;
-}
-
-.hero-lottie {
-  width: 100%;
-  max-width: 480px;
-  aspect-ratio: 1;
-  margin: 0 auto;
-}
-
-.hero-content {
-  text-align: left;
+  padding: 4rem 1.25rem 3.5rem;
+  text-align: center;
 }
 
 .hero-eyebrow {
   display: inline-block;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -359,14 +454,14 @@ main {
   background: var(--primary-soft);
   padding: 0.4rem 0.9rem;
   border-radius: 999px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.4rem;
 }
 
 .hero-title {
-  font-size: clamp(2.2rem, 6vw, 3.6rem);
-  line-height: 1.1;
+  font-size: clamp(2rem, 5.2vw, 3.2rem);
+  line-height: 1.12;
   letter-spacing: -0.03em;
-  margin: 0 0 1.25rem;
+  margin: 0 0 1rem;
   font-weight: 800;
 }
 
@@ -375,88 +470,210 @@ main {
 }
 
 .hero-sub {
-  font-size: clamp(1rem, 2.2vw, 1.15rem);
+  font-size: clamp(1rem, 2.2vw, 1.1rem);
   line-height: 1.6;
   color: var(--text-muted);
-  max-width: 520px;
-  margin: 0 0 2.25rem;
+  max-width: 560px;
+  margin: 0 auto 2rem;
 }
 
-.hero-cta {
+/* Search */
+.hero-search {
   display: flex;
-  gap: 0.9rem;
-  flex-wrap: wrap;
-}
-
-.hero-glow {
-  position: absolute;
-  top: -120px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, var(--hero-glow) 0%, transparent 60%);
-  pointer-events: none;
-}
-
-/* Buttons */
-.btn {
-  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.8rem 1.5rem;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 0.4rem 0.4rem 0.4rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  box-shadow: 0 6px 20px var(--shadow-card);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hero-search:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.hero-search-icon {
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.hero-search-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 1rem;
+  font-family: inherit;
+  /* 16px+ avoids iOS auto-zoom on focus */
+  padding: 0.65rem 0;
+}
+
+.hero-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.hero-search-btn {
+  flex-shrink: 0;
+  padding: 0.75rem 1.5rem;
+  border: none;
   border-radius: 10px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  border: 1px solid transparent;
-  box-sizing: border-box;
-  transition: transform 0.15s, background 0.18s, box-shadow 0.18s;
-}
-
-.btn:active {
-  transform: translateY(1px);
-}
-
-.btn-primary {
   background: var(--primary);
   color: var(--primary-contrast);
-  box-shadow: 0 6px 18px rgba(31, 122, 77, 0.25);
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.18s ease, opacity 0.18s ease;
 }
 
-.btn-primary:hover {
+.hero-search-btn:hover:not(:disabled) {
   background: var(--primary-hover);
 }
 
-.btn-ghost {
-  background: var(--btn-ghost-bg);
-  color: var(--primary-text);
-  border-color: var(--btn-ghost-border);
+.hero-search-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.btn-ghost:hover {
-  background: var(--btn-ghost-hover);
+.hero-search-hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
-.btn-sm {
-  padding: 0.55rem 1rem;
-  font-size: 0.85rem;
-  background: var(--btn-sm-bg);
-  color: var(--primary-text);
-  width: 100%;
+.hero-search-hint kbd {
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  background: var(--surface-2);
+}
+
+/* Chips */
+.hero-chips {
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 1.5rem 0 0;
+  padding: 0;
 }
 
-.btn-sm:hover {
-  background: var(--btn-sm-hover);
+.hero-chip {
+  /* inline-flex + min-height keeps the tap target at the 44px minimum */
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.5rem 1.1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
 
-/* Sections */
+.hero-chip:hover {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary-text);
+}
+
+/* Trust list */
+.hero-trust {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.5rem;
+  list-style: none;
+  margin: 2rem 0 0;
+  padding: 0;
+}
+
+.hero-trust li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.hero-trust svg {
+  color: var(--primary-text);
+  flex-shrink: 0;
+}
+
+.hero-trust strong {
+  color: var(--text);
+}
+
+/* ============ Payment strip ============ */
+.payment-strip {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.payment-strip-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.75rem;
+}
+
+.payment-strip-label {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.payment-logos {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.payment-logos img {
+  height: 22px;
+  width: auto;
+  object-fit: contain;
+  opacity: 0.85;
+  transition: opacity 0.18s ease;
+}
+
+.payment-logos img:hover {
+  opacity: 1;
+}
+
+/* ============ Sections ============ */
 .section {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 4rem 1.25rem;
+  padding: 3.5rem 1.25rem;
+  width: 100%;
 }
 
 .section-head {
@@ -464,227 +681,133 @@ main {
   align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 2.25rem;
+  margin-bottom: 2rem;
+}
+
+.section-head-center {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .section-eyebrow {
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--primary-text);
+  margin-bottom: 0.4rem;
 }
 
 .section-title {
-  font-size: clamp(1.6rem, 4vw, 2.2rem);
-  letter-spacing: -0.02em;
-  margin: 0.35rem 0 0;
+  font-size: clamp(1.4rem, 3vw, 1.85rem);
   font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
 }
 
 .view-all {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  color: var(--primary-text);
+  gap: 0.35rem;
+  /* Keeps the tap target at the 44px minimum */
+  min-height: 44px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.88rem;
   font-weight: 600;
-  font-size: 0.9rem;
+  color: var(--primary-text);
   text-decoration: none;
   white-space: nowrap;
+  border-radius: 8px;
+  transition: background 0.18s ease;
 }
 
 .view-all:hover {
-  text-decoration: underline;
+  background: var(--primary-soft);
 }
 
-/* Categories */
-.categories {
+/* ============ Categories ============ */
+.grid-categories {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
 }
 
 .category-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.5rem;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: 16px;
-  padding: 2rem;
-  transition: transform 0.18s, box-shadow 0.18s;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .category-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 30px var(--shadow-card);
+  border-color: var(--primary);
+  box-shadow: 0 14px 32px var(--shadow-card-strong);
 }
 
 .category-icon {
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   border-radius: 14px;
   background: var(--primary-soft);
   color: var(--primary-text);
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.4rem;
 }
 
 .category-card h3 {
-  font-size: 1.25rem;
-  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
 }
 
 .category-card p {
+  font-size: 0.88rem;
   color: var(--text-muted);
   line-height: 1.55;
-  margin: 0 0 1.25rem;
-  font-size: 0.95rem;
+  margin: 0 0 0.5rem;
 }
 
 .category-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  color: var(--primary-text);
+  gap: 0.35rem;
+  margin-top: auto;
+  font-size: 0.85rem;
   font-weight: 600;
-  font-size: 0.9rem;
-  text-decoration: none;
+  color: var(--primary-text);
 }
 
-.category-link:hover {
-  gap: 0.6rem;
-}
-
-/* Products */
+/* ============ Products ============ */
 .grid-products {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 1.5rem;
-  align-items: stretch;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.25rem;
 }
 
-.product-card {
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
-  border-radius: 16px;
-  overflow: hidden;
+/* ============ Empty state ============ */
+.state-box {
   display: flex;
   flex-direction: column;
-  box-shadow: 0 1px 2px var(--shadow-card);
-  transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
-}
-
-.product-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--btn-ghost-border);
-  box-shadow: 0 12px 30px var(--shadow-card-strong);
-}
-
-.thumb {
-  position: relative;
-  aspect-ratio: 4 / 3;
-  background: var(--surface-2);
-  border-bottom: 1px solid var(--border);
-  overflow: hidden;
-}
-
-.thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.thumb-placeholder {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-items: center;
-  color: var(--placeholder-icon);
-}
-
-.badge {
-  position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
-  background: var(--primary);
-  color: #fff;
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 0.3rem 0.6rem;
-  border-radius: 999px;
-}
-
-.product-body {
-  padding: 1.1rem 1.1rem 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  flex: 1;
-}
-
-.product-name {
-  font-size: 1rem;
-  margin: 0;
-  line-height: 1.35;
-  font-weight: 600;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  min-height: 2.7em;
-}
-
-.product-price {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--primary-text);
-  margin: 0 0 0.65rem;
-}
-
-.product-body .btn-sm {
-  margin-top: auto;
-}
-
-/* Skeleton */
-.skeleton-box,
-.skeleton-line {
-  background: linear-gradient(90deg, var(--skeleton-a) 25%, var(--skeleton-b) 50%, var(--skeleton-a) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.3s infinite;
-}
-
-.skeleton .thumb {
-  background: none;
-}
-
-.skeleton-line {
-  height: 14px;
-  border-radius: 6px;
-  margin: 0.75rem 1.1rem 0;
-}
-
-.skeleton-line.short {
-  width: 50%;
-  margin-bottom: 1.1rem;
-}
-
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* Features */
-.features {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
-}
-
-.feature {
+  align-items: center;
+  gap: 0.6rem;
+  padding: 3.5rem 1.5rem;
   text-align: center;
-  padding: 1rem;
+  background: var(--surface);
+  border: 1px dashed var(--border-strong);
+  border-radius: 16px;
 }
 
-.feature-icon {
+.state-icon {
   display: grid;
   place-items: center;
   width: 60px;
@@ -692,97 +815,112 @@ main {
   border-radius: 50%;
   background: var(--primary-soft);
   color: var(--primary-text);
-  margin: 0 auto 1.25rem;
+  margin-bottom: 0.4rem;
+}
+
+.state-box h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.state-box p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
+  max-width: 420px;
+  line-height: 1.55;
+}
+
+/* ============ Features ============ */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  padding-top: 0;
+}
+
+.feature {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.feature-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: var(--primary-soft);
+  color: var(--primary-text);
+  margin-bottom: 0.25rem;
 }
 
 .feature h3 {
-  font-size: 1.15rem;
-  margin: 0 0 0.6rem;
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
 }
 
 .feature p {
+  font-size: 0.87rem;
   color: var(--text-muted);
-  line-height: 1.6;
-  font-size: 0.95rem;
+  line-height: 1.55;
   margin: 0;
-  max-width: 320px;
-  margin: 0 auto;
 }
 
-/* FAQ Accordion — Nuxt UI style */
-.faq-section {
-  max-width: 800px;
-}
-
-.section-head-center {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
+/* ============ FAQ ============ */
 .faq-list {
+  max-width: 760px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--surface);
+  gap: 0.6rem;
 }
 
 .faq-item {
-  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.18s ease;
 }
 
-.faq-item:last-child {
-  border-bottom: none;
+.faq-item.faq-open {
+  border-color: var(--primary);
 }
 
 .faq-trigger {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  padding: 1rem 1.25rem;
   gap: 1rem;
+  padding: 1.05rem 1.25rem;
+  background: none;
   border: none;
-  background: transparent;
-  color: var(--text);
-  font-size: 0.92rem;
-  font-weight: 500;
-  font-family: inherit;
-  text-align: left;
   cursor: pointer;
-  transition: background 0.15s;
-}
-
-.faq-trigger:hover {
-  background: var(--surface-2);
-}
-
-.faq-trigger:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: -2px;
-  border-radius: 4px;
-}
-
-.faq-label {
-  flex: 1;
-  line-height: 1.5;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  text-align: left;
 }
 
 .faq-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
+  display: grid;
+  place-items: center;
   color: var(--text-muted);
-  transition: transform 0.2s ease, color 0.2s;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
 }
 
-.faq-open .faq-icon {
+.faq-item.faq-open .faq-icon {
   transform: rotate(180deg);
   color: var(--primary-text);
 }
@@ -803,74 +941,111 @@ main {
 
 .faq-content p {
   margin: 0;
-  padding: 0.5rem 1.25rem 1.5rem;
+  padding: 0 1.25rem 1.15rem;
   font-size: 0.9rem;
-  line-height: 1.75;
+  line-height: 1.65;
   color: var(--text-muted);
-  max-width: 65ch;
 }
 
-/* Responsive */
-@media (max-width: 960px) {
-  .categories {
-    grid-template-columns: repeat(2, 1fr);
-  }
+/* ============ Buttons ============ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.5rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: background 0.18s ease;
 }
 
-@media (max-width: 760px) {
-  .features {
-    grid-template-columns: 1fr;
-    gap: 2.5rem;
-  }
-  .section {
-    padding: 3rem 1.25rem;
-  }
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-contrast);
 }
 
-@media (max-width: 540px) {
-  .categories {
-    grid-template-columns: 1fr;
-  }
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+/* ============ Focus visibility ============ */
+.hero-chip:focus-visible,
+.hero-search-btn:focus-visible,
+.category-card:focus-visible,
+.view-all:focus-visible,
+.faq-trigger:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ============ Responsive ============ */
+@media (max-width: 640px) {
   .hero-inner {
-    padding: 3rem 1.25rem 3.5rem;
+    padding: 3rem 1.25rem 2.5rem;
   }
-  .hero-split {
-    grid-template-columns: 1fr;
-    text-align: center;
-    display: flex;
+
+  .hero-search {
+    flex-wrap: wrap;
+    padding: 0.75rem;
+    gap: 0.6rem;
+  }
+
+  .hero-search-icon {
+    display: none;
+  }
+
+  .hero-search-input {
+    width: 100%;
+    padding: 0.4rem 0.25rem;
+  }
+
+  .hero-search-btn {
+    width: 100%;
+    padding: 0.85rem;
+  }
+
+  .hero-search-hint {
+    display: none;
+  }
+
+  .hero-trust {
     flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
+    align-items: flex-start;
+    text-align: left;
+    gap: 0.6rem;
   }
-  .hero-content {
-    text-align: center;
-    display: contents;
+
+  .section {
+    padding: 2.5rem 1.25rem;
   }
-  .hero-eyebrow {
-    order: 1;
-    margin-bottom: 0.25rem;
+
+  .section-head {
+    flex-direction: column;
+    align-items: flex-start;
   }
-  .hero-title {
-    order: 2;
-    margin: 0 0 0.5rem;
+
+  .grid-products,
+  .grid-categories {
+    grid-template-columns: 1fr;
   }
-  .hero-sub {
-    order: 3;
-    margin: 0 0 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .category-card,
+  .faq-panel,
+  .faq-icon,
+  .hero-chip,
+  .product-card {
+    transition: none;
   }
-  .hero-lottie {
-    max-width: 280px;
-    order: 4;
-    margin-bottom: 1rem;
-  }
-  .hero-cta {
-    order: 5;
-    justify-content: center;
-    width: 100%;
-  }
-  .hero-cta .btn {
-    width: 100%;
-    justify-content: center;
+
+  .category-card:hover {
+    transform: none;
   }
 }
 </style>

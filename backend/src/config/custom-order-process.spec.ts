@@ -120,4 +120,103 @@ describe('Custom Order Process', () => {
       });
     });
   });
+
+  /**
+   * Regression tests for a self-deadlock: the transition hooks used to write
+   * through `connection.rawConnection`, which runs on a *different* pool
+   * connection than the transition's transaction. The transaction held the row
+   * lock while waiting for the hook to return, and the hook waited for that
+   * lock — hanging the order forever in ArrangingPayment.
+   *
+   * The hooks must therefore go through the transaction-scoped repository
+   * (`getRepository(ctx, ...)`), never the raw connection.
+   */
+  describe('transaction safety of the transition hooks', () => {
+    const ctx = { __ctx: true } as any;
+
+    function installConnection() {
+      const update = jest.fn().mockResolvedValue({});
+      const findOne = jest.fn().mockResolvedValue({ id: 1, status: 'PAID' });
+      const getRepository = jest.fn().mockReturnValue({ update, findOne });
+      const rawCreateQueryBuilder = jest.fn();
+      const rawGetRepository = jest.fn();
+      const connection = {
+        getRepository,
+        rawConnection: {
+          createQueryBuilder: rawCreateQueryBuilder,
+          getRepository: rawGetRepository,
+        },
+      };
+      customOrderProcess.init!({ get: () => connection } as any);
+      return { connection, getRepository, update, findOne, rawCreateQueryBuilder, rawGetRepository };
+    }
+
+    afterEach(() => {
+      // Restore the "no connection" state the earlier tests rely on.
+      customOrderProcess.init!({ get: () => undefined } as any);
+    });
+
+    it('onTransitionEnd writes orderPlacedAt through the ctx repository', async () => {
+      const mocks = installConnection();
+      const order = { id: 7, orderPlacedAt: null } as any;
+
+      await customOrderProcess.onTransitionEnd!('ArrangingPayment', 'PaymentSettled', {
+        ctx,
+        order,
+      } as any);
+
+      expect(mocks.getRepository).toHaveBeenCalledWith(ctx, expect.anything());
+      expect(mocks.update).toHaveBeenCalledWith(7, { orderPlacedAt: expect.any(Date) });
+      expect(order.orderPlacedAt).toBeInstanceOf(Date);
+    });
+
+    it('onTransitionEnd never touches the raw connection', async () => {
+      const mocks = installConnection();
+
+      await customOrderProcess.onTransitionEnd!('ArrangingPayment', 'PaymentSettled', {
+        ctx,
+        order: { id: 7, orderPlacedAt: null } as any,
+      } as any);
+
+      expect(mocks.rawCreateQueryBuilder).not.toHaveBeenCalled();
+      expect(mocks.rawGetRepository).not.toHaveBeenCalled();
+    });
+
+    it('onTransitionEnd does nothing when orderPlacedAt is already set', async () => {
+      const mocks = installConnection();
+      const placed = new Date('2024-01-01T00:00:00Z');
+
+      await customOrderProcess.onTransitionEnd!('ArrangingPayment', 'PaymentSettled', {
+        ctx,
+        order: { id: 7, orderPlacedAt: placed } as any,
+      } as any);
+
+      expect(mocks.update).not.toHaveBeenCalled();
+    });
+
+    it('onTransitionEnd ignores transitions other than PaymentSettled', async () => {
+      const mocks = installConnection();
+
+      await customOrderProcess.onTransitionEnd!('AddingItems', 'ArrangingPayment', {
+        ctx,
+        order: { id: 7, orderPlacedAt: null } as any,
+      } as any);
+
+      expect(mocks.update).not.toHaveBeenCalled();
+    });
+
+    it('onTransitionStart reads TripayTransaction through the ctx repository', async () => {
+      const mocks = installConnection();
+
+      const result = await customOrderProcess.onTransitionStart!('PaymentSettled', 'Fulfilled', {
+        ctx,
+        order: { id: 7, totalWithTax: 50000 },
+      } as any);
+
+      expect(result).toBeUndefined();
+      expect(mocks.getRepository).toHaveBeenCalledWith(ctx, expect.anything());
+      expect(mocks.findOne).toHaveBeenCalled();
+      expect(mocks.rawGetRepository).not.toHaveBeenCalled();
+    });
+  });
 });

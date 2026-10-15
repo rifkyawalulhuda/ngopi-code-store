@@ -2,6 +2,43 @@
   <div class="downloads-page">
     <h1>Download Produk Digital</h1>
 
+    <!-- Claim account (shown when arriving via a guest magic link) -->
+    <div v-if="showClaim" class="claim-card">
+      <div v-if="claimSuccess" class="claim-success">
+        <strong>Akun Anda sudah diamankan.</strong>
+        <span>Anda kini bisa masuk kapan saja dengan email dan password baru Anda.</span>
+      </div>
+      <form v-else class="claim-form" @submit.prevent="onClaim">
+        <div class="claim-head">
+          <strong>Simpan akun Anda</strong>
+          <span>Buat password agar pembelian ini tersimpan dan mudah diakses kembali.</span>
+        </div>
+        <div class="claim-fields">
+          <input
+            v-model="claimPassword"
+            type="password"
+            class="claim-input"
+            placeholder="Password baru (min. 4 karakter)"
+            autocomplete="new-password"
+          />
+          <input
+            v-model="claimConfirm"
+            type="password"
+            class="claim-input"
+            placeholder="Ulangi password"
+            autocomplete="new-password"
+          />
+          <button type="submit" class="claim-btn" :disabled="claiming">
+            {{ claiming ? 'Menyimpan...' : 'Simpan Password' }}
+          </button>
+        </div>
+        <span v-if="claimError" class="claim-error">{{ claimError }}</span>
+        <button type="button" class="claim-skip" @click="showClaim = false">
+          Nanti saja
+        </button>
+      </form>
+    </div>
+
     <!-- Loading State -->
     <div v-if="loading" class="loading-state" aria-live="polite">
       <p>Memuat data download...</p>
@@ -120,12 +157,49 @@ import {
   getUnavailableReason,
   type DownloadItem,
 } from '~/composables/useDownload'
+import { useAuth } from '~/composables/useAuth'
 
 useHead({
   title: 'Download - NgopiCode Digital Store',
 })
 
 const route = useRoute()
+
+// Arriving from a guest magic link includes ?claim=1 so we can nudge the
+// customer to turn their guest account into a permanent one.
+const showClaim = ref(route.query.claim === '1')
+const claimPassword = ref('')
+const claimConfirm = ref('')
+const claimError = ref('')
+const claiming = ref(false)
+const claimSuccess = ref(false)
+
+const { setPasswordForGuest } = useAuth()
+
+async function onClaim() {
+  claimError.value = ''
+  if (claimPassword.value.length < 4) {
+    claimError.value = 'Password minimal 4 karakter.'
+    return
+  }
+  if (claimPassword.value !== claimConfirm.value) {
+    claimError.value = 'Konfirmasi password tidak cocok.'
+    return
+  }
+
+  claiming.value = true
+  try {
+    const ok = await setPasswordForGuest(claimPassword.value)
+    if (ok) {
+      claimSuccess.value = true
+    } else {
+      claimError.value = 'Gagal menyimpan password. Silakan coba lagi.'
+    }
+  } finally {
+    claiming.value = false
+  }
+}
+
 const {
   items,
   orderCode,
@@ -183,6 +257,102 @@ onMounted(async () => {
   max-width: 800px;
   margin: 0 auto;
   padding: 2rem 1rem;
+}
+
+/* Claim account */
+.claim-card {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid #c7e3cf;
+  border-radius: 10px;
+  background: #f4fbf6;
+}
+
+.claim-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.claim-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.claim-head strong {
+  font-size: 0.95rem;
+  color: #1f5133;
+}
+
+.claim-head span {
+  font-size: 0.85rem;
+  color: #4b6b58;
+}
+
+.claim-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.claim-input {
+  flex: 1;
+  min-width: 180px;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #c7e3cf;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: #fff;
+}
+
+.claim-btn {
+  padding: 0.6rem 1.1rem;
+  border: none;
+  border-radius: 8px;
+  background: #2d7d46;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.claim-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.claim-error {
+  font-size: 0.82rem;
+  color: #b91c1c;
+}
+
+.claim-skip {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.82rem;
+  color: #4b6b58;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.claim-success {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.claim-success strong {
+  font-size: 0.95rem;
+  color: #1f5133;
+}
+
+.claim-success span {
+  font-size: 0.85rem;
+  color: #4b6b58;
 }
 
 .loading-state,

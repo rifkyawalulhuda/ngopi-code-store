@@ -41,12 +41,15 @@ async function main() {
     }
 
     // Set DB connection for webhook middleware
-    const { setConnection } = await import('./plugins/tripay-payment/middleware/webhook-db');
+    const { setConnection, setWebhookApp } = await import('./plugins/tripay-payment/middleware/webhook-db');
     const { DataSource } = await import('typeorm');
     const ds = app.get(DataSource);
     if (ds) {
       setConnection(ds);
     }
+    // Give the raw Express webhook middleware access to the DI container so it
+    // can delegate to TripayWebhookService / OrderFulfillmentRunner.
+    setWebhookApp(app);
 
     // After bootstrap (schema is ready), run custom migrations
     if (isDev) {

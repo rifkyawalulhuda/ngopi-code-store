@@ -1,4 +1,4 @@
-import { CustomOrderProcess, OrderState, Injector, TransactionalConnection } from '@vendure/core';
+import { CustomOrderProcess, OrderState, Injector, TransactionalConnection, Order } from '@vendure/core';
 import { TripayTransaction } from '../plugins/tripay-payment/entities/tripay-transaction.entity';
 
 /**
@@ -107,8 +107,12 @@ export const customOrderProcess: CustomOrderProcess<string> = {
         return `Payment verification failed: unable to access database connection.`;
       }
 
-      const paidTransaction = await connection.rawConnection
-        .getRepository(TripayTransaction)
+      // Read through the transaction-scoped repository. `data.ctx` carries the
+      // active transaction of the transition, so this sees exactly the state
+      // that will be committed. Using the raw connection here would run on a
+      // different pool connection and observe a stale snapshot.
+      const paidTransaction = await connection
+        .getRepository(data.ctx, TripayTransaction)
         .findOne({
           where: {
             orderId: order.id,
@@ -133,12 +137,20 @@ export const customOrderProcess: CustomOrderProcess<string> = {
     if (toState === 'PaymentSettled' && connection) {
       const order = data.order;
       if (!order.orderPlacedAt) {
-        await connection.rawConnection
-          .createQueryBuilder()
-          .update('order')
-          .set({ orderPlacedAt: new Date() })
-          .where('id = :id', { id: order.id })
-          .execute();
+        const placedAt = new Date();
+        // MUST use the transaction-scoped repository.
+        //
+        // This hook runs *inside* the transition's transaction. Writing via
+        // `connection.rawConnection` would target a different pool connection
+        // and block on the row lock held by the very transaction that is
+        // waiting for this hook to return — a self-deadlock that leaves the
+        // order stuck in ArrangingPayment forever and wedges every later
+        // webhook retry behind it.
+        await connection.getRepository(data.ctx, Order).update(order.id, {
+          orderPlacedAt: placedAt,
+        });
+        // Keep the in-memory entity consistent with what we just wrote.
+        order.orderPlacedAt = placedAt;
       }
     }
   },

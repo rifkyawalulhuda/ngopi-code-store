@@ -7,11 +7,15 @@ import { authRateLimiterMiddleware } from './middleware/auth-rate-limiter.middle
 import { tripayWebhookMiddleware } from './plugins/tripay-payment/middleware/tripay-webhook.middleware';
 import { customOrderProcess } from './config/custom-order-process';
 import { IdrMoneyStrategy } from './config/idr-money-strategy';
+import { NgopiGuestCheckoutStrategy } from './config/guest-checkout-strategy';
 import { TripayPaymentPlugin } from './plugins/tripay-payment/tripay-payment.plugin';
 import { EmailVerificationPlugin } from './plugins/email/email-verification.handler';
 import { GoogleAuthPlugin } from './plugins/google-auth';
 import { GitHubAuthPlugin } from './plugins/github-auth';
 import { DigitalFulfillmentPlugin } from './plugins/digital-fulfillment/digital-fulfillment.plugin';
+import { GuestCheckoutPlugin } from './plugins/guest-checkout/guest-checkout.plugin';
+import { WhatsappPlugin } from './plugins/whatsapp/whatsapp.plugin';
+import { SearchMaintenancePlugin } from './plugins/search-maintenance/search-maintenance.plugin';
 import { DashboardPlugin } from '@vendure/dashboard/plugin';
 
 /**
@@ -126,6 +130,9 @@ export const config: VendureConfig = {
     // Requirement 10.1, 10.2, 10.3: Custom order process with forward-only transitions
     // and payment verification guard
     process: [customOrderProcess],
+    // Guest checkout policy: registered emails are rejected (force login / magic
+    // link); repeat guests reuse their Customer. Controlled by GUEST_CHECKOUT_ENABLED.
+    guestCheckoutStrategy: new NgopiGuestCheckoutStrategy(),
   },
   entityOptions: {
     // IDR is a zero-decimal currency: store Rp 150.000 as 150000 (precision 0)
@@ -179,6 +186,15 @@ export const config: VendureConfig = {
         public: true,
         ui: { component: 'textarea-form-input' },
       },
+      {
+        name: 'isGuest',
+        type: 'boolean',
+        label: [{ languageCode: LanguageCode.en, value: 'Guest Account' }],
+        description: [{ languageCode: LanguageCode.en, value: 'True when this customer was created via guest checkout and has not been claimed. Internal — not exposed to the Shop API.' }],
+        nullable: true,
+        defaultValue: false,
+        public: false,
+      },
     ],
     Product: [
       {
@@ -227,6 +243,16 @@ export const config: VendureConfig = {
         nullable: true,
       },
     ],
+    Order: [
+      {
+        name: 'whatsappReminderSentAt',
+        type: 'datetime',
+        label: [{ languageCode: LanguageCode.en, value: 'WhatsApp Reminder Sent At' }],
+        description: [{ languageCode: LanguageCode.en, value: 'Timestamp of the last unpaid-order WhatsApp reminder. Internal — prevents duplicate reminders.' }],
+        nullable: true,
+        public: false,
+      },
+    ],
   },
   plugins: [
     AssetServerPlugin.init({
@@ -238,6 +264,9 @@ export const config: VendureConfig = {
     TripayPaymentPlugin,
     EmailVerificationPlugin,
     DigitalFulfillmentPlugin,
+    GuestCheckoutPlugin,
+    WhatsappPlugin,
+    SearchMaintenancePlugin,
     GoogleAuthPlugin.init({
       googleClientId: process.env.GOOGLE_CLIENT_ID || '',
     }),

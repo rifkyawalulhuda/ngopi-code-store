@@ -363,7 +363,7 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useAuth } from '~/composables/useAuth'
 import { GET_PRODUCT_BY_SLUG } from '~/graphql/queries/products'
 import { formatPriceIDR } from '~/utils/format'
-import { pickVariant, getLicenseLabel } from '~/utils/variants'
+import { pickVariant, getLicenseLabel, productRequiresFile } from '~/utils/variants'
 import { isOrderTotalConsistent } from '~/utils/checkout'
 import { phoneFieldError } from '~/utils/phone'
 import gql from 'graphql-tag'
@@ -575,7 +575,11 @@ const selectedVariant = computed(() => {
   const variants = product.value?.variants ?? []
   if (!variants.length) return null
   const preferred = (route.query.license as string | undefined) ?? null
-  return pickVariant(variants, preferred)
+  // Services have no file, so a fileless service variant is still selectable.
+  return pickVariant(variants, {
+    preferredLicenseCode: preferred,
+    requiresFile: productRequiresFile(product.value?.facetValues),
+  })
 })
 
 /** License tier label for the order summary, e.g. "Extended". */

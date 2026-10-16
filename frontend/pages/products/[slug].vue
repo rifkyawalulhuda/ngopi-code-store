@@ -382,6 +382,7 @@ import {
   isVariantPurchasable,
   pickVariant,
   hasMultipleVariants,
+  productRequiresFile,
 } from '~/utils/variants'
 
 const route = useRoute()
@@ -457,6 +458,13 @@ const priceLabel = computed(() => {
 
 const variants = computed(() => product.value?.variants ?? [])
 
+/**
+ * Whether this product must have an uploaded file to be sellable.
+ * False for services (jasa), which are delivered by work and have no file —
+ * requiring one made every service tier permanently unsellable.
+ */
+const requiresFile = computed(() => productRequiresFile(product.value?.facetValues))
+
 /** Currently selected variant (license tier). */
 const selectedVariantId = ref<string | null>(null)
 const selectedVariant = computed(
@@ -472,7 +480,7 @@ const licenseOptions = computed(() =>
     variantId: v.id,
     label: getLicenseLabel(v) ?? v.name,
     priceLabel: formatPriceIDR(v.price),
-    purchasable: isVariantPurchasable(v),
+    purchasable: isVariantPurchasable(v, { requiresFile: requiresFile.value }),
   })),
 )
 
@@ -480,10 +488,12 @@ const selectedLicenseLabel = computed(() => getLicenseLabel(selectedVariant.valu
 
 /**
  * Whether the selected variant can actually be delivered.
- * A variant with no uploaded file must never be sold — the order would fulfil
- * with zero downloads.
+ * A digital variant with no uploaded file must never be sold — the order would
+ * fulfil with zero downloads. Services are exempt (see `requiresFile`).
  */
-const selectedPurchasable = computed(() => isVariantPurchasable(selectedVariant.value))
+const selectedPurchasable = computed(() =>
+  isVariantPurchasable(selectedVariant.value, { requiresFile: requiresFile.value }),
+)
 
 function selectVariant(variantId: string) {
   selectedVariantId.value = variantId
@@ -701,7 +711,11 @@ async function loadProduct() {
   // Resolve the initial license tier: honour ?license=extended, otherwise fall
   // back to the first purchasable variant.
   const preferred = (route.query.license as string | undefined) ?? null
-  selectedVariantId.value = pickVariant(variants.value, preferred)?.id ?? null
+  selectedVariantId.value =
+    pickVariant(variants.value, {
+      preferredLicenseCode: preferred,
+      requiresFile: requiresFile.value,
+    })?.id ?? null
 
   // Measure description once rendered to decide if the toggle is needed
   await nextTick()
@@ -739,7 +753,10 @@ watch(
   () => route.query.license,
   (code) => {
     if (!product.value) return
-    const next = pickVariant(variants.value, (code as string | undefined) ?? null)
+    const next = pickVariant(variants.value, {
+      preferredLicenseCode: (code as string | undefined) ?? null,
+      requiresFile: requiresFile.value,
+    })
     if (next && next.id !== selectedVariantId.value) {
       selectedVariantId.value = next.id
     }

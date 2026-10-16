@@ -56,16 +56,25 @@
                   <label class="form-label" for="ck-phone">No. Telepon / WhatsApp</label>
                   <input
                     id="ck-phone"
+                    v-model="customerPhoneInput"
                     type="tel"
                     class="form-input"
-                    :value="customer?.customFields?.whatsappNumber || '—'"
-                    readonly
-                    aria-readonly="true"
+                    placeholder="0812xxxxxxx"
+                    autocomplete="tel"
+                    :aria-invalid="!!customerPhoneError"
+                    :class="{ 'input-invalid': customerPhoneError }"
+                    @blur="saveCustomerPhone"
                   />
+                  <span v-if="customerPhoneError" class="field-error">{{ customerPhoneError }}</span>
+                  <span v-else-if="phoneSaveError" class="field-error">{{ phoneSaveError }}</span>
+                  <span v-else-if="savingPhone" class="field-hint">Menyimpan…</span>
+                  <span v-else class="field-hint">
+                    Dipakai untuk mengirim bukti &amp; akses pesanan via WhatsApp.
+                  </span>
                 </div>
 
                 <p class="billing-note">
-                  Data di atas diambil dari akun Anda.
+                  Email dan nama diambil dari akun Anda.
                   <NuxtLink to="/account" class="billing-link">Ubah di Pengaturan</NuxtLink>
                 </p>
               </div>
@@ -238,7 +247,7 @@
                 </div>
                 <div class="summary-item-info">
                   <span class="summary-item-name">{{ product.name }}</span>
-                  <span class="summary-item-license">{{ product.customFields?.licenseType || 'Personal License' }}</span>
+                  <span class="summary-item-license">{{ selectedLicenseLabel || 'Personal License' }}</span>
                 </div>
                 <span class="summary-item-price">{{ formattedPrice }}</span>
               </div>
@@ -262,21 +271,29 @@
                 <span class="summary-val">{{ formattedPrice }}</span>
               </div>
 
-              <!-- Phone number required warning for e-wallet -->
-              <div v-if="needsPhone" class="phone-warning" role="alert">
+              <!--
+                E-wallet needs a phone number. Point at the field on THIS page —
+                the old copy sent everyone to Pengaturan Profil, a dead end for
+                guests who have no profile to open.
+              -->
+              <div v-if="needsPhone" class="phone-warning" role="status">
                 <AppIcon name="user" :size="18" />
                 <div class="phone-warning-content">
-                  <p class="phone-warning-text">Metode E-Wallet memerlukan nomor telepon.</p>
-                  <p class="phone-warning-sub">Tambahkan nomor WhatsApp di Pengaturan Profil terlebih dahulu.</p>
+                  <p class="phone-warning-text">Metode E-Wallet memerlukan nomor WhatsApp.</p>
+                  <p class="phone-warning-sub">
+                    Isi kolom <strong>No. Telepon / WhatsApp</strong> di Detail Pembeli.
+                  </p>
                 </div>
-                <NuxtLink to="/account?tab=settings" class="phone-warning-link">Atur Profil</NuxtLink>
+                <button type="button" class="phone-warning-link" @click="focusPhoneField">
+                  Isi Nomor
+                </button>
               </div>
 
               <!-- CTA Button -->
               <button
                 type="button"
                 class="btn btn-primary btn-full checkout-cta"
-                :disabled="!selectedChannel || processing || needsPhone || (!isLoggedIn && !guestFormValid)"
+                :disabled="!selectedChannel || processing || needsPhone || formInvalid"
                 @click="onProceedPayment"
               >
                 <span v-if="processing" class="btn-spinner-sm" />
@@ -314,7 +331,7 @@
             <button
               type="button"
               class="btn btn-primary mcb-cta"
-              :disabled="!selectedChannel || processing || needsPhone || (!isLoggedIn && !guestFormValid)"
+              :disabled="!selectedChannel || processing || needsPhone || formInvalid"
               @click="onProceedPayment"
             >
               <span v-if="processing" class="btn-spinner-sm" />
@@ -342,10 +359,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useAuth } from '~/composables/useAuth'
 import { GET_PRODUCT_BY_SLUG } from '~/graphql/queries/products'
 import { formatPriceIDR } from '~/utils/format'
+import { pickVariant, getLicenseLabel } from '~/utils/variants'
+import { isOrderTotalConsistent } from '~/utils/checkout'
+import { phoneFieldError } from '~/utils/phone'
 import gql from 'graphql-tag'
 
 const SET_CUSTOMER_FOR_ORDER = gql`
@@ -366,6 +386,22 @@ const SET_CUSTOMER_FOR_ORDER = gql`
         errorDetail
       }
       ... on NoActiveOrderError {
+        message
+      }
+    }
+  }
+`
+
+const REMOVE_ALL_ORDER_LINES = gql`
+  mutation RemoveAllOrderLines {
+    removeAllOrderLines {
+      ... on Order {
+        id
+        code
+        totalWithTax
+        totalQuantity
+      }
+      ... on OrderModificationError {
         message
       }
     }
@@ -522,13 +558,28 @@ useHead({
 const route = useRoute()
 const slug = route.params.slug as string
 
-const { customer, ensureSession, isLoggedIn } = useAuth()
+const { customer, ensureSession, isLoggedIn, updateProfile } = useAuth()
 const loading = ref(true)
 const product = ref<any>(null)
 const selectedChannel = ref('')
 const processing = ref(false)
 const paymentError = ref('')
 const showPendingOrderHint = ref(false)
+
+/**
+ * The license tier chosen on the PDP, carried via ?license=extended.
+ * Resolved against the fetched product once it loads; falls back to the first
+ * purchasable variant so a direct link to /buy/<slug> still works.
+ */
+const selectedVariant = computed(() => {
+  const variants = product.value?.variants ?? []
+  if (!variants.length) return null
+  const preferred = (route.query.license as string | undefined) ?? null
+  return pickVariant(variants, preferred)
+})
+
+/** License tier label for the order summary, e.g. "Extended". */
+const selectedLicenseLabel = computed(() => getLicenseLabel(selectedVariant.value))
 
 // Guest checkout form (used when the visitor is not logged in)
 const guestForm = reactive({
@@ -545,7 +596,6 @@ const guestErrors = reactive<{ email: string | null; fullName: string | null; wh
 function computeGuestErrors(form: { email: string; fullName: string; whatsappNumber: string }) {
   const email = form.email.trim()
   const name = form.fullName.trim()
-  const phone = form.whatsappNumber.trim().replace(/[\s-]/g, '')
 
   return {
     email: !email
@@ -554,11 +604,8 @@ function computeGuestErrors(form: { email: string; fullName: string; whatsappNum
         ? null
         : 'Format email tidak valid',
     fullName: name.length < 2 ? 'Nama lengkap wajib diisi' : null,
-    whatsappNumber: !phone
-      ? 'Nomor WhatsApp wajib diisi'
-      : /^(\+?62|0)8[1-9][0-9]{6,11}$/.test(phone)
-        ? null
-        : 'Nomor WhatsApp tidak valid (contoh: 081234567890)',
+    // Guests always need a phone: it is the WhatsApp delivery channel.
+    whatsappNumber: phoneFieldError(form.whatsappNumber, { required: true }),
   }
 }
 
@@ -570,6 +617,51 @@ const guestFormValid = computed(() => {
 function validateGuestForm(): boolean {
   Object.assign(guestErrors, computeGuestErrors(guestForm))
   return !guestErrors.email && !guestErrors.fullName && !guestErrors.whatsappNumber
+}
+
+/**
+ * Logged-in customers can fix their WhatsApp number inline instead of being sent
+ * away to the account settings page mid-checkout. The value is persisted through
+ * useAuth.updateProfile so the order — and the WhatsApp receipt — carries it.
+ */
+const customerPhoneInput = ref('')
+const savingPhone = ref(false)
+const phoneSaveError = ref('')
+
+// Seed the field whenever the customer record arrives or changes.
+watch(
+  () => customer.value?.customFields?.whatsappNumber,
+  (phone) => {
+    customerPhoneInput.value = phone || ''
+  },
+  { immediate: true },
+)
+
+/** Inline validation for the logged-in field. Empty is allowed until a method needs it. */
+const customerPhoneError = computed(() => phoneFieldError(customerPhoneInput.value))
+
+/** True when the field holds a value that differs from what is saved on the account. */
+const phoneDirty = computed(
+  () => customerPhoneInput.value.trim() !== (customer.value?.customFields?.whatsappNumber || '').trim(),
+)
+
+/** Persist the phone to the customer profile. Returns false when it must not proceed. */
+async function saveCustomerPhone(): Promise<boolean> {
+  if (!isLoggedIn.value || !phoneDirty.value) return true
+  if (customerPhoneError.value) return false
+
+  savingPhone.value = true
+  phoneSaveError.value = ''
+  try {
+    const ok = await updateProfile({ whatsappNumber: customerPhoneInput.value.trim() })
+    if (!ok) {
+      phoneSaveError.value = 'Gagal menyimpan nomor WhatsApp. Coba lagi.'
+      return false
+    }
+    return true
+  } finally {
+    savingPhone.value = false
+  }
 }
 
 // Tripay payment channels (sandbox-compatible)
@@ -591,10 +683,27 @@ const ewalletCodes = new Set(['OVO', 'DANA', 'SHOPEEPAY'])
 const isEwalletSelected = computed(() => ewalletCodes.has(selectedChannel.value))
 const customerPhone = computed(() =>
   isLoggedIn.value
-    ? customer.value?.customFields?.whatsappNumber || ''
+    ? customerPhoneInput.value.trim().replace(/[\s-]/g, '')
     : guestForm.whatsappNumber.trim().replace(/[\s-]/g, ''),
 )
 const needsPhone = computed(() => isEwalletSelected.value && !customerPhone.value)
+
+/** Id of the phone input on this page, depending on who is checking out. */
+const phoneFieldId = computed(() => (isLoggedIn.value ? 'ck-phone' : 'guest-phone'))
+
+/**
+ * Send the customer to the phone field that is already on this page.
+ *
+ * The hint used to point at Pengaturan Profil, which a guest does not have —
+ * a dead end while the field they needed sat a few lines above.
+ */
+function focusPhoneField() {
+  if (!import.meta.client) return
+  const el = document.getElementById(phoneFieldId.value) as HTMLInputElement | null
+  if (!el) return
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  el.focus({ preventScroll: true })
+}
 
 /**
  * Why the primary action is disabled, phrased for the sticky mobile bar.
@@ -606,10 +715,17 @@ const needsPhone = computed(() => isEwalletSelected.value && !customerPhone.valu
 const disabledReason = computed<string | null>(() => {
   if (processing.value) return 'Memproses pembayaran…'
   if (!selectedChannel.value) return 'Pilih metode pembayaran dulu'
-  if (needsPhone.value) return 'Metode E-Wallet butuh nomor WhatsApp'
-  if (!isLoggedIn.value && !guestFormValid.value) return 'Lengkapi data pembeli dulu'
+  if (needsPhone.value) return 'Isi nomor WhatsApp dulu'
+  if (isLoggedIn.value ? customerPhoneError.value : !guestFormValid.value) {
+    return 'Lengkapi data pembeli dulu'
+  }
   return null
 })
+
+/** True when the buyer's details are incomplete or invalid. */
+const formInvalid = computed(() =>
+  isLoggedIn.value ? !!customerPhoneError.value : !guestFormValid.value,
+)
 
 const fullName = computed(() => {
   if (isLoggedIn.value && customer.value) {
@@ -619,7 +735,7 @@ const fullName = computed(() => {
 })
 
 const formattedPrice = computed(() => {
-  const price = product.value?.variants?.[0]?.price
+  const price = selectedVariant.value?.price
   return price != null ? formatPriceIDR(price) : 'Rp 0'
 })
 
@@ -647,7 +763,13 @@ onMounted(async () => {
 
 /**
  * Process payment: create order in Vendure and initiate Tripay payment.
- * Flow: addItemToOrder → addPaymentToOrder(tripay, channelCode) → redirect to paymentUrl
+ * Flow: removeAllOrderLines (clean slate) → addItemToOrder → setCustomerForOrder
+ * (guests) → setOrderShippingAddress → setOrderShippingMethod →
+ * transitionOrderToState(ArrangingPayment) → addPaymentToOrder(tripay) →
+ * redirect to the Tripay paymentUrl.
+ *
+ * Every step's result is checked: a failure must stop the flow, because the
+ * item is already in the order and a retry would add it a second time.
  */
 async function onProceedPayment() {
   if (!selectedChannel.value || !product.value) return
@@ -658,30 +780,61 @@ async function onProceedPayment() {
     return
   }
 
+  // Logged-in: persist any inline phone edit BEFORE creating the order, so the
+  // order — and the WhatsApp receipt — carries the number just typed. Saving on
+  // blur alone is not enough: the customer may click straight after typing.
+  if (isLoggedIn.value && !(await saveCustomerPhone())) {
+    paymentError.value =
+      phoneSaveError.value || customerPhoneError.value || 'Nomor WhatsApp belum valid.'
+    return
+  }
+
   processing.value = true
   paymentError.value = ''
   showPendingOrderHint.value = false
 
   try {
     const { $apollo } = useNuxtApp()
-    const variantId = product.value.variants?.[0]?.id
+    const variantId = selectedVariant.value?.id
     if (!variantId) {
       paymentError.value = 'Produk tidak memiliki varian yang valid.'
       return
     }
 
-    // Step 1: Add item to order (creates a new order or adds to existing active order)
+    // Step 1: Start from a CLEAN order.
+    //
+    // The Vendure session carries an active order for a long time (default
+    // session duration is a year), so a previously abandoned order would still
+    // hold its lines. Adding to it silently changed what the customer pays
+    // while this page kept showing only the selected variant's price.
+    // "Beli Sekarang" means exactly one product, so clear first.
+    await $apollo.defaultClient.mutate({
+      mutation: REMOVE_ALL_ORDER_LINES,
+      fetchPolicy: 'no-cache',
+    })
+
+    // Step 2: Add the selected variant.
     const { data: addData } = await $apollo.defaultClient.mutate({
       mutation: ADD_ITEM_TO_ORDER,
       variables: { productVariantId: variantId, quantity: 1 },
     })
 
     const addResult = addData?.addItemToOrder
+    // Any non-Order result is fatal. Previously OrderModificationError was
+    // swallowed and the flow continued, so checkout could proceed with the
+    // item missing from the order.
     if (addResult?.__typename !== 'Order') {
-      if (addResult?.__typename !== 'OrderModificationError') {
-        paymentError.value = addResult?.message || 'Gagal menambahkan produk ke pesanan.'
-        return
-      }
+      paymentError.value =
+        addResult?.message || 'Gagal menambahkan produk ke pesanan. Coba muat ulang halaman.'
+      return
+    }
+
+    // Step 2b: Verify what will actually be charged matches what is displayed.
+    // Guards against any future drift between the summary and the real order.
+    if (!isOrderTotalConsistent(selectedVariant.value?.price, addResult.totalWithTax)) {
+      paymentError.value =
+        'Total pesanan tidak sesuai dengan yang ditampilkan. Pesanan dibatalkan demi keamanan — silakan muat ulang halaman.'
+      return
     }
 
     // Step 1b: For guests, attach the customer to the order.
@@ -722,7 +875,9 @@ async function onProceedPayment() {
       }
     }
 
-    // Step 2: Set shipping address (required by Vendure before ArrangingPayment)
+    // Step 3: Set shipping address (required by Vendure before ArrangingPayment).
+    // The result must be checked: if the address is rejected the order can never
+    // reach ArrangingPayment, and the failure was previously invisible.
     const { data: addrData } = await $apollo.defaultClient.mutate({
       mutation: SET_SHIPPING_ADDRESS,
       variables: {
@@ -734,33 +889,43 @@ async function onProceedPayment() {
         },
       },
     })
-    console.log('[Checkout] Step 2 - setShippingAddress:', JSON.stringify(addrData))
 
-    // Step 3: Get and set eligible shipping method
+    const addrResult = addrData?.setOrderShippingAddress
+    if (addrResult?.__typename !== 'Order') {
+      paymentError.value =
+        addrResult?.message || 'Gagal menyimpan alamat pengiriman. Coba muat ulang halaman.'
+      return
+    }
+
+    // Step 4: Get and set eligible shipping method
     const { data: eligibleData } = await $apollo.defaultClient.query({
       query: GET_ELIGIBLE_SHIPPING,
       fetchPolicy: 'network-only',
     })
     const shippingMethods = eligibleData?.eligibleShippingMethods || []
-    console.log('[Checkout] Step 3a - eligibleShippingMethods:', JSON.stringify(shippingMethods))
 
-    if (shippingMethods.length > 0) {
-      const { data: shipData } = await $apollo.defaultClient.mutate({
-        mutation: SET_SHIPPING_METHOD,
-        variables: { ids: [shippingMethods[0].id] },
-      })
-      console.log('[Checkout] Step 3b - setShippingMethod:', JSON.stringify(shipData))
-    } else {
+    if (!shippingMethods.length) {
       paymentError.value = 'Tidak ada metode pengiriman yang tersedia. Pastikan Shipping Method sudah diatur di Dashboard.'
       return
     }
 
-    // Step 4: Transition order to ArrangingPayment state
+    const { data: shipData } = await $apollo.defaultClient.mutate({
+      mutation: SET_SHIPPING_METHOD,
+      variables: { ids: [shippingMethods[0].id] },
+    })
+
+    const shipResult = shipData?.setOrderShippingMethod
+    if (shipResult?.__typename !== 'Order') {
+      paymentError.value =
+        shipResult?.message || 'Gagal menetapkan metode pengiriman. Coba muat ulang halaman.'
+      return
+    }
+
+    // Step 5: Transition order to ArrangingPayment state
     const { data: transData } = await $apollo.defaultClient.mutate({
       mutation: TRANSITION_ORDER_STATE,
       variables: { state: 'ArrangingPayment' },
     })
-    console.log('[Checkout] Step 4 - transitionOrderToState:', JSON.stringify(transData))
 
     const transResult = transData?.transitionOrderToState
     if (transResult?.__typename === 'OrderStateTransitionError') {
@@ -783,7 +948,7 @@ async function onProceedPayment() {
       return
     }
 
-    // Step 4: Add payment with Tripay method
+    // Step 6: Add payment with Tripay method
     const { data: payData } = await $apollo.defaultClient.mutate({
       mutation: ADD_PAYMENT_TO_ORDER,
       variables: {
@@ -798,7 +963,6 @@ async function onProceedPayment() {
     if (payResult?.__typename === 'Order') {
       // Get payment URL from order payments metadata
       const payment = payResult.payments?.[payResult.payments.length - 1]
-      console.log('[Checkout] Payment response:', JSON.stringify(payment, null, 2))
       let paymentUrl = ''
 
       // metadata bisa string JSON atau object tergantung Vendure version
@@ -813,8 +977,6 @@ async function onProceedPayment() {
           paymentUrl = meta?.public?.paymentUrl || meta?.paymentUrl || ''
         }
       }
-
-      console.log('[Checkout] Extracted paymentUrl:', paymentUrl)
 
       if (paymentUrl) {
         window.location.href = paymentUrl
@@ -995,6 +1157,13 @@ async function onProceedPayment() {
 
 [data-theme='dark'] .field-error {
   color: #fca5a5;
+}
+
+/* Persistent helper text under a form field */
+.field-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.4;
 }
 
 .billing-note {
@@ -1370,13 +1539,21 @@ async function onProceedPayment() {
 .phone-warning-link {
   font-size: 0.8rem;
   font-weight: 600;
+  font-family: inherit;
   color: #92400e;
   text-decoration: none;
   white-space: nowrap;
   padding: 0.35rem 0.7rem;
+  border: none;
   border-radius: 6px;
   background: rgba(146, 64, 14, 0.1);
+  cursor: pointer;
   transition: background 0.15s;
+}
+
+.phone-warning-link:focus-visible {
+  outline: 2px solid #92400e;
+  outline-offset: 2px;
 }
 
 .phone-warning-link:hover {

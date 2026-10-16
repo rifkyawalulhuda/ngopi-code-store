@@ -98,6 +98,28 @@
         </div>
       </section>
 
+      <!-- Missing-file audit: these variants cannot be delivered if sold -->
+      <section v-if="missingFileVariants.length" class="missing-section">
+        <div class="missing-card">
+          <div class="missing-head">
+            <span class="missing-icon">⚠️</span>
+            <div>
+              <h2>Varian Tanpa File ({{ missingFileVariants.length }})</h2>
+              <p>
+                Pembeli varian ini akan membayar tetapi tidak menerima file apa pun.
+                Upload file untuk masing-masing varian di bawah.
+              </p>
+            </div>
+          </div>
+          <ul class="missing-list">
+            <li v-for="v in missingFileVariants" :key="v.id">
+              <span class="missing-name">{{ v.name }}</span>
+              <code class="id-badge">{{ v.id }}</code>
+            </li>
+          </ul>
+        </div>
+      </section>
+
       <!-- Existing Digital Products -->
       <section class="products-section">
         <div class="card">
@@ -277,6 +299,8 @@ const fileInput = ref<HTMLInputElement | null>(null)
 
 // Products list state
 const digitalProducts = ref<DigitalProductInfo[]>([])
+/** Variants with NO uploaded file — a paid order for these cannot be delivered. */
+const missingFileVariants = ref<Variant[]>([])
 const loadingProducts = ref(false)
 const deletingId = ref<string | null>(null)
 
@@ -371,14 +395,14 @@ async function adminQuery(query: string, variables: Record<string, any> = {}) {
 
 // --- Variant Search ---
 
-async function loadVariants(search = '') {
+async function loadVariants(search = '', take = 20) {
   const query = `query GetVariants($options: ProductVariantListOptions) {
     productVariants(options: $options) {
       items { id name sku }
       totalItems
     }
   }`
-  const options: any = { take: 20 }
+  const options: any = { take }
   if (search) {
     options.filter = { name: { contains: search } }
   }
@@ -551,9 +575,10 @@ async function handleUpload() {
 async function loadDigitalProducts() {
   loadingProducts.value = true
   try {
-    // Get all variants that have digital products
-    const allVariants = await loadVariants()
+    // Fetch a wide window: this list also drives the "missing file" audit.
+    const allVariants = await loadVariants('', 200)
     const products: DigitalProductInfo[] = []
+    const missing: Variant[] = []
 
     for (const variant of allVariants) {
       const json = await adminQuery(
@@ -572,10 +597,13 @@ async function loadDigitalProducts() {
       const dp = json.data?.digitalProductByVariantId
       if (dp) {
         products.push({ ...dp, variantName: variant.name })
+      } else {
+        missing.push(variant)
       }
     }
 
     digitalProducts.value = products
+    missingFileVariants.value = missing
   } catch (e: any) {
     console.error('Failed to load digital products:', e)
   } finally {
@@ -695,6 +723,68 @@ onMounted(async () => {
   border-radius: 16px;
   padding: 2rem;
   box-shadow: 0 2px 12px var(--shadow-card);
+}
+
+/* Missing-file audit */
+.missing-section {
+  margin-bottom: 1.5rem;
+}
+
+.missing-card {
+  background: rgba(231, 76, 111, 0.08);
+  border: 1px solid #e74c6f;
+  border-radius: 16px;
+  padding: 1.5rem 2rem;
+}
+
+.missing-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.missing-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.missing-head h2 {
+  font-size: 1.05rem;
+  color: #e74c6f;
+  margin: 0 0 0.35rem;
+}
+
+.missing-head p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  max-width: 70ch;
+}
+
+.missing-list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.missing-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.missing-name {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text);
 }
 
 .card h2 {

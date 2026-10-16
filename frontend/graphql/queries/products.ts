@@ -46,6 +46,16 @@ export const GET_PRODUCT_BY_SLUG = gql`
         name
         price
         currencyCode
+        options {
+          id
+          code
+          name
+          group {
+            id
+            code
+            name
+          }
+        }
         customFields {
           originalPrice
         }
@@ -54,6 +64,16 @@ export const GET_PRODUCT_BY_SLUG = gql`
           mimeType
           maxDownloadsPerOrder
           downloadExpiryHours
+        }
+      }
+      optionGroups {
+        id
+        code
+        name
+        options {
+          id
+          code
+          name
         }
       }
       collections {

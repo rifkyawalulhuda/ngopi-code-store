@@ -35,7 +35,10 @@
       <p v-if="showDescription && description" class="card-desc">{{ description }}</p>
 
       <div class="card-foot">
-        <span class="card-price">{{ priceLabel }}</span>
+        <span class="card-price">
+          <span v-if="pricePrefix" class="card-price-prefix">{{ pricePrefix }}</span>
+          {{ priceLabel }}
+        </span>
         <NuxtLink :to="`/products/${product.slug}`" class="card-link">
           Detail
           <AppIcon name="arrowRight" :size="15" />
@@ -66,9 +69,18 @@ const props = withDefaults(
 )
 
 const priceLabel = computed(() => {
-  const price = props.product?.variants?.[0]?.price
+  const p = props.product
+  if (!p) return 'Lihat detail'
+  // Multi-tier products: show the cheapest tier, prefixed with "mulai dari".
+  const range = p.priceRange
+  const price = range?.isRange ? range.min : p.variants?.[0]?.price
   return price != null ? formatPriceIDR(price) : 'Lihat detail'
 })
+
+/** Shown before the price when the product has several differently-priced tiers. */
+const pricePrefix = computed(() =>
+  props.product?.priceRange?.isRange ? 'mulai dari' : '',
+)
 
 const description = computed(() => {
   const p = props.product
@@ -187,6 +199,15 @@ const description = computed(() => {
   color: var(--primary-text);
   /* Tabular figures keep prices from shifting width between cards. */
   font-variant-numeric: tabular-nums;
+}
+
+.card-price-prefix {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  text-transform: uppercase;
 }
 
 .card-link {

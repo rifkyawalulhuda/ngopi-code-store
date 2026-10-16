@@ -93,13 +93,35 @@
             <p class="eyebrow">{{ badgeLabel }}</p>
             <h1 class="info-name">{{ product.name }}</h1>
 
+            <!-- License tier selector -->
+            <div v-if="showVariantSelector" class="variant-select">
+              <span id="variant-select-label" class="variant-select-label">Pilih Lisensi</span>
+              <div class="variant-options" role="radiogroup" aria-labelledby="variant-select-label">
+                <button
+                  v-for="opt in licenseOptions"
+                  :key="opt.variantId"
+                  type="button"
+                  role="radio"
+                  class="variant-option"
+                  :class="{ active: selectedVariantId === opt.variantId, unavailable: !opt.purchasable }"
+                  :aria-checked="selectedVariantId === opt.variantId"
+                  :disabled="!opt.purchasable"
+                  @click="selectVariant(opt.variantId)"
+                >
+                  <span class="variant-option-name">{{ opt.label }}</span>
+                  <span class="variant-option-price">{{ opt.priceLabel }}</span>
+                  <span v-if="!opt.purchasable" class="variant-option-note">Belum tersedia</span>
+                </button>
+              </div>
+            </div>
+
             <div class="price-row">
               <span class="info-price">{{ priceLabel }}</span>
               <span v-if="compareAtPrice" class="price-original">{{ formatPriceIDR(compareAtPrice) }}</span>
               <span v-if="discountPercent" class="discount-badge">Hemat {{ discountPercent }}%</span>
-              <span v-if="licenseShort" class="license-chip">
+              <span v-if="selectedLicenseLabel" class="license-chip">
                 <AppIcon name="tag" :size="14" />
-                {{ licenseShort }}
+                {{ selectedLicenseLabel }}
               </span>
             </div>
 
@@ -113,11 +135,20 @@
               </li>
             </ul>
 
-            <!-- Already owned -->
-            <div v-if="alreadyOwned" class="owned-banner">
+            <!-- Selected tier cannot be delivered (no file uploaded) -->
+            <div v-if="!selectedPurchasable" class="unavailable-banner" role="status">
+              <AppIcon name="clock" :size="20" />
+              <div class="unavailable-content">
+                <span class="unavailable-title">Varian ini belum tersedia</span>
+                <span class="unavailable-desc">Pilih lisensi lain, atau tanya kami via WhatsApp.</span>
+              </div>
+            </div>
+
+            <!-- Already owned (this exact tier) -->
+            <div v-else-if="alreadyOwned" class="owned-banner">
               <div class="owned-icon"><AppIcon name="checkCircle" :size="20" /></div>
               <div class="owned-content">
-                <span class="owned-title">Kamu sudah memiliki produk ini</span>
+                <span class="owned-title">Kamu sudah memiliki lisensi ini</span>
                 <span class="owned-desc">Akses produk di Pustaka Digital kamu.</span>
               </div>
               <NuxtLink to="/account" class="btn btn-primary btn-sm owned-link">Lihat di Pustaka</NuxtLink>
@@ -125,7 +156,12 @@
 
             <!-- Actions -->
             <div v-else class="actions">
-              <button class="btn btn-primary btn-buy" type="button" @click="onBuyNow">
+              <button
+                class="btn btn-primary btn-buy"
+                type="button"
+                :disabled="!selectedPurchasable"
+                @click="onBuyNow"
+              >
                 <AppIcon name="shoppingBag" :size="20" />
                 Beli Sekarang
               </button>
@@ -273,9 +309,14 @@
             <span v-if="compareAtPrice" class="sticky-price-original">{{ formatPriceIDR(compareAtPrice) }}</span>
           </span>
         </div>
-        <button class="btn btn-primary sticky-cta" type="button" @click="onBuyNow">
+        <button
+          class="btn btn-primary sticky-cta"
+          type="button"
+          :disabled="!selectedPurchasable"
+          @click="onBuyNow"
+        >
           <AppIcon name="shoppingBag" :size="18" />
-          Beli
+          {{ selectedPurchasable ? 'Beli' : 'Belum tersedia' }}
         </button>
       </div>
     </transition>
@@ -330,13 +371,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useShop, type Product } from '~/composables/useShop'
 import { useWhatsapp } from '~/composables/useWhatsapp'
 import { formatPriceIDR, formatFileSize, formatMimeType } from '~/utils/format'
+import {
+  getLicenseCode,
+  getLicenseLabel,
+  isVariantPurchasable,
+  pickVariant,
+  hasMultipleVariants,
+} from '~/utils/variants'
 
 const route = useRoute()
+const router = useRouter()
 const slug = computed(() => route.params.slug as string)
 
 const { getProductBySlug, products, fetchProducts } = useShop()
@@ -402,11 +451,48 @@ function prevImage() {
 }
 
 const priceLabel = computed(() => {
-  const price = product.value?.variants?.[0]?.price
+  const price = selectedVariant.value?.price
   return price != null ? formatPriceIDR(price) : 'Hubungi kami'
 })
 
-const firstVariant = computed(() => product.value?.variants?.[0] ?? null)
+const variants = computed(() => product.value?.variants ?? [])
+
+/** Currently selected variant (license tier). */
+const selectedVariantId = ref<string | null>(null)
+const selectedVariant = computed(
+  () => variants.value.find((v) => v.id === selectedVariantId.value) ?? null,
+)
+
+/** True when the product offers more than one tier to choose from. */
+const showVariantSelector = computed(() => hasMultipleVariants(variants.value))
+
+/** Radio-card options for the license selector. */
+const licenseOptions = computed(() =>
+  variants.value.map((v) => ({
+    variantId: v.id,
+    label: getLicenseLabel(v) ?? v.name,
+    priceLabel: formatPriceIDR(v.price),
+    purchasable: isVariantPurchasable(v),
+  })),
+)
+
+const selectedLicenseLabel = computed(() => getLicenseLabel(selectedVariant.value))
+
+/**
+ * Whether the selected variant can actually be delivered.
+ * A variant with no uploaded file must never be sold — the order would fulfil
+ * with zero downloads.
+ */
+const selectedPurchasable = computed(() => isVariantPurchasable(selectedVariant.value))
+
+function selectVariant(variantId: string) {
+  selectedVariantId.value = variantId
+  // Keep the selection shareable/bookmarkable, e.g. ?license=extended
+  const code = getLicenseCode(variants.value.find((v) => v.id === variantId))
+  if (code && import.meta.client) {
+    router.replace({ query: { ...route.query, license: code } })
+  }
+}
 
 /**
  * Compare-at price. Only surfaced when the admin set an originalPrice that is
@@ -414,20 +500,20 @@ const firstVariant = computed(() => product.value?.variants?.[0] ?? null)
  * UI stays clean (no dead strikethrough).
  */
 const compareAtPrice = computed(() => {
-  const variant = firstVariant.value
+  const variant = selectedVariant.value
   const original = variant?.customFields?.originalPrice
   if (!variant || original == null) return null
   return original > variant.price ? original : null
 })
 
 const discountPercent = computed(() => {
-  const variant = firstVariant.value
+  const variant = selectedVariant.value
   if (!compareAtPrice.value || !variant?.price) return null
   return Math.round(((compareAtPrice.value - variant.price) / compareAtPrice.value) * 100)
 })
 
 // Real, shop-facing file metadata (size / format / download limits)
-const fileInfo = computed(() => firstVariant.value?.digitalProductInfo ?? null)
+const fileInfo = computed(() => selectedVariant.value?.digitalProductInfo ?? null)
 
 const fileFormatLabel = computed(() => {
   return formatMimeType(fileInfo.value?.mimeType)
@@ -478,15 +564,10 @@ const specs = computed(() => {
     format: fileFormatLabel.value,
     size: fileSizeLabel.value,
     downloadLimit: downloadLimitLabel.value,
-    license: cf?.licenseType || 'Personal & Komersial',
+    // License now comes from the selected variant; the product-level custom
+    // field is only a fallback for products without license tiers.
+    license: selectedLicenseLabel.value || cf?.licenseType || 'Personal & Komersial',
   }
-})
-
-// Short license label for the price row chip
-const licenseShort = computed(() => {
-  const license = product.value?.customFields?.licenseType
-  if (!license) return ''
-  return license.split(/[&,]/)[0]?.trim() || license
 })
 
 // Badge label from custom field
@@ -499,9 +580,9 @@ const { init: initWishlist, isInWishlist } = useWishlist()
 if (import.meta.client) { initWishlist() }
 const productInWishlist = computed(() => product.value ? isInWishlist(product.value.id) : false)
 
-// Owned products state (check if user already purchased this product)
+// Owned products state (check if user already purchased this variant)
 const { isLoggedIn: authLoggedIn } = useAuth()
-const { fetchOwnedProducts, isOwned } = useOwnedProducts()
+const { fetchOwnedProducts, isVariantOwned } = useOwnedProducts()
 
 // Check if product is repeatable (service/jasa) based on Facet "purchase-rule"
 const isRepeatable = computed(() => {
@@ -511,10 +592,13 @@ const isRepeatable = computed(() => {
   )
 })
 
-// Only show "already owned" banner for non-repeatable products
+/**
+ * "Already owned" is evaluated per VARIANT, not per product.
+ * Owning the Personal tier must not hide the ability to buy Extended.
+ */
 const alreadyOwned = computed(() => {
   if (isRepeatable.value) return false
-  return product.value ? isOwned(product.value.id) : false
+  return isVariantOwned(selectedVariant.value?.id)
 })
 
 // WhatsApp URL with pre-filled message
@@ -535,9 +619,12 @@ const whatsappUrl = computed(() => {
  * block the entire guest flow.
  */
 function onBuyNow() {
-  if (product.value) {
-    navigateTo(`/buy/${product.value.slug}`)
-  }
+  if (!product.value) return
+  if (!selectedPurchasable.value) return
+  // Carry the chosen license tier through to checkout.
+  const code = getLicenseCode(selectedVariant.value)
+  const query = code ? `?license=${encodeURIComponent(code)}` : ''
+  navigateTo(`/buy/${product.value.slug}${query}`)
 }
 
 function onWishlist() {
@@ -548,7 +635,7 @@ function onWishlist() {
 
   // Guests keep a local-only wishlist (see useWishlist) which syncs to the
   // server once they log in, so no login is required to use it.
-  const variant = product.value.variants?.[0]
+  const variant = selectedVariant.value ?? product.value.variants?.[0]
   toggleWishlist({
     productId: product.value.id,
     variantId: variant?.id,
@@ -611,6 +698,11 @@ async function loadProduct() {
 
   loading.value = false
 
+  // Resolve the initial license tier: honour ?license=extended, otherwise fall
+  // back to the first purchasable variant.
+  const preferred = (route.query.license as string | undefined) ?? null
+  selectedVariantId.value = pickVariant(variants.value, preferred)?.id ?? null
+
   // Measure description once rendered to decide if the toggle is needed
   await nextTick()
   measureDescription()
@@ -641,6 +733,18 @@ function setupStickyObserver() {
 }
 
 onMounted(loadProduct)
+
+// Keep the selected tier in sync with browser back/forward and shared links.
+watch(
+  () => route.query.license,
+  (code) => {
+    if (!product.value) return
+    const next = pickVariant(variants.value, (code as string | undefined) ?? null)
+    if (next && next.id !== selectedVariantId.value) {
+      selectedVariantId.value = next.id
+    }
+  },
+)
 
 onBeforeUnmount(() => {
   observer?.disconnect()
@@ -858,6 +962,112 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+/* License tier selector */
+.variant-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.variant-select-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.variant-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.6rem;
+}
+
+.variant-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.75rem 1rem;
+  min-height: 44px;
+  text-align: left;
+  background: var(--surface);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+}
+
+.variant-option:hover:not(:disabled) {
+  border-color: var(--primary);
+}
+
+.variant-option.active {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.variant-option:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.variant-option:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.variant-option-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.variant-option.active .variant-option-name {
+  color: var(--primary-text);
+}
+
+.variant-option-price {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--primary-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.variant-option-note {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* Unavailable tier notice */
+.unavailable-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem 1.15rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  color: var(--text-muted);
+}
+
+.unavailable-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.unavailable-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.unavailable-desc {
+  font-size: 0.8rem;
 }
 
 .info-price {

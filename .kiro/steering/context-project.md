@@ -205,6 +205,28 @@ Payment confirmed → Order Fulfilled → DigitalDownload records created
 - Editing dist JS with `sed` does NOT work (URL is composed from host+port, not a literal string).
 - `build.emptyOutDir: true` is set so stale hashed chunks are wiped each build; without it an `index.html` can reference a deleted chunk and the dashboard renders blank.
 
+### Product Variants — License Tiers
+
+Products are sold in up to two license tiers via a shared Vendure option group:
+
+- Option group `lisensi` with options `personal` and `extended`.
+- Vendure has **no config-declared option groups** — they are runtime data created through the Admin API. `createProductOptionGroup` → `addOptionGroupToProduct` → `updateProductVariant` (existing variant gets `personal`) → `createProductVariants` (new `extended` variant).
+- Created/repaired by `npm run seed:licenses` (`backend/scripts/seed-license-variants.js`). Idempotent; skips products already carrying the group. Extended price = Personal × `EXTENDED_MULTIPLIER` (default 3).
+- Products whose name starts with `MOCKUP:` are test data and are skipped.
+
+**Digital files bind per VARIANT** (`DigitalProduct.productVariantId`). Each tier needs its own upload. `npm run seed:placeholder-files` uploads obvious PLACEHOLDER files for variants that lack one — replace them with real deliverables at `/admin/upload`.
+
+**Missing-file guard.** A paid line whose variant has no file would fulfil with zero downloads, so:
+- The storefront refuses to sell such a variant: `ProductVariant.digitalProductInfo == null` → the PDP disables that tier and hides the buy button (`frontend/utils/variants.ts` → `isVariantPurchasable`).
+- `OrderFulfillmentRunner` logs an error and returns `missingFiles` instead of silently skipping.
+- The admin uploader shows a "Varian Tanpa File" audit panel.
+
+**Storefront variant rules** (all in `frontend/utils/variants.ts`, shared by PDP / buy page / catalog):
+- PDP: radio-card selector, `?license=extended` deep-link, price + license card + file info follow the selected variant.
+- Buy page: honours `?license=` and adds that variant to the order.
+- Catalog: shows "mulai dari" when Vendure returns a `PriceRange` (multi-tier).
+- Ownership is tracked **per variant** (`useOwnedProducts.isVariantOwned`) — owning Personal must not block buying Extended.
+
 ## Cleanup Scripts (backend/scripts/)
 
 - `clear-orders.js` — delete all orders + related records (handles session FK)
@@ -222,6 +244,10 @@ Payment confirmed → Order Fulfilled → DigitalDownload records created
 
 ### Product
 - `shortDescription`, `keyFeatures`, `deliveryInfo`, `productType`, `fileFormat`, `licenseType`
+- `licenseType` is now a **fallback/description only**. Real, purchasable licenses come from the `lisensi` variant option group (see "Product Variants — License Tiers"). Don't treat it as the source of truth.
+
+### ProductVariant
+- `originalPrice` (int, whole Rupiah) — compare-at price; the storefront shows a strikethrough + "Hemat N%" only when it exceeds the variant price.
 
 ## Purchase Rule Facet
 

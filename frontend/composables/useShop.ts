@@ -22,6 +22,13 @@ export interface Product {
     name: string
     price: number
     currencyCode: string
+    /** Options selected on this variant (e.g. the license tier). */
+    options?: Array<{
+      id: string
+      code: string
+      name: string
+      group?: { id: string; code: string; name: string } | null
+    }>
     /** Compare-at price (whole Rupiah). Set only when the variant is discounted. */
     customFields?: {
       originalPrice?: number | null
@@ -34,7 +41,19 @@ export interface Product {
       downloadExpiryHours: number
     } | null
   }>
+  /** Option groups defined on the product (e.g. "Lisensi"). */
+  optionGroups?: Array<{
+    id: string
+    code: string
+    name: string
+    options: Array<{ id: string; code: string; name: string }>
+  }>
   collectionIds?: string[]
+  /**
+   * Present only for search-mapped products that have several price tiers.
+   * `isRange` true means the catalog should show "mulai dari".
+   */
+  priceRange?: { min: number; max: number; isRange: boolean } | null
   collections?: Array<{
     id: string
     name: string
@@ -102,6 +121,19 @@ function extractPrice(price?: SearchResultItem['price']): number {
   return 0
 }
 
+/**
+ * Detect a price range (a product with several variants at different prices).
+ * Vendure's search returns `PriceRange { min, max }` for multi-variant products
+ * and `SinglePrice { value }` otherwise — the catalog must not imply a single
+ * price when tiers differ.
+ */
+function extractPriceRange(
+  price?: SearchResultItem['price'],
+): { min: number; max: number; isRange: boolean } | null {
+  if (!price || typeof price.min !== 'number' || typeof price.max !== 'number') return null
+  return { min: price.min, max: price.max, isRange: price.min !== price.max }
+}
+
 function mapSearchItem(item: SearchResultItem): Product {
   const price = extractPrice(item.price)
   return {
@@ -109,6 +141,7 @@ function mapSearchItem(item: SearchResultItem): Product {
     name: item.productName,
     slug: item.slug,
     description: item.description || '',
+    priceRange: extractPriceRange(item.price),
     featuredAsset: item.productAsset
       ? { id: item.productAsset.id, preview: item.productAsset.preview }
       : null,

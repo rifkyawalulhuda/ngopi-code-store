@@ -1,13 +1,14 @@
 import gql from 'graphql-tag'
 
-const GET_OWNED_PRODUCT_IDS = gql`
-  query GetOwnedProductIds {
+const GET_OWNED_ITEMS = gql`
+  query GetOwnedItems {
     activeCustomer {
       id
       orders(options: { filter: { state: { in: ["PaymentSettled", "Fulfilled", "Delivered"] } } }) {
         items {
           lines {
             productVariant {
+              id
               productId
             }
           }
@@ -18,11 +19,19 @@ const GET_OWNED_PRODUCT_IDS = gql`
 `
 
 /**
- * Composable to check if the logged-in user already owns a specific product.
- * "Owns" = has a paid/fulfilled order containing that product.
+ * Composable to check what the logged-in user already owns.
+ *
+ * Ownership is tracked at BOTH levels on purpose:
+ *  - variant ids: the authoritative check. A product can have several license
+ *    tiers; owning "Personal" must NOT hide the ability to buy "Extended".
+ *  - product ids: kept for "you own something from this product" messaging.
+ *
+ * Tracking only product ids was a revenue blocker: buying one tier marked the
+ * whole product owned and the buy button disappeared.
  */
 export function useOwnedProducts() {
-  const ownedIds = useState<Set<string>>('owned-products.ids', () => new Set())
+  const ownedProductIds = useState<Set<string>>('owned-products.ids', () => new Set())
+  const ownedVariantIds = useState<Set<string>>('owned-variants.ids', () => new Set())
   const loaded = useState<boolean>('owned-products.loaded', () => false)
 
   async function fetchOwnedProducts() {
@@ -32,35 +41,47 @@ export function useOwnedProducts() {
     try {
       const { $apollo } = useNuxtApp()
       const { data } = await $apollo.defaultClient.query({
-        query: GET_OWNED_PRODUCT_IDS,
+        query: GET_OWNED_ITEMS,
         fetchPolicy: 'network-only',
       })
 
       const orders = data?.activeCustomer?.orders?.items || []
-      const ids = new Set<string>()
+      const productIds = new Set<string>()
+      const variantIds = new Set<string>()
       for (const order of orders) {
         for (const line of order.lines || []) {
-          if (line.productVariant?.productId) {
-            ids.add(line.productVariant.productId)
-          }
+          const variant = line.productVariant
+          if (variant?.id) variantIds.add(String(variant.id))
+          if (variant?.productId) productIds.add(String(variant.productId))
         }
       }
-      ownedIds.value = ids
+      ownedProductIds.value = productIds
+      ownedVariantIds.value = variantIds
     } catch {
-      // Silent fail
+      // Silent fail — the PDP simply won't show the owned banner.
     } finally {
       loaded.value = true
     }
   }
 
-  function isOwned(productId: string): boolean {
-    return ownedIds.value.has(productId)
+  /** True when the customer owns this exact variant (e.g. this license tier). */
+  function isVariantOwned(variantId: string | null | undefined): boolean {
+    if (!variantId) return false
+    return ownedVariantIds.value.has(String(variantId))
+  }
+
+  /** True when the customer owns any variant of this product. */
+  function isOwned(productId: string | null | undefined): boolean {
+    if (!productId) return false
+    return ownedProductIds.value.has(String(productId))
   }
 
   return {
-    ownedIds,
+    ownedProductIds,
+    ownedVariantIds,
     loaded,
     fetchOwnedProducts,
+    isVariantOwned,
     isOwned,
   }
 }

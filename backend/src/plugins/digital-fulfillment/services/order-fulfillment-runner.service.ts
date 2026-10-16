@@ -16,6 +16,12 @@ export interface FulfillmentRunResult {
   downloadRecordsCreated: number;
   emailSent: boolean;
   whatsappSent: boolean;
+  /**
+   * Names of paid line items whose variant had no uploaded file, so no download
+   * record could be created. Non-empty means the customer paid for something
+   * that cannot be delivered — surfaced so it is never silent.
+   */
+  missingFiles?: string[];
 }
 
 /**
@@ -64,7 +70,19 @@ export class OrderFulfillmentRunner {
     }
 
     // 2. Download records.
-    const downloadRecordsCreated = await this.createDownloadRecords(ctx, order, customer.id);
+    const { created: downloadRecordsCreated, missingFiles } = await this.createDownloadRecords(
+      ctx,
+      order,
+      customer.id,
+    );
+
+    if (missingFiles.length) {
+      Logger.error(
+        `Order ${order.code} was fulfilled with ${missingFiles.length} undeliverable item(s): ` +
+          `${missingFiles.join(', ')}. Those customers cannot download what they paid for.`,
+        loggerCtx,
+      );
+    }
 
     // 3. Access link.
     const storefrontUrl = getStorefrontUrl();
@@ -115,21 +133,28 @@ export class OrderFulfillmentRunner {
       loggerCtx,
     );
 
-    return { downloadRecordsCreated, emailSent, whatsappSent: waOutcome.sent };
+    return { downloadRecordsCreated, emailSent, whatsappSent: waOutcome.sent, missingFiles };
   }
 
   /**
-   * Creates a DigitalDownload per digital line item, skipping items that have
-   * no uploaded file and records that already exist (idempotent).
+   * Creates a DigitalDownload per digital line item, skipping records that
+   * already exist (idempotent).
+   *
+   * A line whose variant has no uploaded file is NOT silently ignored: it is a
+   * paid item that can never be delivered, so it is logged as an error and
+   * reported back to the caller. Silent skipping used to hide exactly this —
+   * a customer pays for a variant (e.g. an "Extended" tier) and receives zero
+   * downloads with no signal anywhere.
    */
   private async createDownloadRecords(
     ctx: RequestContext,
     order: Order,
     customerId: ID,
-  ): Promise<number> {
+  ): Promise<{ created: number; missingFiles: string[] }> {
     const productRepo = this.connection.getRepository(ctx, DigitalProduct);
     const downloadRepo = this.connection.getRepository(ctx, DigitalDownload);
     let created = 0;
+    const missingFiles: string[] = [];
 
     for (const line of order.lines) {
       const variantId = line.productVariantId;
@@ -138,6 +163,14 @@ export class OrderFulfillmentRunner {
         where: { productVariantId: variantId as any },
       });
       if (!digitalProduct) {
+        const variantName = line.productVariant?.name ?? `variant ${variantId}`;
+        missingFiles.push(variantName);
+        Logger.error(
+          `Undeliverable item on paid order ${order.code}: no digital file uploaded for ` +
+            `"${variantName}" (variant ${variantId}). The customer cannot download this item — ` +
+            `upload a file for this variant in the admin uploader.`,
+          loggerCtx,
+        );
         continue;
       }
 
@@ -167,6 +200,6 @@ export class OrderFulfillmentRunner {
       created += 1;
     }
 
-    return created;
+    return { created, missingFiles };
   }
 }

@@ -15,7 +15,9 @@
     "migration:run": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d src/data-source.ts",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:pbt": "jest --testPathPattern=\\.pbt\\.spec\\.ts$"
+    "test:pbt": "jest --testPathPattern=\\.pbt\\.spec\\.ts$",
+    "seed:licenses": "node scripts/seed-license-variants.js",
+    "seed:placeholder-files": "node scripts/seed-placeholder-files.js"
   },
   "dependencies": {
     "@vendure/asset-server-plugin": "^3.6.3",

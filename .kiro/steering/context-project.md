@@ -218,12 +218,14 @@ Products are sold in up to two license tiers via a shared Vendure option group:
 
 **Missing-file guard.** A paid line whose variant has no file would fulfil with zero downloads, so:
 - The storefront refuses to sell such a variant: `ProductVariant.digitalProductInfo == null` → the PDP disables that tier and hides the buy button (`frontend/utils/variants.ts` → `isVariantPurchasable`).
-- `OrderFulfillmentRunner` logs an error and returns `missingFiles` instead of silently skipping.
+- **Services are exempt**: a product is a service when any facet matches `product-category:jasa`, `purchase-rule:repeatable`, or `product-type:service`. Services are delivered by work and have no file, so requiring one made every service tier unsellable.
+- `OrderFulfillmentRunner` logs an error and returns `missingFiles` instead of silently skipping; service lines are skipped without an error.
 - The admin uploader shows a "Varian Tanpa File" audit panel.
 
 **Storefront variant rules** (all in `frontend/utils/variants.ts`, shared by PDP / buy page / catalog):
-- PDP: radio-card selector, `?license=extended` deep-link, price + license card + file info follow the selected variant.
-- Buy page: honours `?license=` and adds that variant to the order.
+- The option that identifies a variant is `getVariantOption`: it prefers the `lisensi` group but **falls back to the variant's first option**, because products use different groups (`lisensi` for licenses, `paket` for service packages). Matching only `lisensi` silently dropped the shopper's choice.
+- PDP: radio-card selector, `?option=standar` deep-link (legacy `?license=` still read), price + tier label + file info follow the selected variant.
+- Buy page: honours `?option=` and adds that variant to the order.
 - Catalog: shows "mulai dari" when Vendure returns a `PriceRange` (multi-tier).
 - Ownership is tracked **per variant** (`useOwnedProducts.isVariantOwned`) — owning Personal must not block buying Extended.
 

@@ -9,7 +9,12 @@
  * so the PDP, the buy page and the catalog cannot drift apart.
  */
 
-/** Code of the option group that carries license tiers. */
+/**
+ * Option group that is preferred when a variant has several options.
+ * Products use different groups for the same idea — `lisensi` for license
+ * tiers, `paket` for service packages — so this is only a preference, not a
+ * requirement (see getVariantOption).
+ */
 export const LICENSE_GROUP_CODE = 'lisensi'
 
 /** Facet codes that identify a service (no deliverable file). */
@@ -77,22 +82,30 @@ export function productRequiresFile(facetValues?: FacetLike[] | null): boolean {
   return !isServiceProduct(facetValues)
 }
 
-/** The option belonging to a given option group, if any. */
-export function getVariantOption(
-  variant: VariantLike | null | undefined,
-  groupCode: string = LICENSE_GROUP_CODE,
-): VariantOption | null {
+/**
+ * The option that distinguishes this variant from its siblings.
+ *
+ * Prefers the `lisensi` group when present, otherwise falls back to the first
+ * option. The fallback matters: services use a `paket` group (Lite/Standar/
+ * Premium), and matching only `lisensi` silently dropped the shopper's choice —
+ * the PDP showed Standar while checkout defaulted back to the first tier.
+ */
+export function getVariantOption(variant: VariantLike | null | undefined): VariantOption | null {
   if (!variant?.options?.length) return null
-  return variant.options.find((o) => o.group?.code === groupCode) ?? null
+  return (
+    variant.options.find((o) => o.group?.code === LICENSE_GROUP_CODE) ??
+    variant.options[0] ??
+    null
+  )
 }
 
-/** License option code for a variant, e.g. 'personal' | 'extended'. */
-export function getLicenseCode(variant: VariantLike | null | undefined): string | null {
+/** Option code identifying this variant, e.g. 'personal' | 'extended' | 'standar'. */
+export function getVariantOptionCode(variant: VariantLike | null | undefined): string | null {
   return getVariantOption(variant)?.code ?? null
 }
 
-/** Human label for a variant's license, e.g. 'Personal'. */
-export function getLicenseLabel(variant: VariantLike | null | undefined): string | null {
+/** Human label for this variant's option, e.g. 'Personal' | 'Standar'. */
+export function getVariantOptionLabel(variant: VariantLike | null | undefined): string | null {
   return getVariantOption(variant)?.name ?? null
 }
 
@@ -118,8 +131,8 @@ export function isVariantPurchasable(
 }
 
 export interface PickVariantOptions {
-  /** License option code to prefer, e.g. from ?license=extended. */
-  preferredLicenseCode?: string | null
+  /** Option code to prefer, e.g. from ?option=extended. */
+  preferredOptionCode?: string | null
   /** False for service products, which need no file. Defaults to true. */
   requiresFile?: boolean
 }
@@ -128,7 +141,7 @@ export interface PickVariantOptions {
  * Choose which variant to show/select by default.
  *
  * Order of preference:
- *   1. the variant matching `preferredLicenseCode`, but only if purchasable
+ *   1. the variant matching `preferredOptionCode`, but only if purchasable
  *   2. the first purchasable variant
  *   3. the first variant (so the page still renders something)
  */
@@ -138,10 +151,10 @@ export function pickVariant(
 ): VariantLike | null {
   if (!variants?.length) return null
 
-  const { preferredLicenseCode, requiresFile } = options
+  const { preferredOptionCode, requiresFile } = options
 
-  if (preferredLicenseCode) {
-    const match = variants.find((v) => getLicenseCode(v) === preferredLicenseCode)
+  if (preferredOptionCode) {
+    const match = variants.find((v) => getVariantOptionCode(v) === preferredOptionCode)
     if (match && isVariantPurchasable(match, { requiresFile })) return match
   }
 

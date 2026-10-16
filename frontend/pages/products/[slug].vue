@@ -377,8 +377,8 @@ import { useShop, type Product } from '~/composables/useShop'
 import { useWhatsapp } from '~/composables/useWhatsapp'
 import { formatPriceIDR, formatFileSize, formatMimeType } from '~/utils/format'
 import {
-  getLicenseCode,
-  getLicenseLabel,
+  getVariantOptionCode,
+  getVariantOptionLabel,
   isVariantPurchasable,
   pickVariant,
   hasMultipleVariants,
@@ -474,17 +474,17 @@ const selectedVariant = computed(
 /** True when the product offers more than one tier to choose from. */
 const showVariantSelector = computed(() => hasMultipleVariants(variants.value))
 
-/** Radio-card options for the license selector. */
+/** Radio-card options for the tier selector. */
 const licenseOptions = computed(() =>
   variants.value.map((v) => ({
     variantId: v.id,
-    label: getLicenseLabel(v) ?? v.name,
+    label: getVariantOptionLabel(v) ?? v.name,
     priceLabel: formatPriceIDR(v.price),
     purchasable: isVariantPurchasable(v, { requiresFile: requiresFile.value }),
   })),
 )
 
-const selectedLicenseLabel = computed(() => getLicenseLabel(selectedVariant.value))
+const selectedLicenseLabel = computed(() => getVariantOptionLabel(selectedVariant.value))
 
 /**
  * Whether the selected variant can actually be delivered.
@@ -497,10 +497,10 @@ const selectedPurchasable = computed(() =>
 
 function selectVariant(variantId: string) {
   selectedVariantId.value = variantId
-  // Keep the selection shareable/bookmarkable, e.g. ?license=extended
-  const code = getLicenseCode(variants.value.find((v) => v.id === variantId))
+  // Keep the selection shareable/bookmarkable, e.g. ?option=standar
+  const code = getVariantOptionCode(variants.value.find((v) => v.id === variantId))
   if (code && import.meta.client) {
-    router.replace({ query: { ...route.query, license: code } })
+    router.replace({ query: { ...route.query, option: code } })
   }
 }
 
@@ -631,9 +631,9 @@ const whatsappUrl = computed(() => {
 function onBuyNow() {
   if (!product.value) return
   if (!selectedPurchasable.value) return
-  // Carry the chosen license tier through to checkout.
-  const code = getLicenseCode(selectedVariant.value)
-  const query = code ? `?license=${encodeURIComponent(code)}` : ''
+  // Carry the chosen tier through to checkout (?option=standar).
+  const code = getVariantOptionCode(selectedVariant.value)
+  const query = code ? `?option=${encodeURIComponent(code)}` : ''
   navigateTo(`/buy/${product.value.slug}${query}`)
 }
 
@@ -708,12 +708,15 @@ async function loadProduct() {
 
   loading.value = false
 
-  // Resolve the initial license tier: honour ?license=extended, otherwise fall
-  // back to the first purchasable variant.
-  const preferred = (route.query.license as string | undefined) ?? null
+  // Resolve the initial tier: honour ?option=standar, otherwise fall back to
+  // the first purchasable variant. `license` is the legacy param name.
+  const preferred =
+    (route.query.option as string | undefined) ??
+    (route.query.license as string | undefined) ??
+    null
   selectedVariantId.value =
     pickVariant(variants.value, {
-      preferredLicenseCode: preferred,
+      preferredOptionCode: preferred,
       requiresFile: requiresFile.value,
     })?.id ?? null
 
@@ -750,11 +753,12 @@ onMounted(loadProduct)
 
 // Keep the selected tier in sync with browser back/forward and shared links.
 watch(
-  () => route.query.license,
-  (code) => {
+  [() => route.query.option, () => route.query.license],
+  ([option, license]) => {
     if (!product.value) return
+    const code = (option as string | undefined) ?? (license as string | undefined) ?? null
     const next = pickVariant(variants.value, {
-      preferredLicenseCode: (code as string | undefined) ?? null,
+      preferredOptionCode: code,
       requiresFile: requiresFile.value,
     })
     if (next && next.id !== selectedVariantId.value) {

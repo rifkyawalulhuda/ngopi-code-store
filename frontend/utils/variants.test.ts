@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import {
   getVariantOption,
-  getLicenseCode,
-  getLicenseLabel,
+  getVariantOptionCode,
+  getVariantOptionLabel,
   isVariantPurchasable,
   pickVariant,
   hasMultipleVariants,
@@ -71,13 +71,23 @@ describe('getVariantOption', () => {
     expect(getVariantOption(variant())?.code).toBe('personal')
   })
 
-  it('ignores options from other groups', () => {
+  it('falls back to the first option for a non-lisensi group (services)', () => {
+    // Production regression: a jasa product uses a `paket` group. Matching only
+    // `lisensi` returned null, so the chosen package was never carried to
+    // checkout and the order defaulted back to the cheapest tier.
+    expect(getVariantOption(serviceVariant())?.code).toBe('lite')
+    expect(getVariantOptionCode(serviceVariant())).toBe('lite')
+    expect(getVariantOptionLabel(serviceVariant())).toBe('Lite')
+  })
+
+  it('prefers the lisensi group when a variant has several options', () => {
     const v = variant({
       options: [
-        { id: 'x', code: 'zip', name: 'ZIP', group: { id: 'g2', code: 'format', name: 'Format' } },
+        { id: 'a', code: 'zip', name: 'ZIP', group: { id: 'g2', code: 'format', name: 'Format' } },
+        { id: 'b', code: 'extended', name: 'Extended', group: { id: 'g1', code: 'lisensi', name: 'Lisensi' } },
       ],
     })
-    expect(getVariantOption(v)).toBeNull()
+    expect(getVariantOptionCode(v)).toBe('extended')
   })
 
   it('returns null for a variant with no options', () => {
@@ -87,15 +97,15 @@ describe('getVariantOption', () => {
   })
 })
 
-describe('getLicenseCode / getLicenseLabel', () => {
+describe('getVariantOptionCode / getVariantOptionLabel', () => {
   it('reads code and label', () => {
-    expect(getLicenseCode(extended())).toBe('extended')
-    expect(getLicenseLabel(extended())).toBe('Extended')
+    expect(getVariantOptionCode(extended())).toBe('extended')
+    expect(getVariantOptionLabel(extended())).toBe('Extended')
   })
 
   it('returns null when there is no license option', () => {
-    expect(getLicenseCode(variant({ options: [] }))).toBeNull()
-    expect(getLicenseLabel(undefined)).toBeNull()
+    expect(getVariantOptionCode(variant({ options: [] }))).toBeNull()
+    expect(getVariantOptionLabel(undefined)).toBeNull()
   })
 })
 
@@ -170,17 +180,17 @@ describe('pickVariant', () => {
   const ext = extended()
 
   it('picks the variant matching the preferred license code', () => {
-    expect(pickVariant([personal, ext], { preferredLicenseCode: 'extended' })?.id).toBe('2')
-    expect(pickVariant([personal, ext], { preferredLicenseCode: 'personal' })?.id).toBe('1')
+    expect(pickVariant([personal, ext], { preferredOptionCode: 'extended' })?.id).toBe('2')
+    expect(pickVariant([personal, ext], { preferredOptionCode: 'personal' })?.id).toBe('1')
   })
 
   it('falls back to the first purchasable variant when no preference matches', () => {
-    expect(pickVariant([personal, ext], { preferredLicenseCode: 'nonsense' })?.id).toBe('1')
+    expect(pickVariant([personal, ext], { preferredOptionCode: 'nonsense' })?.id).toBe('1')
   })
 
   it('ignores a preferred variant that is not purchasable', () => {
     const extNoFile = extended({ digitalProductInfo: null })
-    expect(pickVariant([personal, extNoFile], { preferredLicenseCode: 'extended' })?.id).toBe('1')
+    expect(pickVariant([personal, extNoFile], { preferredOptionCode: 'extended' })?.id).toBe('1')
   })
 
   it('falls back to the first variant when nothing is purchasable', () => {
@@ -199,6 +209,35 @@ describe('pickVariant', () => {
     const premium = serviceVariant({ id: '24', name: 'JASA-WEB-PREMIUM', price: 1300000 })
     const picked = pickVariant([lite, premium], { requiresFile: false })
     expect(picked?.id).toBe('22')
+  })
+
+  it('honours a preferred package code on a service (not just lisensi)', () => {
+    // The exact production bug: choosing Standar must select Standar, not the
+    // first tier (Lite).
+    const lite = serviceVariant()
+    const standar = serviceVariant({
+      id: '23',
+      name: 'JASA-WEB-STANDAR',
+      price: 800000,
+      options: [
+        { id: 'o4', code: 'standar', name: 'Standar', group: { id: 'g2', code: 'paket', name: 'Paket' } },
+      ],
+    })
+    const premium = serviceVariant({
+      id: '24',
+      name: 'JASA-WEB-PREMIUM',
+      price: 1300000,
+      options: [
+        { id: 'o5', code: 'premium', name: 'Premium', group: { id: 'g2', code: 'paket', name: 'Paket' } },
+      ],
+    })
+
+    const picked = pickVariant([lite, standar, premium], {
+      preferredOptionCode: 'standar',
+      requiresFile: false,
+    })
+    expect(picked?.id).toBe('23')
+    expect(picked?.price).toBe(800000)
   })
 })
 

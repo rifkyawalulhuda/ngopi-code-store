@@ -247,7 +247,7 @@
                 </div>
                 <div class="summary-item-info">
                   <span class="summary-item-name">{{ product.name }}</span>
-                  <span class="summary-item-license">{{ selectedLicenseLabel || 'Personal License' }}</span>
+                  <span v-if="selectedLicenseLabel" class="summary-item-license">{{ selectedLicenseLabel }}</span>
                 </div>
                 <span class="summary-item-price">{{ formattedPrice }}</span>
               </div>
@@ -363,7 +363,7 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useAuth } from '~/composables/useAuth'
 import { GET_PRODUCT_BY_SLUG } from '~/graphql/queries/products'
 import { formatPriceIDR } from '~/utils/format'
-import { pickVariant, getLicenseLabel, productRequiresFile } from '~/utils/variants'
+import { pickVariant, getVariantOptionLabel, productRequiresFile } from '~/utils/variants'
 import { isOrderTotalConsistent } from '~/utils/checkout'
 import { phoneFieldError } from '~/utils/phone'
 import gql from 'graphql-tag'
@@ -567,23 +567,26 @@ const paymentError = ref('')
 const showPendingOrderHint = ref(false)
 
 /**
- * The license tier chosen on the PDP, carried via ?license=extended.
- * Resolved against the fetched product once it loads; falls back to the first
- * purchasable variant so a direct link to /buy/<slug> still works.
+ * The tier chosen on the PDP, carried via ?option=standar (`license` is the
+ * legacy param name). Resolved against the fetched product once it loads; falls
+ * back to the first purchasable variant so a direct link still works.
  */
 const selectedVariant = computed(() => {
   const variants = product.value?.variants ?? []
   if (!variants.length) return null
-  const preferred = (route.query.license as string | undefined) ?? null
+  const preferred =
+    (route.query.option as string | undefined) ??
+    (route.query.license as string | undefined) ??
+    null
   // Services have no file, so a fileless service variant is still selectable.
   return pickVariant(variants, {
-    preferredLicenseCode: preferred,
+    preferredOptionCode: preferred,
     requiresFile: productRequiresFile(product.value?.facetValues),
   })
 })
 
-/** License tier label for the order summary, e.g. "Extended". */
-const selectedLicenseLabel = computed(() => getLicenseLabel(selectedVariant.value))
+/** Tier label for the order summary, e.g. "Extended" or "Standar". */
+const selectedLicenseLabel = computed(() => getVariantOptionLabel(selectedVariant.value))
 
 // Guest checkout form (used when the visitor is not logged in)
 const guestForm = reactive({

@@ -289,7 +289,7 @@ collection even though they stay purchasable for checkout testing.
 Verify:
 
 ```bash
-curl -s -X POST http://localhost:3000/shop-api \
+curl -s -X POST http://localhost:3010/shop-api \
   -H 'Content-Type: application/json' \
   -d '{"query":"{ collections { items { slug productVariantCount } } }"}'
 ```

@@ -12,8 +12,8 @@
 
 | Endpoint | URL | Auth | Purpose |
 |----------|-----|------|---------|
-| Shop API | `http://localhost:3000/shop-api` | Customer token (optional) | Customer-facing operations |
-| Admin API | `http://localhost:3000/admin-api` | Admin bearer token | Store management |
+| Shop API | `http://localhost:3010/shop-api` | Customer token (optional) | Customer-facing operations |
+| Admin API | `http://localhost:3010/admin-api` | Admin bearer token | Store management |
 
 ### Authentication
 

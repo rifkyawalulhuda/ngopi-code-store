@@ -121,6 +121,6 @@ NUXT_PUBLIC_SHOP_API_URL, NUXT_PUBLIC_GOOGLE_CLIENT_ID, NUXT_PUBLIC_GITHUB_CLIEN
 
 ```bash
 dev.bat                              # Start all 3 servers (Windows)
-cd backend && npm run dev            # Backend (port 3000)
+cd backend && npm run dev            # Backend (port 3010)
 cd frontend && npm run dev           # Frontend (port 3001)
 ```

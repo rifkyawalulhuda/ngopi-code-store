@@ -225,7 +225,6 @@
           <aside class="checkout-summary">
             <div class="summary-card">
               <h2 class="summary-title">Ringkasan Pesanan</h2>
-
               <!-- Product item -->
               <div class="summary-item">
                 <div class="summary-thumb">
@@ -298,6 +297,34 @@
               </div>
             </div>
           </aside>
+        </div>
+
+        <!--
+          Mobile-only sticky action bar.
+          On phones the order summary (and therefore the CTA) sits far below the
+          fold, so the primary action must stay thumb-reachable. Desktop keeps
+          the in-card CTA instead.
+        -->
+        <div v-if="product" class="mobile-checkout-bar">
+          <div class="mcb-inner">
+            <div class="mcb-total">
+              <span class="mcb-label">Total</span>
+              <span class="mcb-value">{{ formattedPrice }}</span>
+            </div>
+            <button
+              type="button"
+              class="btn btn-primary mcb-cta"
+              :disabled="!selectedChannel || processing || needsPhone || (!isLoggedIn && !guestFormValid)"
+              @click="onProceedPayment"
+            >
+              <span v-if="processing" class="btn-spinner-sm" />
+              <template v-else>
+                Bayar
+                <AppIcon name="arrowRight" :size="17" />
+              </template>
+            </button>
+          </div>
+          <p v-if="disabledReason" class="mcb-hint">{{ disabledReason }}</p>
         </div>
 
         <!-- Error state -->
@@ -569,6 +596,21 @@ const customerPhone = computed(() =>
 )
 const needsPhone = computed(() => isEwalletSelected.value && !customerPhone.value)
 
+/**
+ * Why the primary action is disabled, phrased for the sticky mobile bar.
+ *
+ * A disabled button with no explanation is the classic dead end — especially on
+ * mobile where the reason may be scrolled off-screen. Returns null when the
+ * action is available.
+ */
+const disabledReason = computed<string | null>(() => {
+  if (processing.value) return 'Memproses pembayaran…'
+  if (!selectedChannel.value) return 'Pilih metode pembayaran dulu'
+  if (needsPhone.value) return 'Metode E-Wallet butuh nomor WhatsApp'
+  if (!isLoggedIn.value && !guestFormValid.value) return 'Lengkapi data pembeli dulu'
+  return null
+})
+
 const fullName = computed(() => {
   if (isLoggedIn.value && customer.value) {
     return `${customer.value.firstName} ${customer.value.lastName}`.trim()
@@ -795,6 +837,9 @@ async function onProceedPayment() {
 <style scoped>
 .checkout-page {
   min-height: 100vh;
+  /* dvh keeps the layout correct when mobile browser chrome (URL bar) shows or
+     hides; 100vh overflows in that case. Declared after vh as a fallback. */
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: var(--bg);
@@ -922,7 +967,9 @@ async function onProceedPayment() {
   border-radius: 10px;
   background: var(--surface-2);
   color: var(--text);
-  font-size: 0.95rem;
+  /* 16px minimum: anything smaller makes iOS Safari zoom the page on focus,
+     which shifts the layout mid-checkout. */
+  font-size: 16px;
   font-family: inherit;
   outline: none;
 }
@@ -1375,6 +1422,106 @@ async function onProceedPayment() {
   animation: spin 0.6s linear infinite;
 }
 
+/* ============================================================
+   Mobile-only sticky action bar
+   ============================================================ */
+.mobile-checkout-bar {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .mobile-checkout-bar {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 18px var(--shadow-card);
+    /* Keep the bar clear of the iOS home indicator / Android gesture bar */
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mcb-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .mcb-total {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    flex-shrink: 0;
+    min-width: 0;
+  }
+
+  .mcb-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    line-height: 1.2;
+  }
+
+  .mcb-value {
+    font-size: 1.02rem;
+    font-weight: 800;
+    color: var(--primary-text);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+  }
+
+  .mcb-cta {
+    flex: 1;
+    min-width: 0;
+    /* 48px: comfortably above the 44px minimum for a primary action */
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border: none;
+    border-radius: 12px;
+    background: var(--primary);
+    color: var(--primary-contrast);
+    font-family: inherit;
+    font-size: 0.98rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.18s ease;
+  }
+
+  .mcb-cta:not(:disabled):active {
+    background: var(--primary-hover);
+  }
+
+  .mcb-cta:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .mcb-hint {
+    max-width: 1100px;
+    margin: 0.5rem auto 0;
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  /* The in-card CTA is redundant once the sticky bar exists */
+  .checkout-cta {
+    display: none;
+  }
+
+  /* Reserve room so the fixed bar never covers the last content */
+  .checkout-main {
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 /* Responsive */
 @media (max-width: 860px) {
   .checkout-grid {
@@ -1407,11 +1554,27 @@ async function onProceedPayment() {
     flex-direction: column;
     gap: 0.5rem;
   }
+
+  /* Tighter payment channel rows on small phones so the page stays short */
+  .channel-option {
+    padding: 0.65rem 0.75rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .spinner {
+  .spinner,
+  .btn-spinner-sm {
     animation: none;
   }
+
+  .mcb-cta {
+    transition: none;
+  }
+}
+
+/* Keyboard focus must stay visible on the sticky action */
+.mcb-cta:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 </style>

@@ -1,6 +1,10 @@
 import { ref, computed } from 'vue'
 import type { Ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+// Single source of truth for the sort contract lives with the API layer
+// (useShop). Re-declaring it here would make Nuxt's auto-import see two
+// exported `SortOption` types and warn about a duplicate.
+import type { SortOption } from './useShop'
 
 export interface ProductFiltersState {
   category: string
@@ -11,8 +15,6 @@ export interface ProductFiltersState {
 export interface UseProductFiltersOptions {
   pageSize?: number
 }
-
-export type SortOption = 'latest' | 'price-asc' | 'price-desc'
 
 const MIN_SEARCH_LENGTH = 2
 

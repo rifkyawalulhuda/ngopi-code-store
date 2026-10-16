@@ -252,9 +252,12 @@ interface UploadResult {
   fileSize: number
 }
 
+// Backend port must match PORT in backend/.env (default 3010).
+const BACKEND_PORT = 3010
+
 const ADMIN_API = import.meta.client
-  ? `http://${window.location.hostname}:3000/admin-api`
-  : 'http://localhost:3000/admin-api'
+  ? `http://${window.location.hostname}:${BACKEND_PORT}/admin-api`
+  : `http://localhost:${BACKEND_PORT}/admin-api`
 
 // Auth token (auto-login on mount)
 const authToken = ref('')

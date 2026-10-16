@@ -32,7 +32,7 @@ Headless e-commerce platform for selling digital products (source code, ebooks, 
 ┌───────────────┐    GraphQL       ┌─────────────────┐
 │   Nuxt 3      │◄────────────────►│   Vendure 3.6   │
 │   (SSR/CSR)   │   Shop API       │   (NestJS)      │
-│   Port 3001   │                  │   Port 3000     │
+│   Port 3001   │                  │   Port 3010     │
 └───────────────┘                  └──┬──────┬───┬───┘
                                       │      │   │
                           ┌───────────┘      │   └───────────┐

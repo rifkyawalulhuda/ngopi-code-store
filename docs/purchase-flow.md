@@ -103,6 +103,18 @@ sequenceDiagram
 - Instruksi bayar dikirim dari event `PaymentStateTransitionEvent → Authorized`,
   bukan dari webhook, agar pelanggan menerima nomor VA segera.
 
+> **Jangan pasang gate login di jalur pembelian.** Ada **dua** tempat yang bisa
+> memblokir guest, dan keduanya harus bebas login:
+>
+> 1. `pages/products/[slug].vue` → `onBuyNow()` — halaman detail produk, tempat
+>    tombol "Beli Sekarang" berada.
+> 2. `pages/buy/[slug].vue` → halaman checkout itu sendiri.
+>
+> Keduanya pernah punya `if (!isLoggedIn) navigateTo('/auth')`. Yang di halaman
+> detail mudah terlewat: memperbaiki halaman checkout saja tidak cukup, karena
+> pengunjung tidak pernah sampai ke sana. Halaman akun (`pages/account/index.vue`)
+> memang boleh mewajibkan login — itu bukan bagian dari jalur pembelian.
+
 ### Fulfillment lewat job queue
 
 Webhook **tidak** menunggu pengiriman email/WhatsApp. Setelah transisi state

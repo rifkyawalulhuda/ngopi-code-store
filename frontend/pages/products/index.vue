@@ -203,8 +203,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
-import { useShop } from '~/composables/useShop'
-import { useProductFilters, PRICE_CEILING, type SortOption } from '~/composables/useProductFilters'
+import { useShop, type SortOption } from '~/composables/useShop'
+import { useProductFilters, PRICE_CEILING } from '~/composables/useProductFilters'
 import { GET_COLLECTIONS } from '~/graphql/queries/collections'
 import type { CategoryOption } from '~/components/CatalogFilterPanel.vue'
 import type { FilterChip, FilterChipKey } from '~/components/ActiveFilterChips.vue'

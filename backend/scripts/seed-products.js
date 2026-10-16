@@ -2,7 +2,7 @@
  * Seed script: Create dummy products for development testing.
  *
  * Prerequisites:
- * - Vendure dev server running on localhost:3000
+ * - Vendure dev server running on localhost:3010 (see PORT in backend/.env)
  * - Superadmin credentials set in .env (default: superadmin/superadmin)
  *
  * Usage:
@@ -17,7 +17,8 @@
 const http = require('http');
 require('dotenv').config();
 
-const ADMIN_API = 'http://localhost:3000/admin-api';
+const PORT = process.env.PORT || '3010';
+const ADMIN_API = `http://localhost:${PORT}/admin-api`;
 const SUPERADMIN_USER = process.env.SUPERADMIN_USERNAME || 'superadmin';
 const SUPERADMIN_PASS = process.env.SUPERADMIN_PASSWORD || 'superadmin';
 
@@ -418,7 +419,7 @@ async function main() {
   }
 
   console.log('\n🎉 Seeding complete!');
-  console.log('   Open http://localhost:3000/dashboard to manage products.');
+  console.log(`   Open http://localhost:${PORT}/dashboard to manage products.`);
 }
 
 main().catch(console.error);

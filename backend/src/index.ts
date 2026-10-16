@@ -3,6 +3,7 @@ dotenv.config();
 
 import { bootstrap, runMigrations, bootstrapWorker } from '@vendure/core';
 import { config } from './vendure-config';
+import { assertPortAvailable, describePortInUse, PortInUseError } from './preflight';
 
 /**
  * Bootstrap the Vendure server.
@@ -23,6 +24,22 @@ import { config } from './vendure-config';
 async function main() {
   try {
     const isDev = process.env.NODE_ENV !== 'production';
+
+    // Fail fast if the HTTP port is taken.
+    //
+    // Vendure initialises for ~10s before binding the port, so a conflict
+    // otherwise shows up as "started successfully" followed by EADDRINUSE and a
+    // silent exit — indistinguishable from the server dying on its own.
+    const port = config.apiOptions.port;
+    try {
+      await assertPortAvailable(port);
+    } catch (err) {
+      if (err instanceof PortInUseError) {
+        console.error(describePortInUse(err));
+        process.exit(1);
+      }
+      throw err;
+    }
 
     // In development, first bootstrap with synchronize to create core schema,
     // then run custom migrations that depend on Vendure tables.

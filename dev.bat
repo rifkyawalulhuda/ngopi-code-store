@@ -26,14 +26,14 @@ echo ========================================
 echo   All services are starting!
 echo.
 echo   Local:
-echo     Backend:    http://localhost:3000
-echo     Shop API:   http://localhost:3000/shop-api
-echo     Admin API:  http://localhost:3000/admin-api
-echo     Dashboard:  http://localhost:3000/dashboard
+echo     Backend:    http://localhost:3010
+echo     Shop API:   http://localhost:3010/shop-api
+echo     Admin API:  http://localhost:3010/admin-api
+echo     Dashboard:  http://localhost:3010/dashboard
 echo     Frontend:   http://localhost:3001
 echo.
 echo   Network (LAN):
-echo     Backend:    http://%LAN_IP%:3000
+echo     Backend:    http://%LAN_IP%:3010
 echo     Frontend:   http://%LAN_IP%:3001
 echo ========================================
 echo.

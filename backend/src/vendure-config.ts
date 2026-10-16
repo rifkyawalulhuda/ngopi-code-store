@@ -38,7 +38,7 @@ import { DashboardPlugin } from '@vendure/dashboard/plugin';
  */
 export const config: VendureConfig = {
   apiOptions: {
-    port: parseInt(process.env.PORT || '3000', 10),
+    port: parseInt(process.env.PORT || '3010', 10),
     adminApiPath: 'admin-api',
     shopApiPath: 'shop-api',
     // CORS: allow frontend origins (credentials require explicit origin, not wildcard)
@@ -46,6 +46,9 @@ export const config: VendureConfig = {
       origin: [
         process.env.STOREFRONT_URL || 'http://localhost:3001',
         'http://localhost:3001',
+        // Backend's own origin (e.g. the dashboard/admin pages served from it)
+        'http://localhost:3010',
+        // Legacy dev port, kept so an older local setup keeps working
         'http://localhost:3000',
         'https://ngopicode.com',
         'https://www.ngopicode.com',

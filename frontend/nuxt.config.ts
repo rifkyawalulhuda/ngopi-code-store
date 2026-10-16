@@ -45,7 +45,7 @@ export default defineNuxtConfig({
   apollo: {
     clients: {
       default: {
-        httpEndpoint: process.env.NUXT_PUBLIC_SHOP_API_URL || 'http://localhost:3000/shop-api',
+        httpEndpoint: process.env.NUXT_PUBLIC_SHOP_API_URL || 'http://localhost:3010/shop-api',
         httpLinkOptions: {
           credentials: 'include',
         },
@@ -67,7 +67,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      shopApiUrl: process.env.NUXT_PUBLIC_SHOP_API_URL || 'http://localhost:3000/shop-api',
+      shopApiUrl: process.env.NUXT_PUBLIC_SHOP_API_URL || 'http://localhost:3010/shop-api',
       googleClientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID || '',
       githubClientId: process.env.NUXT_PUBLIC_GITHUB_CLIENT_ID || '',
     },

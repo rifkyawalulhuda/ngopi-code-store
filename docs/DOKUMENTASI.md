@@ -303,10 +303,10 @@ npm run dev
 
 | Layanan | URL | Deskripsi |
 |---------|-----|-----------|
-| Backend API | `http://localhost:3000` | Server GraphQL Vendure |
-| Shop API | `http://localhost:3000/shop-api` | API untuk customer |
-| Admin API | `http://localhost:3000/admin-api` | Operasi admin |
-| Admin Dashboard | `http://localhost:3000/dashboard` | UI admin React |
+| Backend API | `http://localhost:3010` | Server GraphQL Vendure |
+| Shop API | `http://localhost:3010/shop-api` | API untuk customer |
+| Admin API | `http://localhost:3010/admin-api` | Operasi admin |
+| Admin Dashboard | `http://localhost:3010/dashboard` | UI admin React |
 | Frontend | `http://localhost:3001` | Storefront Nuxt 3 |
 
 **Kredensial admin development:** `superadmin` / `superadmin`

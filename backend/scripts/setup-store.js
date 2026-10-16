@@ -29,7 +29,7 @@
 const http = require('http');
 require('dotenv').config();
 
-const PORT = process.env.PORT || '3000';
+const PORT = process.env.PORT || '3010';
 const ADMIN_API = `http://localhost:${PORT}/admin-api`;
 const SUPERADMIN_USER = process.env.SUPERADMIN_USERNAME || 'superadmin';
 const SUPERADMIN_PASS = process.env.SUPERADMIN_PASSWORD || 'superadmin';

@@ -403,14 +403,15 @@ const whatsappUrl = computed(() => {
   return buildWhatsappUrl(product.value.name, productUrl)
 })
 
+/**
+ * Guest checkout: no login required.
+ *
+ * The buy page collects the buyer's details (email, name, WhatsApp) inline and
+ * fulfilment is delivered through an emailed/WhatsApp magic link, so a
+ * logged-out visitor can complete a purchase. Redirecting to /auth here would
+ * block the entire guest flow.
+ */
 function onBuyNow() {
-  const { isLoggedIn } = useAuth()
-
-  if (!isLoggedIn.value) {
-    navigateTo('/auth')
-    return
-  }
-
   if (product.value) {
     navigateTo(`/buy/${product.value.slug}`)
   }
@@ -419,17 +420,11 @@ function onBuyNow() {
 function onWishlist() {
   if (!product.value) return
 
-  const { isLoggedIn } = useAuth()
-  const { init, toggleWishlist, isInWishlist } = useWishlist()
+  const { init, toggleWishlist } = useWishlist()
   init()
 
-  // Guest user → redirect to login
-  if (!isLoggedIn.value) {
-    navigateTo('/auth')
-    return
-  }
-
-  // Toggle wishlist
+  // Guests keep a local-only wishlist (see useWishlist) which syncs to the
+  // server once they log in, so no login is required to use it.
   const variant = product.value.variants?.[0]
   toggleWishlist({
     productId: product.value.id,

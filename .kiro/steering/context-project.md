@@ -197,12 +197,13 @@ Payment confirmed → Order Fulfilled → DigitalDownload records created
 - **Common gotcha**: files extracted from a Windows zip lose execute bit on `node_modules/.bin/*` → `chmod +x node_modules/.bin/*` or reinstall fresh
 - Node v24 (nvm) in use; `sudo npm` fails (nvm PATH) — install global tools without sudo (`npm install -g pm2`)
 
-### Vendure Dashboard API Host (build-time)
+### Vendure Dashboard API Host (runtime, same-origin)
 
-- Dashboard API URL is **baked at build time** in `backend/vite.config.mts` → `vendureDashboardPlugin({ api: { host, port } })`. NOT `window.location.origin`.
-- For remote/LAN access, set `api.host` to `https://api.ngopicode.com` (port 443) or the LAN IP, then `npm run build` + `pm2 restart vendure`.
+- Dashboard API URL is resolved at **runtime** from `window.location` because `backend/vite.config.mts` sets `vendureDashboardPlugin({ api: { host: 'auto', port: 'auto' } })`.
+- This means ONE build works everywhere: `localhost:3010`, a LAN IP, and `https://api.ngopicode.com/dashboard/` — no per-environment edit or rebuild.
+- Do **NOT** hardcode `api.host`/`api.port`: the value is baked into the bundle, so the dashboard breaks whenever the backend port or domain changes, and a local build would target the production API.
 - Editing dist JS with `sed` does NOT work (URL is composed from host+port, not a literal string).
-- Dashboard accessible from any device via `https://api.ngopicode.com/dashboard/` once host is set to the public domain.
+- `build.emptyOutDir: true` is set so stale hashed chunks are wiped each build; without it an `index.html` can reference a deleted chunk and the dashboard renders blank.
 
 ## Cleanup Scripts (backend/scripts/)
 

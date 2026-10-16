@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatPriceIDR, truncateDescription } from './format'
+import { formatPriceIDR, truncateDescription, formatFileSize, formatMimeType } from './format'
 
 describe('formatPriceIDR', () => {
   it('formats a standard price correctly', () => {
@@ -62,5 +62,60 @@ describe('truncateDescription', () => {
     const result = truncateDescription(text)
     // Should trim trailing spaces before adding ellipsis
     expect(result).not.toMatch(/\s\.\.\./)
+  })
+})
+
+describe('formatFileSize', () => {
+  it('returns an empty string for missing or invalid input', () => {
+    expect(formatFileSize(null)).toBe('')
+    expect(formatFileSize(undefined)).toBe('')
+    expect(formatFileSize(0)).toBe('')
+    expect(formatFileSize(-10)).toBe('')
+    expect(formatFileSize(NaN)).toBe('')
+  })
+
+  it('formats bytes without decimals', () => {
+    expect(formatFileSize(512)).toBe('512 B')
+  })
+
+  it('formats kilobytes as whole numbers', () => {
+    expect(formatFileSize(1024)).toBe('1 KB')
+    expect(formatFileSize(1536)).toBe('2 KB')
+  })
+
+  it('formats megabytes to one decimal', () => {
+    expect(formatFileSize(15 * 1024 * 1024)).toBe('15 MB')
+    expect(formatFileSize(1.5 * 1024 * 1024)).toBe('1,5 MB')
+  })
+
+  it('formats gigabytes', () => {
+    expect(formatFileSize(2 * 1024 ** 3)).toBe('2 GB')
+  })
+
+  it('coerces a numeric string (Postgres bigint) before formatting', () => {
+    // The API returns bigint columns as numbers, but guard against strings too.
+    expect(formatFileSize(Number('15000000'))).toBe('14,3 MB')
+  })
+})
+
+describe('formatMimeType', () => {
+  it('returns an empty string for missing input', () => {
+    expect(formatMimeType(null)).toBe('')
+    expect(formatMimeType(undefined)).toBe('')
+    expect(formatMimeType('')).toBe('')
+  })
+
+  it('maps known MIME types to friendly labels', () => {
+    expect(formatMimeType('application/zip')).toBe('ZIP Archive')
+    expect(formatMimeType('application/pdf')).toBe('PDF Document')
+    expect(formatMimeType('application/epub+zip')).toBe('EPUB')
+  })
+
+  it('is case-insensitive', () => {
+    expect(formatMimeType('APPLICATION/ZIP')).toBe('ZIP Archive')
+  })
+
+  it('falls back to the raw MIME type when unknown', () => {
+    expect(formatMimeType('application/x-custom')).toBe('application/x-custom')
   })
 })

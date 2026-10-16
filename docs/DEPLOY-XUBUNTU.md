@@ -202,24 +202,24 @@ npm install
 
 ### 4.1 Konfigurasi host Dashboard (build-time)
 
-Dashboard Vendure menanam URL API saat **build time**, bukan runtime. Edit `vite.config.mts`:
-
-```bash
-nano ~/ngopi-code-store/backend/vite.config.mts
-```
-
-Ubah baris `api`:
+Dashboard Vendure adalah bundle statis, jadi URL API-nya ditentukan **saat build time** di `vite.config.mts`. Proyek ini memakai `api: { host: 'auto', port: 'auto' }`, yang menurunkan URL API dari `window.location` saat runtime — jadi **tidak ada yang perlu diedit**.
 
 ```ts
-// Dari:
-api: { host: 'http://localhost', port: 3000 },
-
-// Menjadi (agar dashboard bisa diakses via domain dari device mana pun):
-api: { host: 'https://api.ngopicode.com', port: 443 },
+// backend/vite.config.mts — biarkan apa adanya
+api: { host: 'auto', port: 'auto' },
 ```
 
-> Jika hanya butuh akses LAN, gunakan IP: `{ host: 'http://192.168.x.x', port: 3000 }`.
-> Mengedit file `dist` dengan `sed` TIDAK bekerja karena URL disusun dari host+port.
+Konsekuensinya, satu build yang sama bekerja di semua lingkungan:
+
+| Diakses via | API yang dipakai |
+|---|---|
+| `http://localhost:3010/dashboard/` | `http://localhost:3010/admin-api` |
+| `http://192.168.x.x:3010/dashboard/` | `http://192.168.x.x:3010/admin-api` |
+| `https://api.ngopicode.com/dashboard/` | `https://api.ngopicode.com/admin-api` |
+
+> **Jangan** hardcode `host`/`port` (mis. `{ host: 'https://api.ngopicode.com', port: 443 }`). Nilainya akan ikut ter-bake ke bundle, sehingga dashboard rusak setiap kali port backend atau domain berubah — dan build lokal akan menembak API produksi.
+> Mengedit file `dist` dengan `sed` juga TIDAK bekerja karena URL disusun dari host+port.
+> Jika backend di balik reverse proxy pada path selain root, `'auto'` tetap benar selama `/admin-api` di-proxy dari origin yang sama.
 
 ### 4.2 Build & jalankan
 
@@ -460,7 +460,8 @@ node scripts/check-transactions.js
 | Docker compose `no configuration file` | Dijalankan dari folder salah. `cd` ke root project, atau pakai `docker ps`. |
 | `.env variable not set` (compose) | `.env` belum ada di root. `cp backend/.env .env`. |
 | Tunnel 503 "No ingress rules" | Public hostname belum dikonfigurasi di Cloudflare Dashboard (Tahap 7.3). |
-| Dashboard "Failed to fetch" | API host salah di `vite.config.mts`. Set ke domain/IP yang benar, `npm run build`, `pm2 restart vendure`. |
+| Dashboard "Failed to fetch" | `vite.config.mts` sudah diubah dari `api: { host: 'auto', port: 'auto' }` menjadi host hardcode yang salah. Kembalikan ke `'auto'`, lalu `npm run build:dashboard` + `pm2 restart vendure`. |
+| Dashboard blank (layar putih) | `dist/dashboard/index.html` menunjuk bundle yang sudah tidak ada — biasanya karena build lama menumpuk. `emptyOutDir: true` sudah aktif; rebuild: `npm run build:dashboard`. Cek Console browser: `Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html"` = gejala ini. |
 | LAN "Failed to fetch" | Port diblokir UFW, atau CORS. Buka port (Tahap 9); CORS sudah mengizinkan `192.168.x.x`. |
 | Migration `already exists` | Aman, abaikan. Tabel sudah ada dari deploy sebelumnya. |
 | Service mati setelah reboot | `pm2 startup` sudo command belum dijalankan, atau `pm2 save` terlewat (Tahap 10). |

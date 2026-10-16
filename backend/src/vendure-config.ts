@@ -246,6 +246,16 @@ export const config: VendureConfig = {
         nullable: true,
       },
     ],
+    ProductVariant: [
+      {
+        name: 'originalPrice',
+        type: 'int',
+        label: [{ languageCode: LanguageCode.en, value: 'Original Price (compare-at)' }],
+        description: [{ languageCode: LanguageCode.en, value: 'Optional price before discount, in whole Rupiah (e.g. 250000). When set higher than the variant price, the storefront shows a strikethrough price and a discount badge. Leave empty when the product is not discounted.' }],
+        nullable: true,
+        public: true,
+      },
+    ],
     Order: [
       {
         name: 'whatsappReminderSentAt',

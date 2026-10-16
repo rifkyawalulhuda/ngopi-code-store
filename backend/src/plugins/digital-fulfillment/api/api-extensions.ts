@@ -29,6 +29,22 @@ export const shopApiExtensions: DocumentNode = gql`
     fileName: String!
   }
 
+  """
+  Public, non-sensitive metadata about a digital product's file.
+  Exposed on the storefront so shoppers can see what they are buying
+  (e.g. "ZIP Archive - 12 MB"). Never exposes the storage bucket or object key.
+  """
+  type DigitalProductInfo {
+    fileSize: Float!
+    mimeType: String!
+    maxDownloadsPerOrder: Int!
+    downloadExpiryHours: Int!
+  }
+
+  extend type ProductVariant {
+    digitalProductInfo: DigitalProductInfo
+  }
+
   type DigitalDownloadItem {
     id: ID!
     fileName: String!

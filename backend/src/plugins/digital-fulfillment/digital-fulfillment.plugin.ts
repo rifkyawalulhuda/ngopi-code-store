@@ -7,6 +7,7 @@ import { OrderFulfillmentQueue } from './services/order-fulfillment-queue.servic
 import { OrderReceiptEmailService } from './services/order-receipt-email.service';
 import { DigitalProductAdminResolver } from './api/digital-product-admin.resolver';
 import { DigitalProductShopResolver } from './api/digital-product-shop.resolver';
+import { DigitalProductInfoShopResolver } from './api/digital-product-info-shop.resolver';
 import { adminApiExtensions, shopApiExtensions } from './api/api-extensions';
 import { GuestCheckoutPlugin } from '../guest-checkout/guest-checkout.plugin';
 import { WhatsappPlugin } from '../whatsapp/whatsapp.plugin';
@@ -18,6 +19,7 @@ import { WhatsappPlugin } from '../whatsapp/whatsapp.plugin';
  * - MinIO file storage integration (upload/download)
  * - Admin API: uploadDigitalProduct, deleteDigitalProduct, digitalProductByVariantId
  * - Shop API: generateDownloadUrl (authenticated, ownership-validated, 5-min presigned URL)
+ * - Shop API: ProductVariant.digitalProductInfo (public file size/format/limits)
  * - Entities: DigitalProduct (file metadata), DigitalDownload (download records)
  * - Fulfillment: OrderFulfillmentRunner (hidden guest User + downloads + receipt email)
  */
@@ -37,7 +39,7 @@ import { WhatsappPlugin } from '../whatsapp/whatsapp.plugin';
   },
   shopApiExtensions: {
     schema: shopApiExtensions,
-    resolvers: [DigitalProductShopResolver],
+    resolvers: [DigitalProductShopResolver, DigitalProductInfoShopResolver],
   },
   compatibility: '^3.0.0',
 })

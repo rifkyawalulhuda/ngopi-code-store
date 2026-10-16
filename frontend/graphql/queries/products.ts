@@ -46,6 +46,15 @@ export const GET_PRODUCT_BY_SLUG = gql`
         name
         price
         currencyCode
+        customFields {
+          originalPrice
+        }
+        digitalProductInfo {
+          fileSize
+          mimeType
+          maxDownloadsPerOrder
+          downloadExpiryHours
+        }
       }
       collections {
         id

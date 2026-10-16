@@ -22,8 +22,30 @@ export interface Product {
     name: string
     price: number
     currencyCode: string
+    /** Compare-at price (whole Rupiah). Set only when the variant is discounted. */
+    customFields?: {
+      originalPrice?: number | null
+    } | null
+    /** Public digital-file metadata for the storefront (size, format, limits). */
+    digitalProductInfo?: {
+      fileSize: number
+      mimeType: string
+      maxDownloadsPerOrder: number
+      downloadExpiryHours: number
+    } | null
   }>
   collectionIds?: string[]
+  collections?: Array<{
+    id: string
+    name: string
+    slug: string
+  }>
+  facetValues?: Array<{
+    id: string
+    code: string
+    name: string
+    facet?: { id: string; code: string; name: string }
+  }>
   customFields?: {
     shortDescription?: string | null
     keyFeatures?: string | null
@@ -193,17 +215,20 @@ export function useShop() {
     }
   }
 
+  /**
+   * Fetch a single product by slug.
+   *
+   * Returns `null` ONLY when the product genuinely does not exist. Transport or
+   * GraphQL errors are re-thrown so callers can show a "failed to load" state —
+   * swallowing them here made an API outage look like a missing product.
+   */
   async function getProductBySlug(slug: string): Promise<Product | null> {
-    try {
-      const { $apollo } = useNuxtApp()
-      const { data } = await $apollo.defaultClient.query({
-        query: GET_PRODUCT_BY_SLUG,
-        variables: { slug },
-      })
-      return data.product || null
-    } catch {
-      return null
-    }
+    const { $apollo } = useNuxtApp()
+    const { data } = await $apollo.defaultClient.query({
+      query: GET_PRODUCT_BY_SLUG,
+      variables: { slug },
+    })
+    return data?.product ?? null
   }
 
   return {

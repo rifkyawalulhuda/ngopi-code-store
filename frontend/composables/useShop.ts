@@ -1,6 +1,10 @@
 import { ref } from 'vue'
 import type { Ref } from 'vue'
-import { GET_PRODUCT_BY_SLUG, SEARCH_PRODUCTS } from '~/graphql/queries/products'
+import {
+  GET_PRODUCT_BY_SLUG,
+  SEARCH_PRODUCTS,
+  GET_SHORT_DESCRIPTIONS,
+} from '~/graphql/queries/products'
 
 export interface Product {
   id: string
@@ -165,6 +169,46 @@ function buildSearchSort(sort?: SortOption) {
   return undefined
 }
 
+/**
+ * Attach each product's curated `shortDescription` to search results.
+ *
+ * The DefaultSearchPlugin indexes only the product `description` (rich text),
+ * and `SearchResult` exposes no custom fields. Catalog cards should show the
+ * curated short description, so it is fetched in one batched query keyed by the
+ * ids already in hand.
+ *
+ * Best-effort: on any failure the products keep the description they have, and
+ * the card falls back to plain text derived from it.
+ */
+async function attachShortDescriptions(items: Product[]): Promise<void> {
+  if (!items.length || !import.meta.client) return
+
+  const { $apollo } = useNuxtApp()
+  const ids = items.map((p) => String(p.id))
+
+  try {
+    const { data } = await $apollo.defaultClient.query({
+      query: GET_SHORT_DESCRIPTIONS,
+      variables: { ids },
+      fetchPolicy: 'cache-first',
+    })
+
+    const byId = new Map<string, string | null>()
+    for (const p of data?.products?.items ?? []) {
+      byId.set(String(p.id), p.customFields?.shortDescription ?? null)
+    }
+
+    for (const product of items) {
+      const short = byId.get(String(product.id))
+      if (short) {
+        product.customFields = { ...(product.customFields ?? {}), shortDescription: short }
+      }
+    }
+  } catch {
+    // Non-fatal: cards fall back to the description text.
+  }
+}
+
 export function useShop() {
   const products: Ref<Product[]> = ref([])
   const totalItems: Ref<number> = ref(0)
@@ -236,6 +280,10 @@ export function useShop() {
         products.value = sortedItems
         totalItems.value = data.search.totalItems
       }
+
+      // Search results carry only the rich-text description; add the curated
+      // short description so catalog cards can show clean, intended copy.
+      await attachShortDescriptions(products.value)
     } catch (err: any) {
       error.value = err.message || 'Failed to fetch products'
       if (!isAppend) {

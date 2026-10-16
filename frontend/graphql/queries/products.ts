@@ -103,6 +103,19 @@ export const GET_PRODUCT_BY_SLUG = gql`
   }
 `
 
+export const GET_SHORT_DESCRIPTIONS = gql`
+  query GetShortDescriptions($ids: [String!]!) {
+    products(options: { filter: { id: { in: $ids } }, take: 100 }) {
+      items {
+        id
+        customFields {
+          shortDescription
+        }
+      }
+    }
+  }
+`
+
 export const SEARCH_PRODUCTS = gql`
   query SearchProducts($input: SearchInput!) {
     search(input: $input) {

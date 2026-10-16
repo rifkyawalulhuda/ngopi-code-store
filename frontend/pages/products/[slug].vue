@@ -375,7 +375,7 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useShop, type Product } from '~/composables/useShop'
 import { useWhatsapp } from '~/composables/useWhatsapp'
-import { formatPriceIDR, formatFileSize, formatMimeType } from '~/utils/format'
+import { formatPriceIDR, formatFileSize, formatMimeType, stripHtml } from '~/utils/format'
 import {
   getVariantOptionCode,
   getVariantOptionLabel,
@@ -543,12 +543,12 @@ const downloadLimitLabel = computed(() => {
 })
 
 const cleanDescription = computed(() => {
-  // Use dedicated short description custom field if available,
-  // otherwise fall back to stripping HTML from the main description
+  // Prefer the curated short description; otherwise derive plain text from the
+  // rich-text description. Either way strip markup/entities — the field is
+  // edited in a rich-text editor and may contain HTML in both cases.
   const short = product.value?.customFields?.shortDescription
-  if (short) return short.trim()
-  const desc = product.value?.description || ''
-  return desc.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+  if (short) return stripHtml(short)
+  return stripHtml(product.value?.description)
 })
 
 // Dynamic features from custom field (one per line), with fallback

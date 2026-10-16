@@ -1,29 +1,69 @@
 import { describe, it, expect } from 'vitest'
-import { formatPriceIDR, truncateDescription, formatFileSize, formatMimeType } from './format'
+import {
+  formatPriceIDR,
+  truncateDescription,
+  formatFileSize,
+  formatMimeType,
+  stripHtml,
+} from './format'
 
-describe('formatPriceIDR', () => {
-  it('formats a standard price correctly', () => {
-    // IDR zero-decimal: 150000 = Rp 150.000
-    expect(formatPriceIDR(150000)).toBe('Rp 150.000')
+describe('stripHtml', () => {
+  it('returns an empty string for missing input', () => {
+    expect(stripHtml('')).toBe('')
+    expect(stripHtml(null)).toBe('')
+    expect(stripHtml(undefined)).toBe('')
   })
 
-  it('formats zero price', () => {
-    expect(formatPriceIDR(0)).toBe('Rp 0')
+  it('removes the tags seen in real product descriptions', () => {
+    // The exact shape reported from the catalog.
+    expect(stripHtml('<h2><strong>Source Code PHP Lengkap - Siap Deploy</strong></h2>')).toBe(
+      'Source Code PHP Lengkap - Siap Deploy',
+    )
   })
 
-  it('formats small price', () => {
-    // 50 = Rp 50
-    expect(formatPriceIDR(50)).toBe('Rp 50')
+  it('keeps block elements from gluing words together', () => {
+    expect(stripHtml('<h2>Deskripsi</h2><p>Aplikasi web</p>')).toBe('Deskripsi Aplikasi web')
   })
 
-  it('formats large price', () => {
-    // 1000000 = Rp 1.000.000
-    expect(formatPriceIDR(1000000)).toBe('Rp 1.000.000')
+  it('decodes the entities used by the rich-text editor', () => {
+    expect(stripHtml('<p>PILKASIS&nbsp;adalah&nbsp;aplikasi</p>')).toBe('PILKASIS adalah aplikasi')
+    expect(stripHtml('pemasukan &amp; pengeluaran')).toBe('pemasukan & pengeluaran')
+    expect(stripHtml('&lt;tag&gt; &quot;kuotasi&quot; &#39;satu&#39;')).toBe(`<tag> "kuotasi" 'satu'`)
   })
 
-  it('rounds fractional amounts', () => {
-    // 15.5 -> rounds to 16
-    expect(formatPriceIDR(15.5)).toBe('Rp 16')
+  it('does not turn a double-escaped ampersand into a tag', () => {
+    // "&amp;lt;" is the literal text "&lt;", not "<".
+    expect(stripHtml('&amp;lt;')).toBe('&lt;')
+  })
+
+  it('drops script and style content entirely', () => {
+    expect(stripHtml('<style>p{color:red}</style><p>Halo</p>')).toBe('Halo')
+    expect(stripHtml('<script>alert(1)</script><p>Halo</p>')).toBe('Halo')
+  })
+
+  it('collapses whitespace and newlines into single spaces', () => {
+    expect(stripHtml('<p>Baris satu</p>\n\n<p>Baris dua</p>')).toBe('Baris satu Baris dua')
+  })
+
+  it('does not insert a space for inline formatting', () => {
+    // Inline tags carry no spacing, so removing them must not split a word.
+    expect(stripHtml('Kopi<strong>Kode</strong>')).toBe('KopiKode')
+    expect(stripHtml('<em>rapi</em>sekali')).toBe('rapisekali')
+  })
+
+  it('leaves plain text untouched', () => {
+    expect(stripHtml('Aplikasi e-commerce berbasis web.')).toBe(
+      'Aplikasi e-commerce berbasis web.',
+    )
+  })
+
+  it('handles a table-heavy description without leaving markup', () => {
+    const html =
+      '<table style="min-width: 50px;"><tbody><tr><th colspan="2">Fitur</th></tr><tr><td>Absensi</td></tr></tbody></table>'
+    const out = stripHtml(html)
+    expect(out).not.toMatch(/[<>]/)
+    expect(out).toContain('Fitur')
+    expect(out).toContain('Absensi')
   })
 })
 
@@ -62,6 +102,51 @@ describe('truncateDescription', () => {
     const result = truncateDescription(text)
     // Should trim trailing spaces before adding ellipsis
     expect(result).not.toMatch(/\s\.\.\./)
+  })
+
+  it('strips HTML before truncating (catalog blurb)', () => {
+    const html = '<h2><strong>Source Code PHP Lengkap - Siap Deploy</strong></h2><p>Aplikasi web.</p>'
+    const result = truncateDescription(html, 110)
+    expect(result).not.toMatch(/[<>]/)
+    expect(result.startsWith('Source Code PHP Lengkap')).toBe(true)
+  })
+
+  it('does not count markup against the character budget', () => {
+    // 26 chars of markup around a 10-char word must not trigger truncation.
+    const html = `<p><strong>${'a'.repeat(10)}</strong></p>`
+    const result = truncateDescription(html, 110)
+    expect(result).toBe('a'.repeat(10))
+    expect(result.endsWith('...')).toBe(false)
+  })
+
+  it('decodes entities before truncating', () => {
+    expect(truncateDescription('<p>Kopi&nbsp;&amp;&nbsp;Kode</p>')).toBe('Kopi & Kode')
+  })
+})
+
+describe('formatPriceIDR', () => {
+  it('formats a standard price correctly', () => {
+    // IDR zero-decimal: 150000 = Rp 150.000
+    expect(formatPriceIDR(150000)).toBe('Rp 150.000')
+  })
+
+  it('formats zero price', () => {
+    expect(formatPriceIDR(0)).toBe('Rp 0')
+  })
+
+  it('formats small price', () => {
+    // 50 = Rp 50
+    expect(formatPriceIDR(50)).toBe('Rp 50')
+  })
+
+  it('formats large price', () => {
+    // 1000000 = Rp 1.000.000
+    expect(formatPriceIDR(1000000)).toBe('Rp 1.000.000')
+  })
+
+  it('rounds fractional amounts', () => {
+    // 15.5 -> rounds to 16
+    expect(formatPriceIDR(15.5)).toBe('Rp 16')
   })
 })
 
